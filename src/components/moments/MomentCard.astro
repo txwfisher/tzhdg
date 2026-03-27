@@ -132,14 +132,13 @@ const getImgSrc = (img: string | ImageMetadata): string => {
         return (
           <div class={`${imagesArray.length === 1 ? 'aspect-auto max-h-[300px] flex justify-start' : 'aspect-square'} rounded-xl overflow-hidden cursor-pointer group relative`}>
             {typeof img === 'string' ? (
-              <Image 
+              <img 
                 src={img} 
                 alt="Moment image" 
                 class={`${imagesArray.length === 1 ? 'w-auto h-auto max-w-full max-h-[300px] object-cover rounded-xl object-left' : 'w-full h-full object-cover'} transition-transform duration-300 group-hover:scale-105`} 
                 loading="lazy"
                 data-fancybox={`gallery-${moment.id}`}
                 data-src={imgSrc}
-                inferSize={true}
               />
             ) : (
               <Image 
@@ -169,13 +168,12 @@ const getImgSrc = (img: string | ImageMetadata): string => {
       {hiddenImages.map((img) => {
         const imgSrc = getImgSrc(img);
         return typeof img === 'string' ? (
-          <Image 
+          <img 
             src={img} 
             alt="Hidden moment image" 
             class="hidden"
             data-fancybox={`gallery-${moment.id}`}
             data-src={imgSrc}
-            inferSize={true}
           />
         ) : (
           <Image 
