@@ -140,18 +140,23 @@ async function fetchBangumiData(username: string, subjectType: number) {
 const bangumiData: Record<string, UserSubjectCollection[]> = {};
 const tabs: Array<{ id: string; name: string; count: number }> = [];
 
-// 检查是否已配置 Bangumi 用户ID
+// 检查是否已配置 Bangumi 用户ID且页面已启用
 const isUserIdConfigured =
 	bangumiConfig.username &&
 	bangumiConfig.username !== "you-user-id" &&
 	bangumiConfig.username.trim() !== "";
 
-if (!isUserIdConfigured) {
+// 检查页面是否启用
+const isPageEnabled = siteConfig.pages.bangumi;
+
+if (!isPageEnabled) {
+	console.log("[Bangumi] ⚠️ 页面未启用，跳过数据获取");
+} else if (!isUserIdConfigured) {
 	console.log("[Bangumi] ⚠️ 未配置 Bangumi 用户ID，跳过数据获取");
 } else {
 	console.log("[Bangumi] 🌐 从 API 获取数据");
 	
-	// 只有在配置了用户ID的情况下才获取数据
+	// 只有在页面启用且配置了用户ID的情况下才获取数据
 	for (const [categoryKey, enabled] of Object.entries(bangumiConfig.categories)) {
 		if (enabled && categoryMap[categoryKey as keyof typeof categoryMap]) {
 			const categoryInfo = categoryMap[categoryKey as keyof typeof categoryMap];
