@@ -2,9 +2,10 @@
 title: IO流
 published: 2026-03-11
 description: Java学习
-image: "https://re.tsh520.cn/img/java.png"
-tags: [java]  
-category: "编程学习"
+image: https://re.tsh520.cn/cover/ThisCover_20260331_145716.webp
+tags:
+  - java
+category: 编程学习
 ---
 ## 一、 文件操作
 
