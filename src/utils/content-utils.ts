@@ -51,6 +51,58 @@ export async function getSortedPostsList(): Promise<PostForList[]> {
 
 	return sortedPostsList;
 }
+
+export type ArchiveItem = {
+	id: string;
+	type: "post" | "moment";
+	data: {
+		title: string;
+		published: Date;
+		tags: string[];
+		category?: string | null;
+	};
+};
+
+export async function getArchiveList(): Promise<ArchiveItem[]> {
+	const posts = await getCollection("posts", ({ data }) => {
+		return import.meta.env.PROD ? data.draft !== true : true;
+	});
+	const moments = await getCollection("moments");
+
+	const postItems: ArchiveItem[] = posts.map((post) => ({
+		id: post.id,
+		type: "post",
+		data: {
+			title: post.data.title,
+			published: post.data.published,
+			tags: post.data.tags,
+			category: post.data.category,
+		},
+	}));
+
+	const momentItems: ArchiveItem[] = moments.map((moment) => {
+		// 提取摘要作为标题
+		let title = moment.body || "";
+		title = title.replace(/[#*`]/g, "").trim(); // 移除 markdown 符号
+		if (title.length > 50) title = `${title.substring(0, 50)}...`;
+		if (!title) title = i18n(I18nKey.moments) || "日常动态";
+
+		return {
+			id: moment.id,
+			type: "moment",
+			data: {
+				title: title,
+				published: moment.data.published,
+				tags: moment.data.tags,
+				category: null,
+			},
+		};
+	});
+
+	return [...postItems, ...momentItems].sort((a, b) => {
+		return b.data.published.getTime() - a.data.published.getTime();
+	});
+}
 export type Tag = {
 	name: string;
 	count: number;
@@ -61,12 +113,23 @@ export async function getTagList(): Promise<Tag[]> {
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
 
+	const allMoments = await getCollection("moments");
+
 	const countMap: { [key: string]: number } = {};
 	allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
 		post.data.tags.forEach((tag: string) => {
 			if (!countMap[tag]) countMap[tag] = 0;
 			countMap[tag]++;
 		});
+	});
+
+	allMoments.forEach((moment: { data: { tags: string[] } }) => {
+		if (Array.isArray(moment.data.tags)) {
+			moment.data.tags.forEach((tag: string) => {
+				if (!countMap[tag]) countMap[tag] = 0;
+				countMap[tag]++;
+			});
+		}
 	});
 
 	// sort tags

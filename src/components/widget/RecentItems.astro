@@ -1,0 +1,110 @@
+---
+import WidgetLayout from "@/components/common/WidgetLayout.astro";
+import { getCollection } from "astro:content";
+import { getPostUrlBySlug, url } from "@/utils/url-utils";
+import { i18n } from "@/i18n/translation";
+import I18nKey from "@/i18n/i18nKey";
+import { Icon } from "astro-icon/components";
+
+const posts = await getCollection("posts", ({ data }) => {
+	return import.meta.env.PROD ? data.draft !== true : true;
+});
+const moments = await getCollection("moments");
+const bangumi = await getCollection("bangumi");
+
+// 转换所有项为统一格式
+const allItems = [
+	...posts.map((p) => ({
+		type: "post",
+		title: p.data.title,
+		date: p.data.published,
+		url: getPostUrlBySlug(p.id),
+		image: p.data.image,
+		id: p.id,
+	})),
+	...moments.map((m) => {
+		// 提取摘要作为标题
+		let title = m.body || "";
+		title = title.replace(/[#*`]/g, "").trim(); // 移除 markdown 符号
+		if (title.length > 40) title = `${title.substring(0, 40)}...`;
+		if (!title) title = i18n(I18nKey.moments) || "日常动态";
+
+		let image = "";
+		if (Array.isArray(m.data.images) && m.data.images.length > 0) {
+			image =
+				typeof m.data.images[0] === "string"
+					? m.data.images[0]
+					: (m.data.images[0] as any).src;
+		} else if (typeof m.data.images === "string") {
+			image = m.data.images;
+		}
+
+		return {
+			type: "moment",
+			title: title,
+			date: m.data.published,
+			url: `/moments/#${m.id}`,
+			image: image,
+			id: m.id,
+		};
+	}),
+	...bangumi.map((b) => ({
+		type: "bangumi",
+		title: b.data.title,
+		date: b.data.published || new Date(0),
+		url: b.data.link || "/bangumi/",
+		image:
+			typeof b.data.image === "string"
+				? b.data.image
+				: (b.data.image as any).src,
+		id: b.id,
+	})),
+];
+
+// 排序并获取前 5 个
+const recentItems = allItems
+	.sort((a, b) => b.date.getTime() - a.date.getTime())
+	.slice(0, 5);
+
+const defaultImage = "https://re.tsh520.cn/zl/zbd.webp";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+const className = Astro.props.class;
+const style = Astro.props.style;
+---
+
+<WidgetLayout name={i18n(I18nKey.recentItems)} id="recent-items" class={className} style={style}>
+  <Icon name="material-symbols:history" slot="title-icon" class="text-xl" />
+  <div class="flex flex-col gap-3 py-1">
+    {recentItems.map(item => (
+      <a href={item.url} class="flex gap-3 group items-center transition-all">
+        <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
+          <img 
+            src={item.image || defaultImage} 
+            alt={item.title} 
+            class="w-full h-full object-cover"
+            onerror={`this.onerror=null;this.src='${defaultImage}';`}
+            loading="lazy"
+          />
+        </div>
+        <div class="flex flex-col min-w-0 flex-1">
+          <div class="text-sm font-bold text-neutral-700 dark:text-neutral-200 line-clamp-2 leading-snug group-hover:text-(--primary) transition-colors">
+            {item.title}
+          </div>
+          <div class="text-[10px] text-neutral-400 mt-1.5 flex items-center justify-between pr-1">
+            <div class="flex items-center gap-1">
+              <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
+              {item.date.toISOString().substring(0, 10)}
+            </div>
+            <span class="px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[8px] uppercase tracking-wider font-bold text-neutral-500 dark:text-neutral-400 border border-neutral-200/50 dark:border-neutral-700/50">
+              {item.type === 'post' ? i18n(I18nKey.recentPosts) : item.type === 'moment' ? i18n(I18nKey.recentMoments) : i18n(I18nKey.recentLife)}
+            </span>
+          </div>
+        </div>
+      </a>
+    ))}
+  </div>
+</WidgetLayout>

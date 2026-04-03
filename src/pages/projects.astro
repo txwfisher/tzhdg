@@ -2,7 +2,10 @@
 import { getEntry, render } from "astro:content";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
-import { projectsPageConfig, getEnabledProjects } from "@/config/projectsConfig";
+import {
+	projectsPageConfig,
+	getEnabledProjects,
+} from "@/config/projectsConfig";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
@@ -77,6 +80,7 @@ const description = "精选优质开源项目和工具";
                   src={item.imgurl}
                   alt={item.title}
                   class="w-full h-full object-cover"
+                  onerror="this.onerror=null;this.src='https://re.tsh520.cn/zl/zbd.webp';"
                 />
               </div>
 

@@ -6,9 +6,11 @@ import Calendar from "@/components/widget/Calendar.astro";
 import Categories from "@/components/widget/Categories.astro";
 import Music from "@/components/widget/Music.astro";
 import Profile from "@/components/widget/Profile.astro";
+import RecentItems from "@/components/widget/RecentItems.astro";
 import SidebarTOC from "@/components/widget/SidebarTOC.astro";
 import SiteStats from "@/components/widget/SiteStats.astro";
 import Tags from "@/components/widget/Tags.astro";
+import RelationshipTimer from "@/components/widget/RelationshipTimer.astro";
 import { sidebarLayoutConfig } from "@/config";
 import type {
 	MobileBottomComponentConfig,
@@ -49,7 +51,9 @@ const componentMap = {
 	stats: SiteStats,
 	calendar: Calendar,
 	music: Music,
-} satisfies Record<WidgetComponentType, typeof Profile>;
+	relationship: RelationshipTimer,
+	recentItems: RecentItems,
+} satisfies Record<WidgetComponentType, any>;
 
 // 获取侧边栏位置
 const side = (Astro.props.side ||

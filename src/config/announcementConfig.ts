@@ -12,7 +12,7 @@ export const announcementConfig: AnnouncementConfig = {
 
 	link: {
 		// 启用链接
-		
+
 		enable: true,
 		// 链接文本
 		text: "了解更多",

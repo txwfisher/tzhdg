@@ -1144,4 +1144,20 @@ function disableAnimation() {
     initThemeListener();
     initIconLoader();
   }
+
+  // 动态修改网页标题（标签页标题互动）
+  let originTitle = document.title;
+  let titleTime: ReturnType<typeof setTimeout>;
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      originTitle = document.title;
+      document.title = siteConfig.navbar?.hoverTitle || "w(ﾟДﾟ)w 不要走！再看看嘛！";
+      clearTimeout(titleTime);
+    } else {
+      document.title = "欢迎回来，这里是团子和蛋糕的博客";
+      titleTime = setTimeout(function () {
+        document.title = originTitle;
+      }, 2000);
+    }
+  });
 </script>

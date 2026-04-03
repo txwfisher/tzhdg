@@ -39,6 +39,7 @@ export { musicPlayerConfig } from "./musicConfig"; // 音乐播放器配置
 export { navBarConfig, navBarSearchConfig } from "./navBarConfig"; // 导航栏配置与搜索配置
 export { live2dModelConfig, spineModelConfig } from "./pioConfig"; // 看板娘配置
 export { profileConfig } from "./profileConfig"; // 用户资料配置
+export { relationshipConfig } from "./relationshipConfig"; // 恋爱计时配置
 export { sakuraConfig } from "./sakuraConfig"; // 樱花特效配置
 // 布局配置
 export { sidebarLayoutConfig } from "./sidebarConfig"; // 侧边栏布局配置

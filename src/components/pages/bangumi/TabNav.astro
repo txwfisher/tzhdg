@@ -43,13 +43,23 @@ const { tabs, activeTab } = Astro.props;
     const tabButtons = document.querySelectorAll('[data-tab]');
     const sections = document.querySelectorAll('[data-section]');
 
+    // 移除旧的监听器，防止重复绑定
     tabButtons.forEach(button => {
+      const newButton = button.cloneNode(true) as HTMLButtonElement;
+      if (button.parentNode) {
+        button.parentNode.replaceChild(newButton, button);
+      }
+    });
+
+    const newTabButtons = document.querySelectorAll('[data-tab]');
+
+    newTabButtons.forEach(button => {
       button.addEventListener('click', (event) => {
         const currentButton = event.currentTarget as HTMLButtonElement;
         const targetTab = currentButton.dataset.tab;
 
         // Update active tab
-        tabButtons.forEach(btn => {
+        newTabButtons.forEach(btn => {
           btn.classList.remove('border-(--primary)', 'text-(--primary)');
           btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'dark:text-gray-400', 'dark:hover:text-gray-300');
         });
@@ -70,7 +80,11 @@ const { tabs, activeTab } = Astro.props;
     });
   }
 
-  // Initialize when DOM is ready
+  // Support for Swup and Astro view transitions
+  document.addEventListener('astro:page-load', initTabNavigation);
+  document.addEventListener('swup:contentReplaced', initTabNavigation);
+
+  // Initialize when DOM is ready (for initial load)
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTabNavigation);
   } else {

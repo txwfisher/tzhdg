@@ -7,15 +7,16 @@ import { getPostUrlBySlug } from "@/utils/url-utils";
 
 export let tags: string[] = [];
 export let categories: string[] = [];
-export let sortedPosts: Post[] = [];
+export let archiveList: ArchiveItem[] = [];
 
 const params = new URLSearchParams(window.location.search);
 tags = params.has("tag") ? params.getAll("tag") : [];
 categories = params.has("category") ? params.getAll("category") : [];
 const uncategorized = params.get("uncategorized");
 
-interface Post {
+interface ArchiveItem {
 	id: string;
+	type: "post" | "moment";
 	data: {
 		title: string;
 		tags: string[];
@@ -26,7 +27,7 @@ interface Post {
 
 interface Group {
 	year: number;
-	posts: Post[];
+	items: ArchiveItem[];
 }
 
 let groups: Group[] = [];
@@ -41,52 +42,59 @@ function formatTag(tagList: string[]) {
 	return tagList.map((t) => `#${t}`).join(" ");
 }
 
+function getItemUrl(item: ArchiveItem) {
+	if (item.type === "post") {
+		return getPostUrlBySlug(item.id);
+	}
+	return `/moments/#${item.id}`;
+}
+
 onMount(async () => {
-	let filteredPosts: Post[] = sortedPosts;
+	let filteredItems: ArchiveItem[] = archiveList;
 
 	if (tags.length > 0) {
-		filteredPosts = filteredPosts.filter(
-			(post) =>
-				Array.isArray(post.data.tags) &&
-				post.data.tags.some((tag) => tags.includes(tag)),
+		filteredItems = filteredItems.filter(
+			(item) =>
+				Array.isArray(item.data.tags) &&
+				item.data.tags.some((tag) => tags.includes(tag)),
 		);
 	}
 
 	if (categories.length > 0) {
-		filteredPosts = filteredPosts.filter(
-			(post) => post.data.category && categories.includes(post.data.category),
+		filteredItems = filteredItems.filter(
+			(item) => item.data.category && categories.includes(item.data.category),
 		);
 	}
 
 	if (uncategorized) {
-		filteredPosts = filteredPosts.filter((post) => !post.data.category);
+		filteredItems = filteredItems.filter((item) => !item.data.category);
 	}
 
-	// 按发布时间倒序排序，确保不受置顶影响
-	filteredPosts = filteredPosts
+	// 按发布时间倒序排序
+	filteredItems = filteredItems
 		.slice()
 		.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
 
-	const grouped = filteredPosts.reduce(
-		(acc, post) => {
-			const year = post.data.published.getFullYear();
+	const grouped = filteredItems.reduce(
+		(acc, item) => {
+			const year = item.data.published.getFullYear();
 			if (!acc[year]) {
 				acc[year] = [];
 			}
-			acc[year].push(post);
+			acc[year].push(item);
 			return acc;
 		},
-		{} as Record<number, Post[]>,
+		{} as Record<number, ArchiveItem[]>,
 	);
 
-	const groupedPostsArray = Object.keys(grouped).map((yearStr) => ({
+	const groupedItemsArray = Object.keys(grouped).map((yearStr) => ({
 		year: Number.parseInt(yearStr, 10),
-		posts: grouped[Number.parseInt(yearStr, 10)],
+		items: grouped[Number.parseInt(yearStr, 10)],
 	}));
 
-	groupedPostsArray.sort((a, b) => b.year - a.year);
+	groupedItemsArray.sort((a, b) => b.year - a.year);
 
-	groups = groupedPostsArray;
+	groups = groupedItemsArray;
 });
 </script>
 
@@ -104,20 +112,20 @@ onMount(async () => {
                     ></div>
                 </div>
                 <div class="w-[70%] md:w-[80%] transition text-left text-50">
-                    {group.posts.length} {i18n(group.posts.length === 1 ? I18nKey.postCount : I18nKey.postsCount)}
+                    {group.items.length} {i18n(group.items.length === 1 ? I18nKey.postCount : I18nKey.postsCount)}
                 </div>
             </div>
 
-            {#each group.posts as post}
+            {#each group.items as item}
                 <a
-                        href={getPostUrlBySlug(post.id)}
-                        aria-label={post.data.title}
+                        href={getItemUrl(item)}
+                        aria-label={item.data.title}
                         class="group btn-plain block! h-10 w-full rounded-lg hover:text-[initial]"
                 >
                     <div class="flex flex-row justify-start items-center h-full">
                         <!-- date -->
                         <div class="w-[15%] md:w-[10%] transition text-sm text-right text-50">
-                            {formatDate(post.data.published)}
+                            {formatDate(item.data.published)}
                         </div>
 
                         <!-- dot and line -->
@@ -132,13 +140,18 @@ onMount(async () => {
                             ></div>
                         </div>
 
-                        <!-- post title -->
+                        <!-- item title -->
                         <div
                                 class="w-[70%] md:max-w-[65%] md:w-[65%] text-left font-bold
                      group-hover:translate-x-1 transition-all group-hover:text-(--primary)
-                     text-75 pr-8 whitespace-nowrap text-ellipsis overflow-hidden"
+                     text-75 pr-8 whitespace-nowrap text-ellipsis overflow-hidden flex items-center gap-2"
                         >
-                            {post.data.title}
+                            {#if item.type === 'moment'}
+                                <span class="px-1.5 py-0.5 text-[10px] bg-(--primary) text-white rounded-md shrink-0 uppercase tracking-wider opacity-80 font-normal">
+                                    {i18n(I18nKey.moments) || 'Moment'}
+                                </span>
+                            {/if}
+                            {item.data.title}
                         </div>
 
                         <!-- tag list -->
@@ -146,7 +159,7 @@ onMount(async () => {
                                 class="hidden md:block md:w-[15%] text-left text-sm transition
                      whitespace-nowrap text-ellipsis overflow-hidden text-30"
                         >
-                            {formatTag(post.data.tags)}
+                            {formatTag(item.data.tags)}
                         </div>
                     </div>
                 </a>

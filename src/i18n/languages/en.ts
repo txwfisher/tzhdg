@@ -80,11 +80,15 @@ export const en: Translation = {
 	[Key.updatedAt]: "Updated at",
 	[Key.readTime]: "Read time",
 	[Key.license]: "License",
-	[Key.bangumi]: "Bangumi",
+	[Key.bangumi]: "Life",
+	[Key.moments]: "Moments",
 
+	[Key.recentMoments]: "Recent Moments",
+	[Key.recentLife]: "Recent Life",
+	[Key.recentItems]: "Recent Updates",
 	// Bangumi Filter and Status Text
-	[Key.bangumiTitle]: "My Bangumi",
-	[Key.bangumiSubtitle]: "Record my ACG journey",
+	[Key.bangumiTitle]: "My Life Records",
+	[Key.bangumiSubtitle]: "Record my life journey",
 	[Key.bangumiFilterAll]: "All",
 	[Key.bangumiFilterWatched]: "Watched",
 	[Key.bangumiFilterWatching]: "Watching",

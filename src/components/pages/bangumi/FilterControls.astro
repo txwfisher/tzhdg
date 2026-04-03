@@ -40,7 +40,17 @@ const { filters, activeFilter, sectionId } = Astro.props;
   function initFilterControls() {
     const filterButtons = document.querySelectorAll(`[data-section="${sectionId}"][data-filter]`);
 
+    // 移除旧的监听器，防止重复绑定
     filterButtons.forEach(button => {
+      const newButton = button.cloneNode(true);
+      if (button.parentNode) {
+        button.parentNode.replaceChild(newButton, button);
+      }
+    });
+
+    const newFilterButtons = document.querySelectorAll(`[data-section="${sectionId}"][data-filter]`);
+
+    newFilterButtons.forEach(button => {
       button.addEventListener('click', function() {
         const filter = this.dataset.filter;
         const currentSectionId = this.dataset.section;
@@ -87,6 +97,10 @@ const { filters, activeFilter, sectionId } = Astro.props;
       pagination.dispatchEvent(event);
     }
   }
+
+  // Support for Swup and Astro view transitions
+  document.addEventListener('astro:page-load', initFilterControls);
+  document.addEventListener('swup:contentReplaced', initFilterControls);
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {

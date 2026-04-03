@@ -78,6 +78,8 @@ export const siteConfig: SiteConfig = {
 		},
 		// 导航栏标题
 		title: "团子和蛋糕",
+		// 悬停时显示的互动颜文字
+		hoverTitle: "w(ﾟДﾟ)w 不要走！再看看嘛！",
 		// 全宽导航栏，导航栏是否占满屏幕宽度，true：占满，false：不占满
 		widthFull: false,
 		// 导航栏图标和标题是否跟随主题色
@@ -123,7 +125,7 @@ export const siteConfig: SiteConfig = {
 		// 留言板页面开关，需要配置评论系统
 		guestbook: true,
 		// 番组计划页面开关，含追番、游戏、书籍和音乐，dev调试时只获取一页数据，build才会获取全部数据
-		bangumi: false,
+		bangumi: true,
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航

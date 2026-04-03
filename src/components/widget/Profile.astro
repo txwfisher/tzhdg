@@ -3,108 +3,90 @@ import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import { profileConfig } from "@/config/profileConfig";
 import { url } from "@/utils/url-utils";
+import { getCollection } from "astro:content";
+import { getTagList } from "@/utils/content-utils";
+
+const posts = await getCollection("posts", ({ data }) => {
+	return import.meta.env.PROD ? data.draft !== true : true;
+});
+const tags = await getTagList();
+const moments = await getCollection("moments");
+
+const stats = [
+	{ label: "文章", count: posts.length },
+	{ label: "标签", count: tags.length },
+	{ label: "动态", count: moments.length },
+];
+
+const githubLink =
+	profileConfig.links.find((item) => item.name === "GitHub")?.url || "#";
 ---
 
-<div class="card-base p-3">
-  <a
-    aria-label="Go to About Page"
-    href={url("/about/")}
-    class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3
-       max-w-48 lg:max-w-none overflow-hidden rounded-xl active:scale-95"
-  >
-    <div
-      class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50
-        w-full h-full z-50 flex items-center justify-center"
+<div class="card-base p-4">
+  <div class="flex flex-col items-center">
+    <!-- Avatar (Circular) -->
+    <a 
+      aria-label="Go to About Page" 
+      href={url("/about/")}
+      class="group relative block w-24 h-24 mb-4 rounded-full overflow-hidden border-2 border-white dark:border-neutral-800 shadow-lg active:scale-95 transition-all"
     >
-      <Icon
-        name="fa7-regular:address-card"
-        class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl"
+      <div class="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity pointer-events-none">
+        <Icon name="material-symbols:account-circle" class="text-white text-3xl" />
+      </div>
+      <ImageWrapper
+        src={profileConfig.avatar || ""}
+        alt="Profile Image"
+        class="w-full h-full object-cover"
+        loading="eager"
+        fetchpriority="high"
+        widths={[150]}
+        sizes="150px"
       />
-    </div>
-    <ImageWrapper
-      src={profileConfig.avatar || ""}
-      alt="Profile Image of the Author"
-      class="mx-auto lg:w-full h-full lg:mt-0"
-      loading="eager"
-      fetchpriority="high"
-      widths={[350]}
-      sizes="350px"
-    />
-  </a>
-  <div class="px-2">
-    <div
-      class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition"
-    >
-      {profileConfig.name}
-    </div>
-    <div
-      class="h-1 w-5 bg-(--primary) mx-auto rounded-full mb-2 transition"
-    >
-    </div>
-    <div class="text-center text-neutral-400 mb-2.5 transition">
-      {profileConfig.bio}
-    </div>
-        <div class="flex flex-wrap gap-2 justify-center mb-1">
-            {profileConfig.links.length > 1 && profileConfig.links.map(item =>
-                    {
-                    const showName = item.showName;
-                    const className = showName 
-                        ? "btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95" 
-                        : "btn-regular rounded-lg h-10 w-10 active:scale-90";
+    </a>
 
-                    if (item.url.startsWith("mailto:")) {
-                        const encodedEmail = Buffer.from(item.url.replace("mailto:", "")).toString("base64");
-                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={`
-                                            (function() {
-                                                const encodedEmail = this.getAttribute('data-encoded-email');
-                                                const decodedEmail = atob(encodedEmail);
-                                                this.href = 'mailto:' + decodedEmail;
-                                                this.removeAttribute('data-encoded-email');
-                                                this.removeAttribute('onclick');
-                                                this.click();
-                                                return false;
-                                            }).call(this);
-                                        `.replace(/\s+/g, " ").trim()
-                                    },
-                                    class={className}>
-                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                            {showName && item.name}
-                        </a>
-                    } else {
-                        return <a rel="me" aria-label={item.name} href={item.url} target="_blank" class={className}>
-                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                            {showName && item.name}
-                        </a>
-                    }
-                    }
-            )}
-            {profileConfig.links.length == 1 && (function(item){
-                if (item.url.startsWith("mailto:")) {
-                        const encodedEmail = Buffer.from(item.url.replace("mailto:", "")).toString("base64");
-                        return <a rel="me" aria-label={item.name} href="#" data-encoded-email={encodedEmail} onclick={`
-                                            (function() {
-                                                const encodedEmail = this.getAttribute('data-encoded-email');
-                                                const decodedEmail = atob(encodedEmail);
-                                                this.href = 'mailto:' + decodedEmail;
-                                                this.removeAttribute('data-encoded-email');
-                                                this.removeAttribute('onclick');
-                                                this.click();
-                                                return false;
-                                            }).call(this);
-                                        `.replace(/\s+/g, " ").trim()
-                                    },
-                                    class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                            <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                            {item.name}
-                        </a>
-                    } else {
-                        return <a rel="me" aria-label={item.name} href={item.url} target="_blank"
-                                            class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                                <Icon name={item.icon} class="text-[1.5rem]"></Icon>
-                                {item.name}
-                            </a>
-                    }
-            })(profileConfig.links[0])}
+    <!-- Name and Bio -->
+    <div class="text-center mb-1">
+      <div class="font-bold text-xl text-neutral-800 dark:text-neutral-100 mb-0.5">
+        {profileConfig.name}
+      </div>
+      <div class="text-sm text-neutral-500 dark:text-neutral-400">
+        {profileConfig.bio}
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="flex w-full justify-around py-4 border-y border-neutral-100 dark:border-neutral-800 my-4">
+      {stats.map(stat => (
+        <div class="flex flex-col items-center">
+          <div class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">{stat.label}</div>
+          <div class="text-lg font-bold text-neutral-800 dark:text-neutral-100 leading-none">{stat.count}</div>
         </div>
+      ))}
+    </div>
+
+    <!-- Main Button -->
+    <a 
+      href={githubLink}
+      target="_blank"
+      class="btn-regular w-full py-2.5 rounded-xl bg-(--primary) text-white font-bold flex items-center justify-center gap-2 mb-4 hover:scale-[0.98] active:scale-95 transition-all"
+    >
+      <Icon name="material-symbols:sports-esports" class="text-xl" />
+      前往小窝~
+    </a>
+
+    <!-- Social Icons -->
+    <div class="flex flex-wrap gap-4 justify-center">
+      {profileConfig.links.map(item => (
+        <a 
+          rel="me" 
+          aria-label={item.name} 
+          href={item.url} 
+          target={item.url.startsWith("mailto:") ? "_self" : "_blank"}
+          class="text-neutral-500 hover:text-(--primary) transition-colors transform hover:scale-110 active:scale-90"
+        >
+          <Icon name={item.icon} class="text-[1.3rem]"></Icon>
+        </a>
+      ))}
+    </div>
   </div>
 </div>

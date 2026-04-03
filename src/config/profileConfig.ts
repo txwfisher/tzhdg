@@ -12,7 +12,7 @@ export const profileConfig: ProfileConfig = {
 	name: "团子和蛋糕",
 
 	// 个人签名
-	bio: "团子喜欢吃蛋糕！",
+	bio: "海棠花未眠，老陈总在我身边",
 
 	// 链接配置
 	// 已经预装的图标集：fa7-brands，fa7-regular，fa7-solid，material-symbols，simple-icons
@@ -22,27 +22,33 @@ export const profileConfig: ProfileConfig = {
 	// showName: true 时显示图标和名称，false 时只显示图标
 	links: [
 		{
-			name: "Bilibli",
-			icon: "fa7-brands:bilibili",
-			url: "https://space.bilibili.com/1394731616?spm_id_from=333.1007.0.0",
+			name: "WeChat",
+			icon: "simple-icons:wechat",
+			url: "https://re.tsh520.cn/zl/vx.webp",
+			showName: false,
+		},
+		{
+			name: "QQ",
+			icon: "simple-icons:tencentqq",
+			url: "https://re.tsh520.cn/zl/qq.webp",
 			showName: false,
 		},
 		{
 			name: "GitHub",
-			icon: "fa7-brands:github",
+			icon: "simple-icons:github",
 			url: "https://github.com/tianshihao2003",
 			showName: false,
 		},
 		{
 			name: "Email",
-			icon: "fa7-solid:envelope",
+			icon: "material-symbols:mail-outline",
 			url: "mailto:3109581507@qq.com",
 			showName: false,
 		},
 		{
-			name: "RSS",
-			icon: "fa7-solid:rss",
-			url: "/rss/",
+			name: "Bilibili",
+			icon: "simple-icons:bilibili",
+			url: "https://space.bilibili.com/1394731616?spm_id_from=333.1007.0.0",
 			showName: false,
 		},
 	],

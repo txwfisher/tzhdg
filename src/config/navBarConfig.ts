@@ -17,60 +17,27 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		// 归档
 		LinkPreset.Archive,
 
-		// 动态
+		// 项目推荐
 		{
-			name: "动态",
-			url: "/moments/",
-			icon: "material-symbols:local-cafe",
+			name: "常用网站",
+			url: "/projects/",
+			icon: "material-symbols:star",
 		},
 	];
 
-	// 自定义导航栏链接,并且支持多级菜单
+	// 动态
 	links.push({
-		name: "链接",
-		url: "/links/",
-		icon: "material-symbols:link",
-
-		// 子菜单
-		children: [
-			{
-				name: "GitHub",
-				url: "https://github.com/tianshihao2003/dumplingandcakeblog",
-				external: true,
-				icon: "fa7-brands:github",
-			},
-			{
-				name: "Bilibili",
-				url: "https://space.bilibili.com/1394731616?spm_id_from=333.1007.0.0",
-				external: true,
-				icon: "fa7-brands:bilibili",
-			},
-		],
+		name: "动态",
+		url: "/moments/",
+		icon: "material-symbols:local-cafe",
 	});
 
-	// 友链
-	links.push(LinkPreset.Friends);
-
-	
-	// 项目推荐
-	links.push({
-		name: "常用网站",
-		url: "/projects/",
-		icon: "material-symbols:star",
-	});
-
-
-	// 根据配置决定是否添加留言板，在siteConfig关闭pages.guestbook时导航栏不显示留言板
-	if (siteConfig.pages.guestbook) {
-		links.push(LinkPreset.Guestbook);
-	}
-
-	// 收藏/足迹 (原本的番组计划)
+	// 生活 (原本的番组计划)
 	if (siteConfig.pages.bangumi) {
 		links.push({
-			name: "收藏",
+			name: "生活",
 			url: "/bangumi/",
-			icon: "material-symbols:movie",
+			icon: "material-symbols:camera-outdoor",
 		});
 	}
 
@@ -80,11 +47,17 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		url: "/content/",
 		icon: "material-symbols:info",
 		children: [
-			// 根据配置决定是否添加赞助，在siteConfig关闭pages.sponsor时导航栏不显示赞助
-			...(siteConfig.pages.sponsor ? [LinkPreset.Sponsor] : []),
-
 			// 关于页面
 			LinkPreset.About,
+
+			// 友链
+			LinkPreset.Friends,
+
+			// 留言板
+			...(siteConfig.pages.guestbook ? [LinkPreset.Guestbook] : []),
+
+			// 赞助
+			...(siteConfig.pages.sponsor ? [LinkPreset.Sponsor] : []),
 		],
 	});
 
