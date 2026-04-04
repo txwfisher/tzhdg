@@ -40,16 +40,16 @@ const style = Astro.props.style;
     </div>
 
     <!-- 计时器 -->
-    <div id="relationship-timer" class="flex flex-col items-center gap-3">
+    <div class="relationship-timer flex flex-col items-center gap-3">
       <div class="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-sm">
-        <span class="timer-num" id="years">0</span><span class="timer-unit bg-red-400">年</span>
-        <span class="timer-num" id="months">0</span><span class="timer-unit bg-red-300">月</span>
-        <span class="timer-num" id="days">0</span><span class="timer-unit bg-blue-400">天</span>
-        <span class="timer-num" id="hours">0</span><span class="timer-unit bg-orange-400">时</span>
-        <span class="timer-num" id="minutes">0</span><span class="timer-unit bg-blue-500">分</span>
+        <span class="timer-num" data-timer-years>0</span><span class="timer-unit bg-red-400">年</span>
+        <span class="timer-num" data-timer-months>0</span><span class="timer-unit bg-red-300">月</span>
+        <span class="timer-num" data-timer-days>0</span><span class="timer-unit bg-blue-400">天</span>
+        <span class="timer-num" data-timer-hours>0</span><span class="timer-unit bg-orange-400">时</span>
+        <span class="timer-num" data-timer-minutes>0</span><span class="timer-unit bg-blue-500">分</span>
       </div>
       <div class="flex items-center gap-1">
-        <span class="text-xl font-bold text-neutral-700 dark:text-neutral-200" id="seconds">00</span>
+        <span class="text-xl font-bold text-neutral-700 dark:text-neutral-200" data-timer-seconds>00</span>
         <span class="text-xs text-neutral-400 font-serif">"</span>
       </div>
     </div>
@@ -76,45 +76,59 @@ const style = Astro.props.style;
     
     if (diff < 0) return;
 
-    // 计算年月日
+    // 计算年月日时分秒的差值
     let years = now.getFullYear() - startDate.getFullYear();
     let months = now.getMonth() - startDate.getMonth();
     let days = now.getDate() - startDate.getDate();
+    let hours = now.getHours() - startDate.getHours();
+    let minutes = now.getMinutes() - startDate.getMinutes();
+    let seconds = now.getSeconds() - startDate.getSeconds();
 
+    // 处理借位逻辑
+    if (seconds < 0) {
+      seconds += 60;
+      minutes--;
+    }
+    if (minutes < 0) {
+      minutes += 60;
+      hours--;
+    }
+    if (hours < 0) {
+      hours += 24;
+      days--;
+    }
     if (days < 0) {
-      months--;
       const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
       days += lastMonth.getDate();
+      months--;
     }
     if (months < 0) {
-      years--;
       months += 12;
+      years--;
     }
 
-    // 计算时分秒
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
+    // 更新所有实例，避免移动端和电脑端 ID 冲突
+    const update = (attr, value) => {
+      const elements = document.querySelectorAll(`[data-timer-${attr}]`);
+      elements.forEach(el => {
+        el.innerText = value;
+      });
+    };
 
-    const yearsEl = document.getElementById('years');
-    const monthsEl = document.getElementById('months');
-    const daysEl = document.getElementById('days');
-    const hoursEl = document.getElementById('hours');
-    const minutesEl = document.getElementById('minutes');
-    const secondsEl = document.getElementById('seconds');
-
-    if (yearsEl) yearsEl.innerText = years.toString();
-    if (monthsEl) monthsEl.innerText = months.toString();
-    if (daysEl) daysEl.innerText = days.toString();
-    if (hoursEl) hoursEl.innerText = hours.toString();
-    if (minutesEl) minutesEl.innerText = minutes.toString();
-    if (secondsEl) secondsEl.innerText = seconds.toString().padStart(2, '0');
+    update('years', years);
+    update('months', months);
+    update('days', days);
+    update('hours', hours);
+    update('minutes', minutes);
+    update('seconds', seconds.toString().padStart(2, '0'));
   }
 
   // 立即运行并每秒更新
   updateRelationshipTimer();
-  setInterval(updateRelationshipTimer, 1000);
+  if (!window.relationshipTimerInterval) {
+    window.relationshipTimerInterval = setInterval(updateRelationshipTimer, 1000);
+  }
 
-  // 监听 Swup 页面切换，确保在 SPA 导航后重新启动计时器（如果是Swup驱动）
+  // 监听 Swup 页面切换
   document.addEventListener('swup:content:replace', updateRelationshipTimer);
 </script>

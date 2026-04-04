@@ -41,6 +41,33 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		});
 	}
 
+	// 我的网站
+	links.push({
+		name: "我的网站",
+		url: "#",
+		icon: "material-symbols:public",
+		children: [
+			{
+				name: "跑步步数",
+				url: "https://ze.tsh520.cn/",
+				external: true,
+				icon: "material-symbols:directions-run",
+			},
+			{
+				name: "临时邮箱",
+				url: "https://email.0824.uk/",
+				external: true,
+				icon: "material-symbols:mail",
+			},
+			{
+				name: "评论管理",
+				url: "https://co.tsh520.cn/",
+				external: true,
+				icon: "material-symbols:comment",
+			},
+		],
+	});
+
 	// 关于及其子菜单
 	links.push({
 		name: "关于",
