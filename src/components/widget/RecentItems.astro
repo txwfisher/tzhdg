@@ -2,6 +2,7 @@
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import { getCollection } from "astro:content";
 import { getPostUrlBySlug, url } from "@/utils/url-utils";
+import { processCoverImageSync } from "@/utils/image-utils";
 import { i18n } from "@/i18n/translation";
 import I18nKey from "@/i18n/i18nKey";
 import { Icon } from "astro-icon/components";
@@ -19,7 +20,7 @@ const allItems = [
 		title: p.data.title,
 		date: p.data.published,
 		url: getPostUrlBySlug(p.id),
-		image: p.data.image,
+		image: processCoverImageSync(p.data.image || "api", p.id),
 		id: p.id,
 	})),
 	...moments.map((m) => {

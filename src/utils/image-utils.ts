@@ -28,7 +28,7 @@ function appendSeedParam(apiUrl: string, hash: number): string {
 
 /**
  * 处理文章封面图
- * 当image字段为"api"时，返回第一个API的URL（客户端会按顺序尝试所有API）
+ * 当image字段为"api"时，基于文章信息生成独特的随机索引
  * @param image - 文章frontmatter中的image字段值
  * @param seed - 用于生成唯一URL的种子（文章id或slug）
  */
@@ -52,9 +52,11 @@ export function processCoverImageSync(
 		return "";
 	}
 
-	// 始终使用第一个API，失败时由客户端按顺序尝试后续API
+	// 基于文章ID生成固定的哈希值
+	// 确保同一篇文章在不同地方显示相同的封面图片
 	const hash = getSeedHash(seed);
-	return appendSeedParam(randomCoverImage.apis[0], hash);
+	const apiIndex = hash % randomCoverImage.apis.length;
+	return appendSeedParam(randomCoverImage.apis[apiIndex], hash);
 }
 
 /**
@@ -71,6 +73,7 @@ export function getApiUrlList(
 		return [];
 	}
 
+	// 基于文章ID生成固定的哈希值
 	const hash = getSeedHash(seed);
 	return randomCoverImage.apis.map((api) => appendSeedParam(api, hash));
 }

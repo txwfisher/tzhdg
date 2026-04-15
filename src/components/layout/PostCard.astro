@@ -41,9 +41,9 @@ const {
 } = Astro.props;
 const className = Astro.props.class;
 
-// 处理随机图：如果image为"api"，则从配置的API获取随机图
-const processedImage = processCoverImageSync(image, entry.id);
-const apiUrls = getApiUrlList(image, entry.id);
+// 处理随机图：如果image为"api"或未设置，则从配置的API获取随机图
+const processedImage = processCoverImageSync(image || "api", entry.id);
+const apiUrls = getApiUrlList(image || "api", entry.id);
 const hasCover =
 	processedImage !== undefined &&
 	processedImage !== null &&

@@ -269,13 +269,14 @@ const showLoading = coverImageConfig.randomCoverImage.showLoading ?? true;
 			const img = container.querySelector('img[data-cover-img]') as HTMLImageElement | null;
 			if (!img) return;
 
-			// 解析API URL列表，用于按顺序重试
+			// 解析API URL列表，用于错误时重试
 			let apiUrls: string[] = [];
-			let currentApiIndex = 1; // 0号已由服务端设为img.src
 			const apiUrlsAttr = container.getAttribute('data-api-urls');
 			if (apiUrlsAttr) {
 				try { apiUrls = JSON.parse(apiUrlsAttr); } catch (_e) { /* ignore */ }
 			}
+
+			let currentApiIndex = 1; // 0号已由服务端设为img.src
 
 			const hideLoading = () => {
 				container.setAttribute('data-loading', 'false');
