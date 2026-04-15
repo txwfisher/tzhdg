@@ -260,6 +260,20 @@ const showLoading = coverImageConfig.randomCoverImage.showLoading ?? true;
 </style>
 
 <script>
+	// 生成页面级别的随机种子，确保同一页面加载中相同文章使用相同图片
+	const pageSeed = Math.floor(Math.random() * 1000000);
+
+	// 基于种子生成哈希值的函数
+	function getSeedHash(seed) {
+		return seed
+			? Math.abs(
+					seed.split('').reduce((acc, char) => {
+						return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
+					}, 0),
+			)
+			: 0;
+	}
+
 	function initCoverImages() {
 		const containers = document.querySelectorAll('.cover-image-container');
 		containers.forEach((container) => {
@@ -269,14 +283,18 @@ const showLoading = coverImageConfig.randomCoverImage.showLoading ?? true;
 			const img = container.querySelector('img[data-cover-img]') as HTMLImageElement | null;
 			if (!img) return;
 
-			// 解析API URL列表，用于错误时重试
+			// 解析API URL列表
 			let apiUrls: string[] = [];
 			const apiUrlsAttr = container.getAttribute('data-api-urls');
 			if (apiUrlsAttr) {
 				try { apiUrls = JSON.parse(apiUrlsAttr); } catch (_e) { /* ignore */ }
 			}
 
-			let currentApiIndex = 1; // 0号已由服务端设为img.src
+			// 生成基于页面种子和容器的唯一标识符
+			const containerId = container.getAttribute('id') || container.dataset.index || Math.random().toString(36).substr(2, 9);
+			const uniqueSeed = `${pageSeed}-${containerId}`;
+			const hash = getSeedHash(uniqueSeed);
+			let currentApiIndex = hash % apiUrls.length;
 
 			const hideLoading = () => {
 				container.setAttribute('data-loading', 'false');
@@ -287,10 +305,8 @@ const showLoading = coverImageConfig.randomCoverImage.showLoading ?? true;
 				container.setAttribute('data-error', 'true');
 			};
 
-			// 统一的错误处理：尝试下一个API或显示回退
-			const onError = () => {
-				if (img.dataset.remote !== 'true') return;
-
+			// 尝试加载随机选择的API
+			const tryNextApi = () => {
 				if (currentApiIndex < apiUrls.length) {
 					// 先绑定好事件，再更换src
 					img.addEventListener('load', hideLoading, { once: true });
@@ -302,7 +318,16 @@ const showLoading = coverImageConfig.randomCoverImage.showLoading ?? true;
 				}
 			};
 
-			if (img.complete) {
+			// 统一的错误处理：尝试下一个API或显示回退
+			const onError = () => {
+				if (img.dataset.remote !== 'true') return;
+				tryNextApi();
+			};
+
+			// 初始加载：使用随机选择的API
+			if (apiUrls.length > 0) {
+				tryNextApi();
+			} else if (img.complete) {
 				if (img.naturalWidth > 0) {
 					hideLoading();
 				} else {

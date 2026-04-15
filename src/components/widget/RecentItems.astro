@@ -84,10 +84,10 @@ const style = Astro.props.style;
       <a href={item.url} class="flex gap-3 group items-center transition-all">
         <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
           <img 
-            src={item.image || defaultImage} 
+            src={item.image || (item.type === 'moment' ? 'https://re.tsh520.cn/zl/tx.webp' : defaultImage)} 
             alt={item.title} 
             class="w-full h-full object-cover"
-            onerror={`this.onerror=null;this.src='${defaultImage}';`}
+            onerror={`this.onerror=null;this.src='${item.type === 'moment' ? 'https://re.tsh520.cn/zl/tx.webp' : defaultImage}';`}
             loading="lazy"
           />
         </div>
