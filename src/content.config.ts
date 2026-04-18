@@ -81,9 +81,9 @@ const lifeCollection = defineCollection({
 		value: z.string().optional().default(""),
 		title: z.string().optional().default(""),
 		description: z.string().optional().default(""),
-		date: z.string().optional().default(""),
-		createdAt: z.string().optional().default(""),
-		completedAt: z.string().optional().default(""),
+		date: z.coerce.date().optional(),
+		createdAt: z.coerce.date().optional(),
+		completedAt: z.coerce.date().optional(),
 		content: z.string().optional().default(""),
 		status: z.enum(["done", "todo"]).optional(),
 
@@ -102,15 +102,15 @@ const lifeCollection = defineCollection({
 		cover: z.string().optional().default(""),
 		summary: z.string().optional().default(""),
 		entries: z.number().optional().default(0),
-		updatedAt: z.string().optional().default(""),
+		updatedAt: z.union([z.string(), z.date()]).optional(),
 		tags: z.array(z.string()).optional().default([]),
 
-		// Plan
-		planName: z.string().optional().default(""),
+	// Plan
+	planName: z.string().optional().default(""),
 		targetDesc: z.string().optional().default(""),
 		dailyTarget: z.number().optional().default(1),
 		monthlyTarget: z.number().optional().default(20),
-		checkins: z.array(z.string()).optional().default([]),
+		checkins: z.array(z.coerce.date()).optional().default([]),
 
 		// Place
 		province: z.string().optional().default(""),
@@ -134,7 +134,7 @@ const lifeCollection = defineCollection({
 const lifeWorkoutCollection = defineCollection({
 	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/health/workout" }),
 	schema: z.object({
-		date: z.string(),
+		date: z.date(),
 		workoutType: z.string().optional().default(""),
 		runKm: z.number().optional().default(0),
 		workoutMinutes: z.number().optional(),
@@ -145,7 +145,7 @@ const lifeWorkoutCollection = defineCollection({
 const lifeSleepCollection = defineCollection({
 	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/health/sleep" }),
 	schema: z.object({
-		date: z.string(),
+		date: z.date(),
 		sleepHours: z.number().optional(),
 		sleepQuality: z.number().min(1).max(5).optional().default(3),
 	}),
@@ -154,39 +154,40 @@ const lifeSleepCollection = defineCollection({
 const lifeFoodCollection = defineCollection({
 	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/health/food" }),
 	schema: z.object({
-		date: z.string(),
+		date: z.date(),
 		allowedFoods: z.array(z.string()).optional().default([]),
 		avoidFoods: z.array(z.string()).optional().default([]),
 	}),
 });
 
 const notebooksCollection = defineCollection({
-	loader: glob({ pattern: "**/_index.md", base: "./src/content/life/notebooks" }),
+	loader: glob({ pattern: "**/*.{md,json}", base: "./src/content/life/notebooks" }),
 	schema: z.object({
-		name: z.string(),
+		name: z.string().optional().default("未命名日记本"),
 		cover: z.string().optional().default(""),
 		summary: z.string().optional().default(""),
+		date: z.coerce.date().optional(),
 	}),
 });
 
-const notebookGrowthCollection = defineCollection({
-	loader: glob({ pattern: "*.md", base: "./src/content/life/notebooks/growth", exclude: ["**/_index.md"] }),
+const checkinCollection = defineCollection({
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/checkin" }),
 	schema: z.object({
-		date: z.string().optional().default(""),
+		name: z.string(),
+		description: z.string().optional().default(""),
+		count: z.number().optional().default(0),
 	}),
 });
 
-const notebookStudyCollection = defineCollection({
-	loader: glob({ pattern: "*.md", base: "./src/content/life/notebooks/study", exclude: ["**/_index.md"] }),
+const routinesCollection = defineCollection({
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/routines" }),
 	schema: z.object({
-		date: z.string().optional().default(""),
-	}),
-});
-
-const notebookIdeasCollection = defineCollection({
-	loader: glob({ pattern: "*.md", base: "./src/content/life/notebooks/ideas", exclude: ["**/_index.md"] }),
-	schema: z.object({
-		date: z.string().optional().default(""),
+		name: z.string(),
+		time: z.string().optional().default(""),
+		description: z.string().optional().default(""),
+		icon: z.string().optional().default("📌"),
+		color: z.string().optional().default(""),
+		updatedAt: z.union([z.string(), z.date()]).optional(),
 	}),
 });
 
@@ -200,7 +201,6 @@ export const collections = {
 	lifeSleep: lifeSleepCollection,
 	lifeFood: lifeFoodCollection,
 	notebooks: notebooksCollection,
-	notebookGrowth: notebookGrowthCollection,
-	notebookStudy: notebookStudyCollection,
-	notebookIdeas: notebookIdeasCollection,
+	checkin: checkinCollection,
+	routines: routinesCollection,
 };

@@ -10,32 +10,34 @@ const now = new Date();
 const currentYear = now.getFullYear();
 const currentMonth = now.getMonth();
 
-const isSameMonth = (dateText?: string) => {
-	if (!dateText) return false;
-	const d = new Date(dateText);
-	if (Number.isNaN(d.getTime())) return false;
-	return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+const isSameMonth = (date?: Date) => {
+	if (!date) return false;
+	return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
 };
 
-const isSameYear = (dateText?: string) => {
-	if (!dateText) return false;
-	const d = new Date(dateText);
-	if (Number.isNaN(d.getTime())) return false;
-	return d.getFullYear() === currentYear;
+const isSameYear = (date?: Date) => {
+	if (!date) return false;
+	return date.getFullYear() === currentYear;
 };
 
 const sum = (arr: number[]) => arr.reduce((acc, num) => acc + num, 0);
 const avg = (arr: number[]) => (arr.length > 0 ? sum(arr) / arr.length : 0);
 
-const sortedWorkouts = [...workoutEntries].sort((a, b) =>
-	(b.data.date || "").localeCompare(a.data.date || ""),
-);
-const sortedSleep = [...sleepEntries].sort((a, b) =>
-	(b.data.date || "").localeCompare(a.data.date || ""),
-);
-const sortedFood = [...foodEntries].sort((a, b) =>
-	(b.data.date || "").localeCompare(a.data.date || ""),
-);
+const sortedWorkouts = [...workoutEntries].sort((a, b) => {
+	const aTime = a.data.date instanceof Date ? a.data.date.getTime() : 0;
+	const bTime = b.data.date instanceof Date ? b.data.date.getTime() : 0;
+	return bTime - aTime;
+});
+const sortedSleep = [...sleepEntries].sort((a, b) => {
+	const aTime = a.data.date instanceof Date ? a.data.date.getTime() : 0;
+	const bTime = b.data.date instanceof Date ? b.data.date.getTime() : 0;
+	return bTime - aTime;
+});
+const sortedFood = [...foodEntries].sort((a, b) => {
+	const aTime = a.data.date instanceof Date ? a.data.date.getTime() : 0;
+	const bTime = b.data.date instanceof Date ? b.data.date.getTime() : 0;
+	return bTime - aTime;
+});
 
 const monthWorkout = sortedWorkouts.filter((item) => isSameMonth(item.data.date));
 const yearWorkout = sortedWorkouts.filter((item) => isSameYear(item.data.date));
@@ -107,7 +109,7 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 					sortedWorkouts.map((record) => (
 						<article class="life-data-item rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
 							<div class="mb-2 flex items-center justify-between">
-								<span class="font-semibold">{record.data.date}</span>
+								<span class="font-semibold">{record.data.date instanceof Date ? record.data.date.toISOString().split("T")[0] : "未填写日期"}</span>
 								<span class="text-sm text-[var(--content-meta)]">{record.data.workoutType || "未填写"}</span>
 							</div>
 							<div class="flex flex-wrap gap-4 text-sm text-[var(--content-meta)]">
@@ -152,7 +154,7 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 					sortedSleep.map((record) => (
 						<article class="life-data-item rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
 							<div class="flex items-center justify-between">
-								<span class="font-semibold">{record.data.date}</span>
+								<span class="font-semibold">{record.data.date instanceof Date ? record.data.date.toISOString().split("T")[0] : "未填写日期"}</span>
 								<span class="text-sm text-[var(--content-meta)]">质量 {record.data.sleepQuality || 3}/5</span>
 							</div>
 							<div class="mt-1 text-sm text-[var(--content-meta)]">睡眠 {record.data.sleepHours || 0} 小时</div>
@@ -185,7 +187,7 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 					sortedFood.map((record) => (
 						<article class="life-data-item rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
 							<div class="mb-2 flex items-center justify-between">
-								<span class="font-semibold">{record.data.date}</span>
+								<span class="font-semibold">{record.data.date instanceof Date ? record.data.date.toISOString().split("T")[0] : "未填写日期"}</span>
 							</div>
 							<div class="space-y-1 text-sm">
 								{(record.data.allowedFoods || []).length > 0 && (

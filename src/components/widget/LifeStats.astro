@@ -16,6 +16,8 @@ const workoutEntries = await getCollection("lifeWorkout");
 const sleepEntries = await getCollection("lifeSleep");
 const foodEntries = await getCollection("lifeFood");
 const notebookEntries = await getCollection("notebooks");
+const checkinEntries = await getCollection("checkin");
+const routinesEntries = await getCollection("routines");
 
 // 辅助函数
 const isIn = (entryId: string, folder: string) =>
@@ -26,10 +28,9 @@ const ideas = lifeEntries.filter((entry) => isIn(entry.id, "ideas")).map((e) => 
 const ideasDone = ideas.filter((item) => item.status === "done").length;
 const ideasTotal = ideas.length;
 
-// 统计计划
-const plans = lifeEntries.filter((entry) => isIn(entry.id, "plans")).map((e) => e.data);
-const totalCheckins = plans.reduce((acc, plan) => acc + (plan.checkins?.length || 0), 0);
-const totalPlans = plans.length;
+// 统计打卡
+const checkinCount = checkinEntries.length;
+const totalCheckinCount = checkinEntries.reduce((acc, item) => acc + (item.data.count || 0), 0);
 
 // 统计运动
 const workouts = workoutEntries.map((e) => e.data);
@@ -56,41 +57,20 @@ const places = lifeEntries.filter((entry) => isIn(entry.id, "places")).map((e) =
 const placesCount = places.length;
 const visitedCities = new Set(places.map((p) => p.city).filter(Boolean)).size;
 
-// 计算连续打卡天数
-const calculateStreak = () => {
-	const allCheckins = new Set<string>();
-	plans.forEach((plan) => {
-		(plan.checkins || []).forEach((date) => allCheckins.add(date));
-	});
-	const sortedDates = [...allCheckins].sort().reverse();
-	let streak = 0;
-	const today = new Date().toISOString().split("T")[0];
-	let currentDate = new Date(today);
-
-	for (const dateStr of sortedDates) {
-		const checkDate = new Date(dateStr);
-		const diffDays = Math.floor((currentDate.getTime() - checkDate.getTime()) / (1000 * 60 * 60 * 24));
-		if (diffDays <= 1) {
-			streak++;
-			currentDate = checkDate;
-		} else {
-			break;
-		}
-	}
-	return streak;
-};
-const currentStreak = calculateStreak();
-
-// 统计笔记本
-const notebooksCount = notebookEntries.length;
-
-// 统计今年打卡
-const now = new Date();
-const currentYear = now.getFullYear();
-const thisYearCheckins = plans.reduce(
-	(acc, plan) => acc + (plan.checkins || []).filter((date) => date.startsWith(String(currentYear))).length,
-	0,
+// 统计笔记本（排除 _index 文件）
+const notebookFolders = new Set(
+	notebookEntries
+		.map((e) => {
+			const id = e.id.replace(/\\/g, "/");
+			const match = id.match(/^([^/]+)\//);
+			return match ? match[1] : null;
+		})
+		.filter(Boolean)
 );
+const notebooksCount = notebookFolders.size;
+
+// 统计日常规划
+const routinesCount = routinesEntries.length;
 
 // 格式化数字
 function formatNumber(num: number): string {
@@ -130,20 +110,19 @@ const stats = [
 		value: notebooksCount,
 	},
 	{
-		icon: "material-symbols:local-fire-department",
-		label: "连续打卡",
-		value: currentStreak,
-		suffix: "天",
+		icon: "material-symbols:check-circle-outline",
+		label: "打卡项目",
+		value: checkinCount,
 	},
 	{
 		icon: "material-symbols:event-available-outline",
-		label: "今年打卡",
-		value: thisYearCheckins,
+		label: "打卡总数",
+		value: formatNumber(totalCheckinCount),
 	},
 	{
-		icon: "material-symbols:event-note-outline",
-		label: "总打卡数",
-		value: formatNumber(totalCheckins),
+		icon: "material-symbols:schedule-outline",
+		label: "日常规划",
+		value: routinesCount,
 	},
 ];
 ---

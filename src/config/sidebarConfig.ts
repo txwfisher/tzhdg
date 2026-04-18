@@ -134,6 +134,16 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			// 组件类型：网站更新热力图
 			type: "siteHeatmap",
 			// 是否启用该组件
+			enable: false,
+			// 组件位置
+			position: "top",
+			// 是否在文章详情页显示
+			showOnPostPage: true,
+		},
+		{
+			// 组件类型：今日一言
+			type: "quoteOfTheDay",
+			// 是否启用该组件
 			enable: true,
 			// 组件位置
 			position: "top",

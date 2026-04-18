@@ -177,6 +177,19 @@ export const siteConfig: SiteConfig = {
 		quality: 85,
 	},
 
+	// 地图配置
+	mapConfig: {
+		// 高德地图 Web端 JS API Key
+		// 申请地址: https://console.amap.com/dev/key/app
+		amapKey: "e569398fc0c6a32b8d24763e57d2dc87",
+		// 地图初始中心点 [经度, 纬度]
+		center: [104.195, 35.861],
+		// 初始缩放级别
+		zoom: 4,
+		// 是否显示地图标记点
+		showMarkers: true,
+	},
+
 	// 字体配置
 	// 在src/config/fontConfig.ts中配置具体字体
 	font: fontConfig,

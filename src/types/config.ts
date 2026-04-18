@@ -122,6 +122,41 @@ export type SiteConfig = {
 		 */
 		quality?: number;
 	};
+
+	// 地图配置（支持 Leaflet 或高德地图）
+	mapConfig?: {
+		/**
+		 * 高德地图 Web端 JS API Key（可选）
+		 * 申请地址: https://console.amap.com/dev/key/app
+		 * 如果未设置，将使用 Leaflet + OpenStreetMap（完全免费）
+		 */
+		amapKey?: string;
+		/**
+		 * 地图初始中心点 [经度, 纬度]
+		 * 默认: [104.195, 35.861] (中国地理中心)
+		 */
+		center?: [number, number];
+		/**
+		 * 初始缩放级别
+		 * 默认: 4
+		 */
+		zoom?: number;
+		/**
+		 * 最小缩放级别
+		 * 默认: 3
+		 */
+		minZoom?: number;
+		/**
+		 * 最大缩放级别
+		 * 默认: 18
+		 */
+		maxZoom?: number;
+		/**
+		 * 是否显示地图标记点
+		 * 默认: true
+		 */
+		showMarkers?: boolean;
+	};
 };
 
 export type Favicon = {
@@ -348,7 +383,8 @@ export type WidgetComponentType =
 	| "relationship"
 	| "recentItems"
 	| "lifeStats"
-	| "siteHeatmap";
+	| "siteHeatmap"
+	| "quoteOfTheDay";
 
 // 恋爱计时小组件配置
 export type RelationshipConfig = {

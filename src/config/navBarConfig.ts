@@ -49,11 +49,6 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		icon: "material-symbols:favorite",
 		children: [
 			{
-				name: "总览",
-				url: "/life/",
-				icon: "material-symbols:home-outline",
-			},
-			{
 				name: "健康",
 				url: "/life/health/",
 				icon: "material-symbols:favorite-outline",
@@ -64,14 +59,19 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 				icon: "material-symbols:lightbulb-outline",
 			},
 			{
+				name: "打卡",
+				url: "/life/checkin/",
+				icon: "material-symbols:check-circle-outline",
+			},
+			{
+				name: "规划",
+				url: "/life/routines/",
+				icon: "material-symbols:schedule-outline",
+			},
+			{
 				name: "地点",
 				url: "/life/places/",
 				icon: "material-symbols:location-on-outline",
-			},
-			{
-				name: "计划",
-				url: "/life/plans/",
-				icon: "material-symbols:check-circle-outline",
 			},
 			{
 				name: "笔记本",
@@ -119,7 +119,7 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	// 关于及其子菜单
 	links.push({
 		name: "关于",
-		url: "/content/",
+		url: "/about/",
 		icon: "material-symbols:info",
 		children: [
 			// 关于页面

@@ -11,15 +11,23 @@ const now = new Date();
 const currentYear = now.getFullYear();
 const currentMonth = now.getMonth();
 
-const isSameMonth = (dateText?: string) => {
+const formatDate = (dateText?: string | Date) => {
+	if (!dateText) return "未填写";
+	const d = dateText instanceof Date ? dateText : new Date(dateText);
+	if (Number.isNaN(d.getTime())) return "未填写";
+	return d.toISOString().split("T")[0];
+};
+
+const isSameMonth = (dateText?: string | Date) => {
 	if (!dateText) return false;
-	const d = new Date(dateText);
+	const d = dateText instanceof Date ? dateText : new Date(dateText);
 	if (Number.isNaN(d.getTime())) return false;
 	return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
 };
 
 const ideas = lifeEntries
 	.filter((entry) => isIn(entry.id, "ideas"))
+	.filter((entry) => !entry.id.toLowerCase().includes("readme"))
 	.map((entry) => entry.data);
 
 const ideasDone = ideas
@@ -77,8 +85,8 @@ const todoCount = ideasTodo.length;
 						<article class="life-data-item rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
 							<div class="font-medium leading-relaxed">{item.content}</div>
 							<div class="mt-2 flex flex-wrap gap-3 text-xs text-[var(--content-meta)]">
-								<span>记录：{item.createdAt || "未填写"}</span>
-								<span>完成：{item.completedAt || "-"}</span>
+								<span>记录：{formatDate(item.createdAt)}</span>
+								<span>完成：{formatDate(item.completedAt)}</span>
 								{item.label && <span>标签：{item.label}</span>}
 							</div>
 						</article>
@@ -102,7 +110,7 @@ const todoCount = ideasTodo.length;
 						<article class="life-data-item rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
 							<div class="font-medium leading-relaxed">{item.content}</div>
 							<div class="mt-2 flex flex-wrap gap-3 text-xs text-[var(--content-meta)]">
-								<span>记录：{item.createdAt || "未填写"}</span>
+								<span>记录：{formatDate(item.createdAt)}</span>
 								<span>状态：待完成</span>
 								{item.label && <span>标签：{item.label}</span>}
 							</div>

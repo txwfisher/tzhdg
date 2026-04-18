@@ -1,11 +1,13 @@
----
+const fs = require('fs');
+
+const content = `---
 import MainGridLayout from '@/layouts/MainGridLayout.astro';
 import { getCollection } from 'astro:content';
 
 const lifeEntries = await getCollection('life');
 
 const isIn = (entryId: string, folder: string) =>
-	entryId.replace(/\\\\/g, '/').startsWith(`${folder}/`);
+	entryId.replace(/\\\\\\\\/g, '/').startsWith(\`\${folder}/\`);
 
 const now = new Date();
 const currentYear = now.getFullYear();
@@ -21,7 +23,6 @@ const sum = (arr: number[]) => arr.reduce((acc, num) => acc + num, 0);
 
 const visitedPlaces = lifeEntries
 	.filter((entry) => isIn(entry.id, 'places'))
-	.filter((entry) => !entry.id.toLowerCase().includes("readme"))
 	.map((entry) => entry.data);
 
 const sortedPlaces = [...visitedPlaces].sort((a, b) => {
@@ -86,19 +87,19 @@ const clientSortedPlaces = sortedPlaces.map(p => ({
 		<section class='life-section card-base rounded-[var(--radius-large)] p-6'>
 			<h2 class='mb-4 text-xl font-bold text-[var(--text-color)]'>足迹地图</h2>
 			<div id='life-map' class='h-[600px] w-full rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] overflow-hidden'></div>
-			<p class='mt-2 text-xs text-[var(--content-meta)] text-center'>地图由 Apache ECharts 提供</p>
+			<p class='mt-2 text-xs text-[var(--content-meta)] text-center'>地图由 Apache ECharts 提供 · 去过的地方会覆盖为红色</p>
 		</section>
 		<section class='life-section card-base rounded-[var(--radius-large)] p-6'>
 			<h2 class='mb-4 text-xl font-bold text-[var(--text-color)]'>地点列表</h2>
 			<div class='grid gap-3 md:grid-cols-2'>
 				{sortedPlaces.length === 0 ? (
-					<div class='col-span-2 rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--content-meta)]'>暂无地点记录，在 `life/places/` 下新建 md 即可添加。</div>
+					<div class='col-span-2 rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--content-meta)]'>暂无地点记录，在 \`life/places/\` 下新建 md 即可添加。</div>
 				) : (
 					sortedPlaces.map((place) => (
 						<article class='life-data-item rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-4'>
 							<div class='flex items-start justify-between'>
 								<div>
-									<h3 class='font-semibold'>{place.province || '未知省份'}{place.city ? ` - ${place.city}` : ''}</h3>
+									<h3 class='font-semibold'>{place.province || '未知省份'}{place.city ? \` - \${place.city}\` : ''}</h3>
 									<p class='mt-1 text-sm text-[var(--content-meta)]'>{place.experience || '暂无体验记录'}</p>
 								</div>
 								<div class='text-right text-sm text-[var(--content-meta)]'>
@@ -116,17 +117,18 @@ const clientSortedPlaces = sortedPlaces.map(p => ({
 <script is:inline define:vars={{ clientSortedPlaces }}>
 (function() {
 	var container = document.getElementById('life-map');
-	if (!container) {
-		console.error('地图容器未找到');
-		return;
+	if (!container) return;
+
+	var placesWithCity = clientSortedPlaces.filter(function(p) { return p.city; });
+
+	function normalizeCityName(name) {
+		if (!name) return '';
+		return name.replace(/市$/, '');
 	}
 
 	function loadECharts() {
 		return new Promise(function(resolve, reject) {
-			if (window.echarts) {
-				resolve(window.echarts);
-				return;
-			}
+			if (window.echarts) { resolve(window.echarts); return; }
 			var script = document.createElement('script');
 			script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js';
 			script.onload = function() { resolve(window.echarts); };
@@ -143,149 +145,150 @@ const clientSortedPlaces = sortedPlaces.map(p => ({
 			});
 	}
 
-	function initMap() {
-		// 再次检查容器是否存在
-		var containerCheck = document.getElementById('life-map');
-		if (!containerCheck) return;
+	function getProvinceAdcode(provinceName) {
+		var adcodes = {
+			'北京': 110000, '天津': 120000, '上海': 310000, '重庆': 500000,
+			'河北': 130000, '山西': 140000, '辽宁': 210000, '吉林': 220000,
+			'黑龙江': 230000, '江苏': 320000, '浙江': 330000, '安徽': 340000,
+			'福建': 350000, '江西': 360000, '山东': 370000, '河南': 410000,
+			'湖北': 420000, '湖南': 430000, '广东': 440000, '广西': 450000,
+			'海南': 460000, '四川': 510000, '贵州': 520000, '云南': 530000,
+			'西藏': 540000, '陕西': 610000, '甘肃': 620000, '青海': 630000,
+			'宁夏': 640000, '新疆': 650000, '台湾': 710000,
+			'内蒙古': 150000, '内蒙古自治区': 150000, '香港': 810000, '澳门': 820000
+		};
+		var normalized = provinceName.replace(/省|自治区|特别行政区/g, '');
+		return adcodes[normalized] || adcodes[provinceName];
+	}
 
+	function loadProvinceCities(provinceAdcode) {
+		return fetch('https://geo.datav.aliyun.com/areas_v3/bound/' + provinceAdcode + '_full.json')
+			.then(function(res) { return res.json(); })
+			.catch(function(err) { return null; });
+	}
+
+	function findCityInFeatures(features, cityName) {
+		var normalizedCity = normalizeCityName(cityName);
+		for (var i = 0; i < features.length; i++) {
+			var feature = features[i];
+			var name = feature.properties && feature.properties.name;
+			if (!name) continue;
+			var normalizedName = normalizeCityName(name);
+			if (normalizedName === normalizedCity || name === cityName || name.includes(cityName) || cityName.includes(normalizedName)) {
+				return { feature: feature, name: name };
+			}
+		}
+		return null;
+	}
+
+	function initMap() {
 		Promise.all([loadECharts(), loadChinaMap()]).then(function(results) {
 			var echartsLib = results[0];
 			var chinaMapData = results[1];
 
-			// 再次检查容器
-			var currentContainer = document.getElementById('life-map');
-			if (!currentContainer || !chinaMapData) {
-				if (currentContainer) {
-					currentContainer.innerHTML = '<div class="h-full flex items-center justify-center text-[var(--content-meta)]">地图数据加载失败</div>';
-				}
+			if (!chinaMapData) {
+				container.innerHTML = '<div class=h-full flex items-center justify-center text-[var(--content-meta)]>地图数据加载失败</div>';
 				return;
 			}
 
 			echartsLib.registerMap('china', chinaMapData);
-			var chart = echartsLib.init(currentContainer);
+			var chart = echartsLib.init(container);
 
-			// 统计各省份到访次数
-			var provinceVisitCount = {};
+			var allCityFeatures = [];
+			var cityPlaceMap = {};
 			var maxVisits = 1;
+			var processedProvinces = {};
 
-			clientSortedPlaces.forEach(function(place) {
-				var province = place.province;
-				var count = place.visitCount || 1;
-
-				if (province) {
-					provinceVisitCount[province] = (provinceVisitCount[province] || 0) + count;
-					if (provinceVisitCount[province] > maxVisits) {
-						maxVisits = provinceVisitCount[province];
+			var promises = placesWithCity.map(function(place) {
+				var adcode = getProvinceAdcode(place.province);
+				if (!adcode || processedProvinces[adcode]) return Promise.resolve();
+				processedProvinces[adcode] = true;
+				return loadProvinceCities(adcode).then(function(cityData) {
+					if (!cityData || !cityData.features) return;
+					var matched = findCityInFeatures(cityData.features, place.city);
+					if (matched) {
+						var cityName = matched.name;
+						allCityFeatures.push(matched.feature);
+						if (!cityPlaceMap[cityName]) cityPlaceMap[cityName] = [];
+						cityPlaceMap[cityName].push(place);
+						var total = cityPlaceMap[cityName].reduce(function(s, p) { return s + (p.visitCount || 1); }, 0);
+						if (total > maxVisits) maxVisits = total;
 					}
-				}
-			});
-
-			// 省份数据
-			var provinceData = (chinaMapData.features || []).map(function(f) {
-				var name = f.properties && f.properties.name;
-				var normalizedName = name.replace(/省|自治区|特别行政区/g, '');
-				var visits = provinceVisitCount[normalizedName] || provinceVisitCount[name] || 0;
-				var places = clientSortedPlaces.filter(function(p) {
-					var pName = (p.province || '').replace(/省|自治区|特别行政区/g, '');
-					return pName === normalizedName || pName === name;
 				});
-				return { name: name, value: visits, places: places };
 			});
 
-			var option = {
-				tooltip: {
-					trigger: 'item',
-					formatter: function(params) {
+			Promise.all(promises).then(function() {
+				if (allCityFeatures.length > 0) {
+					echartsLib.registerMap('cities', { type: 'FeatureCollection', features: allCityFeatures });
+				}
+
+				var baseData = (chinaMapData.features || []).map(function(f) {
+					return { name: f.properties && f.properties.name, value: 0, places: [] };
+				});
+
+				var cityDataList = Object.keys(cityPlaceMap).map(function(cityName) {
+					var places = cityPlaceMap[cityName];
+					var total = places.reduce(function(s, p) { return s + (p.visitCount || 1); }, 0);
+					return { name: cityName, value: total, places: places };
+				});
+
+				var option = {
+					tooltip: {trigger: 'item', formatter: function(params) {
 						if (params.value && params.value > 0) {
 							var places = params.data && params.data.places ? params.data.places : [];
 							var tip = '<strong>' + params.name + '</strong><br/>到访：' + params.value + '次';
 							if (places.length > 0) {
 								tip += "<br/><span style='font-size:11px;color:#888;'>";
-								for (var i = 0; i < Math.min(places.length, 5); i++) {
-									var city = places[i].city || '该地区';
-									tip += '<br/>• ' + city + '(' + (places[i].visitCount || 1) + '次)';
+								for (var n = 0; n < Math.min(places.length, 5); n++) {
+									var loc = (places[n].district || '') || (places[n].city || '') || '该地区';
+									tip += '<br/>• ' + loc + '(' + (places[n].visitCount || 1) + '次)';
 								}
 								if (places.length > 5) tip += '<br/>...等' + places.length + '处';
 								tip += '</span>';
 							}
 							return tip;
 						}
-						return '<strong>' + params.name + '</strong><br/><span style="color:#999;">未到访</span>';
-					}
-				},
-				visualMap: {
-					type: 'piecewise',
-					show: true,
-					left: 20,
-					bottom: 20,
-					pieces: [
+						return '<strong>' + params.name + '</strong><br/><span style=\\'color:#999;\\'>未到访</span>';
+					}},
+					visualMap: {type: 'piecewise', show: true, left: 20, bottom: 20, pieces: [
 						{gt: Math.ceil(maxVisits * 0.8), color: '#cc0000'},
 						{gt: Math.ceil(maxVisits * 0.5), lte: Math.ceil(maxVisits * 0.8), color: '#ff4444'},
 						{gt: 1, lte: Math.ceil(maxVisits * 0.5), color: '#ff8888'},
 						{value: 0, color: '#e8e8e8'}
-					],
-					textStyle: {color: 'var(--text-color)', fontSize: 12}
-				},
-				series: [{
-					name: '省份',
-					type: 'map',
-					map: 'china',
-					roam: true,
-					zoom: 1.2,
-					center: [105, 36],
-					itemStyle: {
-						areaColor: '#e8e8e8',
-						borderColor: '#ccc',
-						borderWidth: 1
-					},
-					emphasis: {
-						itemStyle: {
-							areaColor: '#d0d0d0'
-						},
-						label: {show: true}
-					},
-					select: {disabled: true},
-					data: provinceData
-				}]
-			};
+					], textStyle: {color: 'var(--text-color)', fontSize: 12}},
+					series: [
+						{name: '省份', type: 'map', map: 'china', roam: true, zoom: 1.2, center: [105, 36], silent: true, itemStyle: {areaColor: '#f0f0f0', borderColor: '#ccc', borderWidth: 1}, emphasis: {itemStyle: {areaColor: '#e0e0e0'}, label: {show: false}}, select: {disabled: true}, data: baseData},
+						{name: '城市', type: 'map', map: 'cities', roam: true, zoom: 1.2, center: [105, 36], silent: false, itemStyle: {areaColor: '#ff4444', borderColor: '#cc0000', borderWidth: 2}, emphasis: {itemStyle: {areaColor: '#ff6666', borderColor: '#ff0000', borderWidth: 3}, label: {show: true, color: '#fff', fontWeight: 'bold', fontSize: 14}}, select: {disabled: true}, data: cityDataList, z: 10}
+					]
+				};
 
-			chart.setOption(option);
+				chart.setOption(option);
 
-			// 点击事件
-			chart.on('click', function(params) {
-				if (params.value && params.value > 0) {
-					var places = params.data && params.data.places ? params.data.places : [];
-					if (places.length > 0) {
-						var list = places.map(function(p, idx) {
-							var city = p.city || '未知';
-							return (idx + 1) + '. ' + city + '-到访' + (p.visitCount || 1) + '次' + (p.experience ? '\n   ' + p.experience : '');
-						}).join('\n\n');
-						alert(params.name + '去过' + places.length + '处：\n\n' + list);
+				chart.on('click', function(params) {
+					if (params.value && params.value > 0) {
+						var places = params.data && params.data.places ? params.data.places : [];
+						if (places.length > 0) {
+							var list = places.map(function(p, idx) {
+								var loc = (p.district || '') || (p.city || '') || '未知';
+								return (idx + 1) + '. ' + loc + '-到访' + (p.visitCount || 1) + '次' + (p.experience ? '\\n   ' + p.experience : '');
+							}).join('\\n\\n');
+							alert(params.name + '去过' + places.length + '处：\\n\\n' + list);
+						}
 					}
-				}
-			});
+				});
 
-			window.addEventListener('resize', function() { chart.resize(); });
+				window.addEventListener('resize', function() { chart.resize(); });
+			});
 		}).catch(function(err) {
-			var failContainer = document.getElementById('life-map');
-			if (failContainer) {
-				failContainer.innerHTML = '<div class="h-full flex items-center justify-center text-[var(--content-meta)]">加载失败:' + (err.message || '') + '</div>';
-			}
+			container.innerHTML = '<div class=h-full flex items-center justify-center text-[var(--content-meta)]>加载失败:' + (err.message || '') + '</div>';
 		});
 	}
 
-	// 使用 requestAnimationFrame 确保 DOM 完全渲染
-	function whenReady(fn) {
-		if (document.readyState === 'complete') {
-			requestAnimationFrame(fn);
-		} else {
-			window.addEventListener('load', function() {
-				requestAnimationFrame(fn);
-			});
-		}
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initMap);
+	} else {
+		initMap();
 	}
-
-	whenReady(initMap);
 })();
 </script>
 <style>
@@ -297,3 +300,7 @@ const clientSortedPlaces = sortedPlaces.map(p => ({
 	:global(html.dark) .life-stat-card { background: linear-gradient(140deg, color-mix(in srgb, var(--primary) 12%, transparent) 0%, transparent 46%), color-mix(in srgb, var(--card-bg) 84%, #000); }
 	.life-page { --life-border: color-mix(in srgb, var(--line-divider) 86%, transparent); }
 </style>
+`;
+
+fs.writeFileSync('E:/GithubProgect/dumplingandcakeblog/src/pages/life/places.astro', content, 'utf8');
+console.log('Done');
