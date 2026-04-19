@@ -3,12 +3,78 @@
 /**
  * Obsidian 笔记同步脚本
  * 将 Obsidian 笔记同步到 Astro 博客项目的 content 文件夹
+ * 
+ * 支持增量同步策略：
+ * - skip: 跳过已存在的文件（默认）
+ * - incremental: 仅当源文件较新时更新
+ * - force: 强制覆盖所有文件
  */
 
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import config from './sync.config.js';
+
+// 命令行参数解析
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const result = {
+    strategy: config.syncStrategy || 'skip',
+    types: [],
+    help: false,
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--strategy' || arg === '-s') {
+      const strategy = args[++i];
+      if (['skip', 'incremental', 'force'].includes(strategy)) {
+        result.strategy = strategy;
+      } else {
+        console.warn(`⚠️  未知同步策略: ${strategy}，使用默认: skip`);
+      }
+    } else if (arg === '--type' || arg === '-t') {
+      result.types.push(args[++i]);
+    } else if (arg === '--all' || arg === '-a') {
+      result.types = ['文章', '动态', '记录', '生活'];
+    } else if (arg === '--force' || arg === '-f') {
+      result.strategy = 'force';
+    } else if (arg === '--help' || arg === '-h') {
+      result.help = true;
+    }
+  }
+
+  return result;
+}
+
+// 打印帮助信息
+function printHelp() {
+  console.log(`
+🚀 Obsidian 笔记同步工具 - 帮助信息
+
+用法: node sync.js [选项]
+
+选项:
+  -s, --strategy <策略>    同步策略: skip(默认) | incremental | force
+  -t, --type <类型>       指定同步类型: 文章 | 动态 | 记录 | 生活
+  -a, --all               同步全部类型
+  -f, --force             强制覆盖所有文件（等同于 --strategy force）
+  -h, --help              显示帮助信息
+
+同步策略说明:
+  skip         - 跳过已存在的文件（默认行为）
+  incremental  - 仅当源文件较新时更新目标文件
+  force        - 强制覆盖所有文件
+
+示例:
+  node sync.js                                    # 交互模式（默认 skip 策略）
+  node sync.js --strategy incremental             # 增量同步
+  node sync.js --type 文章                        # 仅同步文章
+  node sync.js --all --strategy force            # 强制同步全部
+  node sync.js -t 文章 -t 动态 -s incremental     # 增量同步文章和动态
+`);
+}
 
 // 工具函数：解析 frontmatter
 function parseFrontmatter(content) {
@@ -78,18 +144,39 @@ function generateFileName(frontmatter, originalName, mapping) {
   return originalName;
 }
 
-// 工具函数：复制文件
-function copyFile(src, dest, skipIfExists = true) {
+// 工具函数：复制文件（支持增量同步策略）
+function copyFile(src, dest, options = {}) {
+  const { strategy = 'skip' } = options;
+  
   return new Promise((resolve, reject) => {
-    if (skipIfExists && fs.existsSync(dest)) {
-      resolve({ skipped: true, reason: '文件已存在' });
-      return;
-    }
-
     // 确保目标目录存在
     const destDir = path.dirname(dest);
     if (!fs.existsSync(destDir)) {
       fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    if (fs.existsSync(dest)) {
+      const srcStat = fs.statSync(src);
+      const destStat = fs.statSync(dest);
+      
+      switch (strategy) {
+        case 'skip':
+          // 默认行为：跳过已存在的文件
+          resolve({ skipped: true, reason: '文件已存在' });
+          return;
+          
+        case 'incremental':
+          // 增量模式：仅当源文件较新时复制
+          if (srcStat.mtime.getTime() <= destStat.mtime.getTime()) {
+            resolve({ skipped: true, reason: '目标文件较新或相同' });
+            return;
+          }
+          break;
+          
+        case 'force':
+          // 强制模式：覆盖所有文件
+          break;
+      }
     }
 
     fs.copyFile(src, dest, (err) => {
@@ -108,8 +195,9 @@ function getFileModTime(filePath) {
   }
 }
 
-// 工具函数：递归复制文件夹
-async function copyDirectory(src, dest) {
+// 工具函数：递归复制文件夹（支持增量同步策略）
+async function copyDirectory(src, dest, options = {}) {
+  const { strategy = 'skip' } = options;
   let copiedCount = 0;
 
   // 确保目标目录存在
@@ -124,11 +212,9 @@ async function copyDirectory(src, dest) {
     const destPath = path.join(dest, entry.name);
 
     if (entry.isDirectory()) {
-      // 递归复制子目录
-      copiedCount += await copyDirectory(srcPath, destPath);
+      copiedCount += await copyDirectory(srcPath, destPath, options);
     } else {
-      // 复制文件
-      const result = await copyFile(srcPath, destPath, true);
+      const result = await copyFile(srcPath, destPath, { strategy });
       if (!result.skipped) {
         copiedCount++;
       }
@@ -139,7 +225,7 @@ async function copyDirectory(src, dest) {
 }
 
 // 同步指定类型
-async function syncType(mapping) {
+async function syncType(mapping, strategy = 'skip') {
   const obsidianFolder = path.join(config.obsidianVaultPath, mapping.obsidianFolder);
   const targetFolder = path.join(config.projectContentPath, mapping.targetFolder);
 
@@ -157,6 +243,7 @@ async function syncType(mapping) {
   let total = 0;
   let copied = 0;
   let skipped = 0;
+  let updated = 0;
 
   // 递归读取所有文件（支持所有文件类型）
   function readAllFiles(dir, fileList = []) {
@@ -184,10 +271,17 @@ async function syncType(mapping) {
     return fileList;
   }
 
+  const strategyLabel = {
+    'skip': '跳过已存在',
+    'incremental': '增量同步',
+    'force': '强制覆盖'
+  };
+
   console.log(`\n${'='.repeat(50)}`);
   console.log(`📁 正在同步: ${mapping.type}`);
   console.log(`   源目录: ${obsidianFolder}`);
   console.log(`   目标目录: ${targetFolder}`);
+  console.log(`   同步策略: ${strategyLabel[strategy] || strategy}`);
   console.log(`   开始时间: ${new Date().toLocaleTimeString()}`);
   console.log(`${'='.repeat(50)}\n`);
 
@@ -199,9 +293,9 @@ async function syncType(mapping) {
 
   // 统计信息
   const stats = {
-    md: { copied: 0, skipped: 0 },
-    assets: { copied: 0, skipped: 0 },
-    other: { copied: 0, skipped: 0 },
+    md: { copied: 0, updated: 0, skipped: 0 },
+    assets: { copied: 0, updated: 0, skipped: 0 },
+    other: { copied: 0, updated: 0, skipped: 0 },
   };
 
   for (const fileInfo of files) {
@@ -217,7 +311,7 @@ async function syncType(mapping) {
         const targetDir = path.join(targetFolder, relativeDir);
         const targetPath = path.join(targetDir, newFileName);
 
-        const result = await copyFile(fileInfo.path, targetPath, true);
+        const result = await copyFile(fileInfo.path, targetPath, { strategy });
 
         if (result.skipped) {
           stats.md.skipped++;
@@ -225,8 +319,9 @@ async function syncType(mapping) {
             console.log(`  ⏭️  [已存在] ${fileInfo.relativePath}`);
           }
         } else {
-          stats.md.copied++;
-          console.log(`  ✅ [笔记] ${fileInfo.relativePath} → ${path.relative(targetFolder, targetPath)}`);
+          const destExists = fs.existsSync(targetPath) && strategy === 'incremental';
+          stats.md[destExists ? 'updated' : 'copied']++;
+          console.log(`  ${destExists ? '🔄' : '✅'} [${destExists ? '更新' : '新增'}] ${fileInfo.relativePath} → ${path.relative(targetFolder, targetPath)}`);
         }
 
         // 检查并同步同级 assets 文件夹
@@ -244,7 +339,7 @@ async function syncType(mapping) {
             syncedAssets.add(assetsKey);
 
             // 递归复制整个 assets 文件夹
-            const copiedAssets = await copyDirectory(assetsDir, assetsTargetDir);
+            const copiedAssets = await copyDirectory(assetsDir, assetsTargetDir, { strategy });
 
             if (copiedAssets > 0) {
               stats.assets.copied += copiedAssets;
@@ -258,7 +353,7 @@ async function syncType(mapping) {
         const targetDir = path.join(targetFolder, relativeDir);
         const targetPath = path.join(targetDir, fileInfo.name);
 
-        const result = await copyFile(fileInfo.path, targetPath, true);
+        const result = await copyFile(fileInfo.path, targetPath, { strategy });
 
         if (result.skipped) {
           stats.other.skipped++;
@@ -266,8 +361,9 @@ async function syncType(mapping) {
             console.log(`  ⏭️  [已存在] ${fileInfo.relativePath}`);
           }
         } else {
-          stats.other.copied++;
-          console.log(`  ✅ [文件] ${fileInfo.relativePath} → ${path.relative(targetFolder, targetPath)}`);
+          const destExists = fs.existsSync(targetPath) && strategy === 'incremental';
+          stats.other[destExists ? 'updated' : 'copied']++;
+          console.log(`  ${destExists ? '🔄' : '✅'} [${destExists ? '更新' : '新增'}] ${fileInfo.relativePath} → ${path.relative(targetFolder, targetPath)}`);
         }
       }
     } catch (err) {
@@ -278,23 +374,35 @@ async function syncType(mapping) {
 
   // 统计总数
   const totalCopied = stats.md.copied + stats.assets.copied + stats.other.copied;
+  const totalUpdated = stats.md.updated + stats.assets.updated + stats.other.updated;
   const totalSkipped = stats.md.skipped + stats.assets.skipped + stats.other.skipped;
 
   console.log(`\n${'═'.repeat(50)}`);
   console.log(`📊 同步完成！`);
   console.log(`\n📈 详细统计:`);
-  console.log(`   📝 笔记文件: ${stats.md.copied} 个新增, ${stats.md.skipped} 个已存在`);
-  console.log(`   📦 资源文件: ${stats.assets.copied} 个新增, ${stats.assets.skipped} 个已存在`);
-  console.log(`   📄 其他文件: ${stats.other.copied} 个新增, ${stats.other.skipped} 个已存在`);
+  console.log(`   📝 笔记文件: ${stats.md.copied} 个新增, ${stats.md.updated} 个更新, ${stats.md.skipped} 个已存在`);
+  console.log(`   📦 资源文件: ${stats.assets.copied} 个新增, ${stats.assets.updated} 个更新, ${stats.assets.skipped} 个已存在`);
+  console.log(`   📄 其他文件: ${stats.other.copied} 个新增, ${stats.other.updated} 个更新, ${stats.other.skipped} 个已存在`);
   console.log(`   ${'─'.repeat(40)}`);
-  console.log(`   总计: ${totalCopied} 个新增, ${totalSkipped} 个已存在`);
+  console.log(`   总计: ${totalCopied} 个新增, ${totalUpdated} 个更新, ${totalSkipped} 个已存在`);
   console.log(`${'═'.repeat(50)}`);
 
-  return { total: totalCopied + totalSkipped, copied: totalCopied, skipped: totalSkipped };
+  return { total: totalCopied + totalUpdated + totalSkipped, copied: totalCopied, updated: totalUpdated, skipped: totalSkipped };
 }
 
 // 主函数
 async function main() {
+  // 解析命令行参数
+  const args = parseArgs();
+
+  // 显示帮助信息
+  if (args.help) {
+    printHelp();
+    process.exit(0);
+  }
+
+  const { strategy: defaultStrategy, types } = args;
+
   console.log('🚀 Obsidian 笔记同步工具\n');
   console.log('='.repeat(50));
 
@@ -310,77 +418,154 @@ async function main() {
     process.exit(1);
   }
 
+  // 如果指定了类型，直接执行同步（无交互模式）
+  if (types.length > 0) {
+    console.log(`📋 同步策略: ${defaultStrategy}`);
+    console.log(`\n🎯 指定类型: ${types.join(', ')}`);
+    console.log('\n' + '='.repeat(50));
+    console.log('🔄 开始同步...\n');
+
+    for (const type of types) {
+      const mapping = config.mappings.find(m => m.type === type);
+      if (mapping) {
+        await syncType(mapping, defaultStrategy);
+      } else {
+        console.log(`❌ 未找到配置: ${type}`);
+      }
+    }
+
+    console.log('\n✅ 同步完成!');
+    process.exit(0);
+  }
+
   // 创建交互式菜单
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
-  const menuOptions = [
+  // 策略选项
+  const strategyOptions = [
+    { id: 1, value: 'skip', name: '跳过已存在', desc: '只复制新文件，已存在的跳过' },
+    { id: 2, value: 'incremental', name: '增量同步', desc: '源文件较新时才更新' },
+    { id: 3, value: 'force', name: '强制覆盖', desc: '覆盖所有文件' },
+  ];
+
+  // 内容类型选项
+  const typeOptions = [
     { id: 1, name: '同步文章', mappings: ['文章'] },
     { id: 2, name: '同步动态', mappings: ['动态'] },
     { id: 3, name: '同步记录', mappings: ['记录'] },
     { id: 4, name: '同步生活', mappings: ['生活'] },
     { id: 5, name: '同步全部', mappings: null },
-    { id: 6, name: '退出', mappings: null },
+    { id: 6, name: '返回上级', type: 'back' },
   ];
 
-  function showMenu() {
+  let currentStrategy = defaultStrategy;
+
+  // 选择策略函数
+  async function selectStrategy() {
+    console.log('\n请选择同步策略:\n');
+    strategyOptions.forEach(opt => {
+      console.log(`  ${opt.id}. ${opt.name} - ${opt.desc}`);
+    });
+    console.log('');
+
+    const choice = await askQuestion('请输入选项 (1-3): ', rl);
+    const selected = strategyOptions.find(opt => opt.id === parseInt(choice));
+
+    if (selected) {
+      currentStrategy = selected.value;
+      console.log(`✅ 已选择策略: ${selected.name}`);
+      return true;
+    } else {
+      console.log('❌ 无效选项，请重新输入');
+      return false;
+    }
+  }
+
+  // 选择内容类型函数
+  async function selectType() {
+    const strategyLabel = {
+      'skip': '跳过已存在',
+      'incremental': '增量同步',
+      'force': '强制覆盖'
+    };
+
+    console.log('\n' + '='.repeat(50));
+    console.log(`📋 当前策略: ${strategyLabel[currentStrategy] || currentStrategy}`);
     console.log('\n请选择要同步的内容类型:\n');
-    menuOptions.forEach(opt => {
+    typeOptions.forEach(opt => {
       console.log(`  ${opt.id}. ${opt.name}`);
     });
     console.log('');
-  }
 
-  function askChoice() {
-    return new Promise((resolve) => {
-      rl.question('请输入选项 (1-6): ', (answer) => {
-        const choice = parseInt(answer.trim());
-        resolve(choice);
-      });
-    });
-  }
-
-  while (true) {
-    showMenu();
-    const choice = await askChoice();
-    const selected = menuOptions.find(opt => opt.id === choice);
+    const choice = await askQuestion('请输入选项 (1-6): ', rl);
+    const selected = typeOptions.find(opt => opt.id === parseInt(choice));
 
     if (!selected) {
       console.log('❌ 无效选项，请重新输入');
-      continue;
+      return { continue: true, exit: false };
     }
 
-    if (selected.id === 5) {
-      console.log('👋 再见!');
-      rl.close();
-      process.exit(0);
+    if (selected.type === 'back') {
+      return { continue: true, exit: false, goBack: true };
     }
 
     if (selected.id === 6) {
       // 同步全部
       console.log('\n🔄 开始同步所有内容...\n');
       for (const mapping of config.mappings) {
-        await syncType(mapping);
+        await syncType(mapping, currentStrategy);
       }
     } else if (selected.mappings) {
       // 同步指定类型
       const mapping = config.mappings.find(m => m.type === selected.mappings[0]);
       if (mapping) {
-        await syncType(mapping);
+        await syncType(mapping, currentStrategy);
       } else {
         console.log(`❌ 未找到配置: ${selected.mappings[0]}`);
       }
     }
 
-    console.log('\n' + '='.repeat(50));
-
-    // 等待用户按回车继续
-    await new Promise((resolve) => {
-      rl.question('\n按回车键继续...', resolve);
-    });
+    return { continue: true, exit: selected.id === 6 };
   }
+
+  // 主交互循环
+  while (true) {
+    // 首先选择策略
+    const strategySelected = await selectStrategy();
+    if (!strategySelected) continue;
+
+    // 然后循环选择内容类型
+    while (true) {
+      const result = await selectType();
+
+      if (result.goBack) {
+        break; // 返回选择策略
+      }
+
+      if (result.exit) {
+        console.log('\n👋 再见!');
+        rl.close();
+        process.exit(0);
+      }
+
+      // 等待用户按回车继续
+      await new Promise((resolve) => {
+        rl.question('\n按回车键返回上级菜单...', resolve);
+      });
+    }
+  }
+}
+
+// 辅助函数：提问
+function askQuestion(question, rl) {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
 }
 
 // 错误处理
