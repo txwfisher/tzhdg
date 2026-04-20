@@ -175,7 +175,7 @@ const checkinCollection = defineCollection({
 	schema: z.object({
 		name: z.string(),
 		description: z.string().optional().default(""),
-		count: z.number().optional().default(0),
+		checkins: z.array(z.coerce.date()).optional().default([]),
 	}),
 });
 

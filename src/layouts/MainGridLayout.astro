@@ -275,10 +275,8 @@ const mobileQuality = Math.round(configQuality * 0.9);
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
-<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 mx-auto" class:list={[navbarWidthFull ? "" : "max-w-(--page-width) px-0 md:px-4"]}>
-    <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
-        <Navbar></Navbar>
-    </div>
+<div id="navbar-wrapper" class="pointer-events-auto transition-all" data-full-width={String(navbarWidthFull)}>
+    <Navbar></Navbar>
 </div>
 
 <!-- Wallpaper - 如果允许切换则始终渲染，否则只渲染当前模式 -->

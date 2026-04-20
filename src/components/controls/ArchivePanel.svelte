@@ -16,12 +16,13 @@ const uncategorized = params.get("uncategorized");
 
 interface ArchiveItem {
 	id: string;
-	type: "post" | "moment";
+	type: "post" | "moment" | "bangumi" | "life";
 	data: {
 		title: string;
 		tags: string[];
 		category?: string | null;
 		published: Date;
+		link?: string;
 	};
 }
 
@@ -46,7 +47,14 @@ function getItemUrl(item: ArchiveItem) {
 	if (item.type === "post") {
 		return getPostUrlBySlug(item.id);
 	}
-	return `/moments/#${item.id}`;
+	if (item.type === "moment") {
+		return `/moments/#${item.id}`;
+	}
+	if (item.type === "life") {
+		return item.data.link || "/life/";
+	}
+	// bangumi 类型
+	return item.data.link || "/bangumi/";
 }
 
 onMount(async () => {
@@ -146,9 +154,21 @@ onMount(async () => {
                      group-hover:translate-x-1 transition-all group-hover:text-(--primary)
                      text-75 pr-8 whitespace-nowrap text-ellipsis overflow-hidden flex items-center gap-2"
                         >
-                            {#if item.type === 'moment'}
+                            {#if item.type === 'post'}
+                                <span class="px-1.5 py-0.5 text-[10px] bg-amber-500 text-white rounded-md shrink-0 uppercase tracking-wider opacity-80 font-normal">
+                                    文章
+                                </span>
+                            {:else if item.type === 'moment'}
                                 <span class="px-1.5 py-0.5 text-[10px] bg-(--primary) text-white rounded-md shrink-0 uppercase tracking-wider opacity-80 font-normal">
                                     {i18n(I18nKey.moments) || 'Moment'}
+                                </span>
+                            {:else if item.type === 'bangumi'}
+                                <span class="px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-md shrink-0 uppercase tracking-wider opacity-80 font-normal">
+                                    {i18n(I18nKey.bangumi) || 'Record'}
+                                </span>
+                            {:else if item.type === 'life'}
+                                <span class="px-1.5 py-0.5 text-[10px] bg-emerald-600 text-white rounded-md shrink-0 uppercase tracking-wider opacity-80 font-normal">
+                                    生活
                                 </span>
                             {/if}
                             {item.data.title}

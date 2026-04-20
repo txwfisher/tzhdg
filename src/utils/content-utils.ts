@@ -54,20 +54,34 @@ export async function getSortedPostsList(): Promise<PostForList[]> {
 
 export type ArchiveItem = {
 	id: string;
-	type: "post" | "moment";
+	type: "post" | "moment" | "bangumi" | "life";
 	data: {
 		title: string;
 		published: Date;
 		tags: string[];
 		category?: string | null;
+		image?: string;
+		link?: string;
 	};
 };
+
+// 辅助函数
+const isIn = (entryId: string, folder: string) =>
+	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
 
 export async function getArchiveList(): Promise<ArchiveItem[]> {
 	const posts = await getCollection("posts", ({ data }) => {
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
 	const moments = await getCollection("moments");
+	const bangumi = await getCollection("bangumi");
+	const lifeEntries = await getCollection("life");
+	const workoutEntries = await getCollection("lifeWorkout");
+	const sleepEntries = await getCollection("lifeSleep");
+	const foodEntries = await getCollection("lifeFood");
+	const notebooksEntries = await getCollection("notebooks");
+	const checkinEntries = await getCollection("checkin");
+	const routinesEntries = await getCollection("routines");
 
 	const postItems: ArchiveItem[] = posts.map((post) => ({
 		id: post.id,
@@ -99,7 +113,122 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 		};
 	});
 
-	return [...postItems, ...momentItems].sort((a, b) => {
+	const bangumiItems: ArchiveItem[] = bangumi.map((b) => ({
+		id: b.id,
+		type: "bangumi",
+		data: {
+			title: b.data.title,
+			published: b.data.published || new Date(0),
+			tags: [],
+			category: null,
+			image: typeof b.data.image === "string" ? b.data.image : (b.data.image as any)?.src,
+			link: b.data.link,
+		},
+	}));
+
+	// 生活动态归档
+	const lifeItems: ArchiveItem[] = [];
+
+	// 运动记录
+	workoutEntries.forEach((w) => {
+		lifeItems.push({
+			id: w.id,
+			type: "life",
+			data: {
+				title: `运动: ${w.data.workoutType || "锻炼"} - ${w.data.runKm || 0}km`,
+				published: w.data.date,
+				tags: ["运动"],
+				link: "/life/health/",
+			},
+		});
+	});
+
+	// 睡眠记录
+	sleepEntries.forEach((s) => {
+		lifeItems.push({
+			id: s.id,
+			type: "life",
+			data: {
+				title: `睡眠: ${s.data.sleepHours || 0}小时`,
+				published: s.data.date,
+				tags: ["睡眠"],
+				link: "/life/health/",
+			},
+		});
+	});
+
+	// 饮食记录
+	foodEntries.forEach((f) => {
+		lifeItems.push({
+			id: f.id,
+			type: "life",
+			data: {
+				title: `饮食记录`,
+				published: f.data.date,
+				tags: ["饮食"],
+				link: "/life/health/",
+			},
+		});
+	});
+
+	// 想法记录
+	lifeEntries.filter((entry) => isIn(entry.id, "ideas")).forEach((i) => {
+		const title = i.data.content || "想法";
+		lifeItems.push({
+			id: i.id,
+			type: "life",
+			data: {
+				title: title.length > 50 ? `${title.substring(0, 50)}...` : title,
+				published: i.data.completedAt || i.data.createdAt || new Date(),
+				tags: ["想法"],
+				link: "/life/ideas/",
+			},
+		});
+	});
+
+	// 笔记本记录
+	notebooksEntries.forEach((n) => {
+		lifeItems.push({
+			id: n.id,
+			type: "life",
+			data: {
+				title: n.data.name || "笔记本",
+				published: n.data.date || new Date(),
+				tags: ["笔记本"],
+				link: "/life/notebooks/",
+			},
+		});
+	});
+
+	// 打卡记录
+	checkinEntries.forEach((c) => {
+		lifeItems.push({
+			id: c.id,
+			type: "life",
+			data: {
+				title: `打卡: ${c.data.name}`,
+				published: c.data.checkins?.[c.data.checkins.length - 1] || new Date(),
+				tags: ["打卡"],
+				link: "/life/checkin/",
+			},
+		});
+	});
+
+	// 日常规划
+	routinesEntries.forEach((r) => {
+		lifeItems.push({
+			id: r.id,
+			type: "life",
+			data: {
+				title: `规划: ${r.data.name}`,
+				published: r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(),
+				tags: ["规划"],
+				link: "/life/routines/",
+			},
+		});
+	});
+
+	return [...postItems, ...momentItems, ...bangumiItems, ...lifeItems].sort((a, b) => {
 		return b.data.published.getTime() - a.data.published.getTime();
 	});
 }

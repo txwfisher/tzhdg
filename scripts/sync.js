@@ -512,7 +512,7 @@ async function main() {
       return { continue: true, exit: false, goBack: true };
     }
 
-    if (selected.id === 6) {
+    if (selected.id === 5) {
       // 同步全部
       console.log('\n🔄 开始同步所有内容...\n');
       for (const mapping of config.mappings) {
@@ -528,7 +528,7 @@ async function main() {
       }
     }
 
-    return { continue: true, exit: selected.id === 6 };
+    return { continue: true, exit: false };
   }
 
   // 主交互循环

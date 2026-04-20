@@ -25,12 +25,12 @@ const isIn = (entryId: string, folder: string) =>
 
 // 统计想法
 const ideas = lifeEntries.filter((entry) => isIn(entry.id, "ideas")).map((e) => e.data);
-const ideasDone = ideas.filter((item) => item.status === "done").length;
+const ideasDone = ideas.filter((item) => item.completedAt).length;
 const ideasTotal = ideas.length;
 
 // 统计打卡
 const checkinCount = checkinEntries.length;
-const totalCheckinCount = checkinEntries.reduce((acc, item) => acc + (item.data.count || 0), 0);
+const totalCheckinCount = checkinEntries.reduce((acc, item) => acc + (item.data.checkins?.length || 0), 0);
 
 // 统计运动
 const workouts = workoutEntries.map((e) => e.data);

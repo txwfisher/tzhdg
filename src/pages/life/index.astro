@@ -4,10 +4,16 @@ import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import { url } from "@/utils/url-utils";
 
+// 辅助函数
+const isIn = (entryId: string, folder: string) =>
+	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
+
 // 获取所有生活相关数据
 const allLifeEntries = await getCollection("life");
-// 过滤掉 README 文件
-const ideas = allLifeEntries.filter((entry) => !entry.id.toLowerCase().includes("readme"));
+// 从 life 集合中过滤出 ideas 和 places
+const ideas = allLifeEntries.filter((entry) =>
+	isIn(entry.id, "ideas") && !entry.id.toLowerCase().includes("readme")
+);
 const workoutEntries = await getCollection("lifeWorkout");
 const sleepEntries = await getCollection("lifeSleep");
 const foodEntries = await getCollection("lifeFood");
@@ -17,8 +23,7 @@ const routinesEntries = await getCollection("routines");
 
 // 从 life 集合中过滤出 places
 const places = allLifeEntries.filter((entry) =>
-	entry.id.replace(/\\\\/g, "/").startsWith("places/") &&
-	!entry.id.toLowerCase().includes("readme")
+	isIn(entry.id, "places") && !entry.id.toLowerCase().includes("readme")
 );
 
 const now = new Date();
@@ -39,7 +44,7 @@ const isSameYear = (date?: Date) => {
 
 // ========== 想法统计 ==========
 const ideasCount = ideas.length;
-const ideasDone = ideas.filter((item) => item.data.status === "done");
+const ideasDone = ideas.filter((item) => item.data.completedAt);
 const ideasDoneCount = ideasDone.length;
 const ideasTodoCount = ideas.length - ideasDoneCount;
 const thisMonthDoneIdeas = ideasDone.filter((item) => isSameMonth(item.data.completedAt)).length;
@@ -102,7 +107,7 @@ const totalVisitCount = places.reduce((acc, p) => acc + (p.data.visitCount || 1)
 const recentPlace = sortedPlaces[0];
 
 // ========== 打卡统计 ==========
-const checkinTotalCount = checkinEntries.reduce((acc, item) => acc + (item.data.count || 0), 0);
+const checkinTotalCount = checkinEntries.reduce((acc, item) => acc + (item.data.checkins?.length || 0), 0);
 const checkinCount = checkinEntries.length;
 const checkinItems = checkinEntries.slice(0, 3);
 
@@ -296,7 +301,7 @@ const recentUpdates = [
 					{recentIdeas.map((idea) => (
 						<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-3 transition-colors hover:border-[var(--primary)]/30">
 							<div class="flex items-start gap-2">
-								<span class={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${idea.data.status === "done" ? "bg-emerald-500" : "bg-amber-500"}`}></span>
+								<span class={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${idea.data.completedAt ? "bg-emerald-500" : "bg-amber-500"}`}></span>
 								<div class="flex-1">
 									<p class="text-sm leading-relaxed text-[var(--text-color)] line-clamp-2">
 										{idea.data.content}
@@ -444,7 +449,7 @@ const recentUpdates = [
 									<div class="text-sm font-medium text-[var(--text-color)]">{item.data.name}</div>
 									<div class="text-xs text-[var(--content-meta)]">{item.data.description}</div>
 								</div>
-								<div class="text-lg font-bold text-[var(--primary)]">{item.data.count || 0}</div>
+								<div class="text-lg font-bold text-[var(--primary)]">{item.data.checkins?.length || 0}</div>
 							</div>
 						))}
 					</div>
@@ -543,15 +548,19 @@ const recentUpdates = [
 						</div>
 						<div class="text-xl font-bold text-amber-600 dark:text-amber-400">{totalNotebookEntries}</div>
 					</div>
-					{recentNotebook && (
-						<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-3">
-							<div class="text-sm font-medium text-[var(--text-color)]">{recentNotebook.data.name}</div>
-							<div class="mt-1 flex items-center justify-between text-xs text-[var(--content-meta)]">
-								<span>{recentNotebook.data.entries?.length || 0} 条记录</span>
-								<span>{recentNotebook.data.updatedAt?.toISOString().split("T")[0]}</span>
+					<div class="space-y-2">
+						{notebookEntriesList.slice(0, 3).map((entry) => (
+							<div class="flex items-center justify-between rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-3">
+								<div class="flex-1 min-w-0">
+									<div class="text-sm font-medium text-[var(--text-color)] truncate">{entry.data.name || "未命名"}</div>
+									<div class="mt-0.5 text-xs text-[var(--content-meta)]">{entry.data.date?.toISOString().split("T")[0]}</div>
+								</div>
 							</div>
-						</div>
-					)}
+						))}
+						{notebookEntriesList.length === 0 && (
+							<div class="text-sm text-[var(--content-meta)] text-center py-2">暂无笔记</div>
+						)}
+					</div>
 				</div>
 			</section>
 

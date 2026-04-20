@@ -42,6 +42,36 @@ const gameCount = bangumi.filter(
 	(item) => item.data.category === "game",
 ).length;
 
+// 统计生活数据
+const lifeEntries = await getCollection("life");
+const workoutEntries = await getCollection("lifeWorkout");
+const sleepEntries = await getCollection("lifeSleep");
+const foodEntries = await getCollection("lifeFood");
+const notebooksEntries = await getCollection("notebooks");
+const checkinEntries = await getCollection("checkin");
+const routinesEntries = await getCollection("routines");
+
+// 辅助函数
+const isIn = (entryId: string, folder: string) =>
+	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
+
+// 想法统计
+const ideas = lifeEntries.filter((entry) => isIn(entry.id, "ideas"));
+const ideasDoneCount = ideas.filter((item) => item.data.completedAt).length;
+const ideasTotalCount = ideas.length;
+
+// 运动统计
+const totalRunKm = workoutEntries.reduce((acc, w) => acc + (w.data.runKm || 0), 0);
+
+// 睡眠统计
+const sleepCount = sleepEntries.length;
+const avgSleepHours = sleepCount > 0
+	? sleepEntries.reduce((acc, s) => acc + (s.data.sleepHours || 0), 0) / sleepCount
+	: 0;
+
+// 打卡统计
+const checkinTotal = checkinEntries.reduce((acc, item) => acc + (item.data.checkins?.length || 0), 0);
+
 // 计算总字数
 let totalWords = 0;
 for (const post of posts) {
@@ -141,6 +171,32 @@ const stats = [
 		dynamic: true,
 		id: "last-update",
 	},
+	// 生活统计（图标使用红色）
+	{
+		icon: "material-symbols:favorite-outline",
+		label: "想法完成",
+		value: ideasDoneCount,
+		iconColor: "red",
+	},
+	{
+		icon: "material-symbols:straighten",
+		label: "累计跑量",
+		value: Math.round(totalRunKm * 10) / 10,
+		suffix: "km",
+		iconColor: "red",
+	},
+	{
+		icon: "material-symbols:bedtime-outline",
+		label: "睡眠记录",
+		value: sleepCount,
+		iconColor: "red",
+	},
+	{
+		icon: "material-symbols:check-circle-outline",
+		label: "打卡总数",
+		value: checkinTotal,
+		iconColor: "red",
+	},
 ];
 ---
 
@@ -149,7 +205,7 @@ const stats = [
     {stats.map((stat) => (
       <div class="flex items-center justify-between px-3 py-1.5">
         <div class="flex items-center gap-2.5">
-          <div class="text-(--primary) text-xl">
+          <div class="text-xl {stat.iconColor === 'red' ? 'text-red-500 dark:text-red-400' : 'text-(--primary)'}">
             <Icon name={stat.icon} />
           </div>
           <span class="text-neutral-700 dark:text-neutral-300 font-medium text-sm">

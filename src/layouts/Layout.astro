@@ -493,9 +493,37 @@ const siteLang = lang.replace("_", "-");
     .enable-banner #right-sidebar-sticky {
       top: calc(1rem - var(--banner-height-extend)) !important;
     }
-    .navbar-hidden {
-      @apply opacity-0 -translate-y-16;
+  }
+
+  /* 滚动时隐藏/显示导航栏 - 使用 fixed 定位 */
+  #navbar-wrapper {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* 非全宽模式下限制导航栏宽度 */
+  #navbar-wrapper:not([data-full-width="true"]) #navbar > div {
+    max-width: var(--page-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (max-width: 1023px) {
+    #navbar-wrapper:not([data-full-width="true"]) #navbar > div {
+      max-width: 100%;
     }
+  }
+
+  #navbar-wrapper.navbar-hidden {
+    transform: translateY(-100%);
+  }
+
+  #navbar-wrapper.navbar-visible {
+    transform: translateY(0);
   }
 
   @media (max-width: 1023px) {
@@ -988,15 +1016,40 @@ function disableAnimation() {
       });
     }
 
-    if (bannerEnabled && navbar) {
+    // 滚动方向检测 - 导航栏自动隐藏/显示（始终执行）
+    if (navbar) {
       operations.push(() => {
-        const threshold = window.innerHeight * (BANNER_HEIGHT_HOME / 100) - 88;
-
-        if (scrollTop >= threshold) {
-          navbar.classList.add("navbar-hidden");
-        } else {
+        const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // 始终在顶部时显示
+        if (currentScrollY <= 10) {
           navbar.classList.remove("navbar-hidden");
+          navbar.classList.add("navbar-visible");
+          (window as any)._navbarHidden = false;
+          (window as any)._lastScrollY = currentScrollY;
+          return;
         }
+        
+        const lastScrollY = (window as any)._lastScrollY || 0;
+        const isHidden = (window as any)._navbarHidden || false;
+        const scrollDelta = currentScrollY - lastScrollY;
+        
+        // 向上滚动 - 显示导航栏
+        if (scrollDelta < 0) {
+          if (isHidden) {
+            navbar.classList.remove("navbar-hidden");
+            navbar.classList.add("navbar-visible");
+            (window as any)._navbarHidden = false;
+          }
+        }
+        // 向下滚动超过50px - 隐藏导航栏
+        else if (scrollDelta > 50 && !isHidden) {
+          navbar.classList.remove("navbar-visible");
+          navbar.classList.add("navbar-hidden");
+          (window as any)._navbarHidden = true;
+        }
+        
+        (window as any)._lastScrollY = currentScrollY;
       });
     }
 

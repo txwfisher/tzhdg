@@ -30,15 +30,19 @@ const ideas = lifeEntries
 	.filter((entry) => !entry.id.toLowerCase().includes("readme"))
 	.map((entry) => entry.data);
 
+// 已完成：有 completedAt
 const ideasDone = ideas
-	.filter((item) => item.status === "done")
-	.sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
+	.filter((item) => item.completedAt)
+	.sort((a, b) => (b.completedAt || "").toString().localeCompare((a.completedAt || "").toString()));
 
+// 待完成：没有 completedAt
 const ideasTodo = ideas
-	.filter((item) => item.status !== "done")
-	.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+	.filter((item) => !item.completedAt)
+	.sort((a, b) => (b.createdAt || "").toString().localeCompare((a.createdAt || "").toString()));
 
-const thisMonthIdeasDone = ideasDone.filter((item) => isSameMonth(item.completedAt)).length;
+const thisMonthIdeasDone = ideas.filter(
+	(item) => item.completedAt && isSameMonth(item.completedAt)
+).length;
 const ideasCount = ideas.length;
 const doneCount = ideasDone.length;
 const todoCount = ideasTodo.length;
