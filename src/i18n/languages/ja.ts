@@ -3,6 +3,10 @@ import type { Translation } from "../translation";
 
 export const ja: Translation = {
 	[Key.home]: "ホーム",
+	[Key.categories]: "カテゴリ",
+	[Key.categoryList]: "カテゴリリスト",
+	[Key.categoryPosts]: "このカテゴリの記事",
+	[Key.allCategories]: "すべてのカテゴリ",
 	[Key.about]: "について",
 	[Key.archive]: "アーカイブ",
 	[Key.search]: "検索",

@@ -114,17 +114,40 @@ const comments = danmuEntries.map((entry) => ({
 
   let danmakuPlayer = null;
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initDanmaku() {
     const track = document.getElementById('danmaku-track');
     const viewport = document.getElementById('danmaku-viewport');
     
-    if (track && viewport) {
-      danmakuPlayer = new DanmakuPlayer(track, viewport);
-      
-      viewport.addEventListener('mouseenter', () => danmakuPlayer?.pause());
-      viewport.addEventListener('mouseleave', () => danmakuPlayer?.resume());
+    // 如果元素不存在，跳过
+    if (!track || !viewport) {
+      return;
     }
-  });
+    
+    // 页面过渡后需要重置状态
+    if (danmakuPlayer) {
+      // 清理旧的自动滚动
+      if (danmakuPlayer.autoScrollInterval) {
+        clearInterval(danmakuPlayer.autoScrollInterval);
+      }
+      danmakuPlayer = null;
+    }
+    
+    danmakuPlayer = new DanmakuPlayer(track, viewport);
+    
+    viewport.addEventListener('mouseenter', () => danmakuPlayer?.pause());
+    viewport.addEventListener('mouseleave', () => danmakuPlayer?.resume());
+  }
+
+  // 页面可能已经加载完成，直接初始化
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initDanmaku();
+  }
+
+  // 直接访问页面时使用 DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', initDanmaku);
+
+  // Swup 页面过渡后重新初始化
+  document.addEventListener('swup:content:replace', initDanmaku);
 
   window.addGuestbookDanmaku = (comment) => {
     danmakuPlayer?.addComment(comment);

@@ -3,6 +3,10 @@ import type { Translation } from "../translation";
 
 export const ru: Translation = {
 	[Key.home]: "Главная",
+	[Key.categories]: "Категории",
+	[Key.categoryList]: "Список категорий",
+	[Key.categoryPosts]: "Статьи в этой категории",
+	[Key.allCategories]: "Все категории",
 	[Key.about]: "О нас",
 	[Key.archive]: "Архив",
 	[Key.search]: "Поиск",

@@ -3,12 +3,13 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { Icon } from "astro-icon/components";
 import { getCategoryList, getSortedPostsList } from "@/utils/content-utils";
-import { url } from "@/utils/url-utils";
+import { url, getCategoryPageUrl } from "@/utils/url-utils";
 
 const categories = await getCategoryList();
 const totalPosts = (await getSortedPostsList()).length;
 const homeUrl = url("/");
 const archiveUrl = url("/archive/");
+const categoriesUrl = getCategoryPageUrl();
 ---
 
 <div class="card-base category-bar p-3 onload-animation hidden" id="category-bar" data-home-path={homeUrl} data-archive-path={archiveUrl}>
@@ -30,6 +31,15 @@ const archiveUrl = url("/archive/");
     >
       {i18n(I18nKey.archive)}
       <span class="text-xs opacity-60 ml-1">{totalPosts}</span>
+    </a>
+    <a
+      href={categoriesUrl}
+      class="category-pill text-sm px-3 py-1 rounded-lg whitespace-nowrap flex-shrink-0
+             transition-colors duration-200 flex items-center justify-center"
+      data-category-name="__categories__"
+    >
+      {i18n(I18nKey.categories)}
+      <span class="text-xs opacity-60 ml-1">{categories.length}</span>
     </a>
     <div class="category-divider flex-shrink-0"></div>
     <div class="scroll-area relative">
@@ -135,11 +145,13 @@ const archiveUrl = url("/archive/");
     const pathname = window.location.pathname.replace(/\/$/, "");
     const homePath = (bar.getAttribute("data-home-path") || "/").replace(/\/$/, "");
     const archivePath = (bar.getAttribute("data-archive-path") || "/archive").replace(/\/$/, "");
+    const categoriesPath = "/categories";
     const isHome = pathname === homePath || pathname === "" || pathname === "/";
     const isArchive = pathname === archivePath;
+    const isCategories = pathname === categoriesPath || pathname.startsWith(categoriesPath + "/");
 
-    // 只在首页和归档页显示
-    if (!isHome && !isArchive) {
+    // 只在首页、归档页和分类页显示
+    if (!isHome && !isArchive && !isCategories) {
       bar.classList.add("hidden");
       bar.classList.remove("visible");
       return;
@@ -158,6 +170,9 @@ const archiveUrl = url("/archive/");
 
     if (isHome) {
       bar.querySelector<HTMLAnchorElement>('.category-pill[data-category-name=""]')
+        ?.setAttribute("data-active", "");
+    } else if (isCategories && !activeCategory) {
+      bar.querySelector<HTMLAnchorElement>('.category-pill[data-category-name="__categories__"]')
         ?.setAttribute("data-active", "");
     } else if (activeCategory) {
       pills.forEach((pill) => {
@@ -183,6 +198,18 @@ const archiveUrl = url("/archive/");
       const bannerTitle = document.querySelector(".banner-page-title-text");
       if (bannerTitle) {
         bannerTitle.textContent = decodeURIComponent(activeCategory);
+      }
+    }
+
+    // 更新横幅标题：分类页面显示分类名
+    if (isCategories) {
+      const bannerTitle = document.querySelector(".banner-page-title-text");
+      if (bannerTitle) {
+        // 从 URL 中提取分类名
+        const categoryFromUrl = pathname.replace(categoriesPath + "/", "").replace(/\//g, "");
+        if (categoryFromUrl) {
+          bannerTitle.textContent = decodeURIComponent(categoryFromUrl);
+        }
       }
     }
   }

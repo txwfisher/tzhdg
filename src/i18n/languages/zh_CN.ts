@@ -3,6 +3,10 @@ import type { Translation } from "../translation";
 
 export const zh_CN: Translation = {
 	[Key.home]: "主页",
+	[Key.categories]: "分类",
+	[Key.categoryList]: "分类列表",
+	[Key.categoryPosts]: "该分类下的文章",
+	[Key.allCategories]: "全部分类",
 	[Key.about]: "关于我",
 	[Key.archive]: "归档",
 	[Key.search]: "搜索",

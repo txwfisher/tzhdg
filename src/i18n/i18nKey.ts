@@ -1,5 +1,9 @@
 enum I18nKey {
 	home = "home",
+	categories = "categories",
+	categoryList = "categoryList",
+	categoryPosts = "categoryPosts",
+	allCategories = "allCategories",
 	about = "about",
 	archive = "archive",
 	search = "search",
@@ -12,7 +16,6 @@ enum I18nKey {
 	other = "other",
 
 	tags = "tags",
-	categories = "categories",
 	recentPosts = "recentPosts",
 	postList = "postList",
 	tableOfContents = "tableOfContents",
