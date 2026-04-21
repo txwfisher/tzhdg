@@ -22,7 +22,7 @@ const momentAssets = import.meta.glob<{ default: ImageMetadata }>(
 	{ eager: true },
 );
 
-// 解析图片路径，支持 frontmatter 中的 images 数组/字符串 (逗号分隔)
+// 解析图片路径
 const parseImages = (imagesData: any): (string | ImageMetadata)[] => {
 	let rawPaths: string[] = [];
 	if (Array.isArray(imagesData)) {
@@ -60,15 +60,14 @@ const parseImages = (imagesData: any): (string | ImageMetadata)[] => {
 		.filter((img) => img);
 };
 
-// 计算图片网格的列数
+// 计算图片网格列数
 const getGridCols = (count: number) => {
-	if (count === 1) return "grid-cols-1";
-	if (count === 2 || count === 4) return "grid-cols-2";
-	return "grid-cols-3";
+	if (count === 1) return 1;
+	if (count === 2 || count === 4) return 2;
+	return 3;
 };
 
 const momentId = moment.id;
-
 const imagesArray = parseImages(images);
 const maxImages = 9;
 const displayImages = imagesArray.slice(0, maxImages);
@@ -80,7 +79,7 @@ const getImgSrc = (img: string | ImageMetadata): string => {
 	return img.src;
 };
 
-// 格式化时间戳为相对时间
+// 相对时间
 const formatTimeAgo = (date: Date): string => {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
@@ -97,118 +96,87 @@ const formatTimeAgo = (date: Date): string => {
 ---
 
 <div id={moment.id} class="moment-card">
-  <!-- 卡片主体 -->
-  <div class="card-inner">
-    <!-- 顶部用户信息 -->
-    <div class="card-header">
-      <div class="user-avatar">
-        {avatar ? (
-          <img src={avatar} alt={author} class="avatar-img" loading="lazy" />
-        ) : (
-          <img src="/avatar.png" alt={author} class="avatar-img" loading="lazy" 
-            onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23999%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M20 21a8 8 0 1 0-16 0%22/></svg>'" />
-        )}
-      </div>
-      
-      <div class="user-info">
-        <div class="user-name-row">
-          <span class="user-name">{author || "匿名"}</span>
-          {device && (
-            <span class="device-tag">
-              <Icon name="material-symbols:smartphone" class="text-xs" />
-              {device}
-            </span>
-          )}
-        </div>
-        <div class="user-meta">
-          <time datetime={published.toISOString()} title={formatDateToYYYYMMDD(published)}>
-            {formatTimeAgo(published)}
-          </time>
-          {location && (
-            <>
-              <span class="meta-dot">·</span>
-              <span class="location">
-                <Icon name="material-symbols:location-on-outline" class="text-xs" />
-                {location}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
+  <div class="card-avatar">
+    {avatar ? (
+      <img src={avatar} alt={author} class="avatar-img" loading="lazy" />
+    ) : (
+      <img src="/avatar.png" alt={author} class="avatar-img" loading="lazy" 
+        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23999%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M20 21a8 8 0 1 0-16 0%22/></svg>'" />
+    )}
+  </div>
 
-      <!-- 更多按钮 -->
-      <button class="more-btn" title="更多">
-        <Icon name="material-symbols:more-horiz" class="text-xl" />
-      </button>
+  <div class="card-body">
+    <!-- 用户名和设备 -->
+    <div class="user-row">
+      <span class="user-name">{author || "匿名"}</span>
+      {device && (
+        <span class="device-tag">
+          <Icon name="material-symbols:smartphone" class="device-icon" />
+          <span class="device-name">{device}</span>
+        </span>
+      )}
     </div>
 
-    <!-- 内容区域 -->
+    <!-- 发布时间和位置 -->
+    <div class="meta-row">
+      <time datetime={published.toISOString()} title={formatDateToYYYYMMDD(published)}>
+        {formatTimeAgo(published)}
+      </time>
+      {location && (
+        <>
+          <span class="meta-dot">·</span>
+          <span class="location">
+            <Icon name="material-symbols:location-on-outline" class="location-icon" />
+            {location}
+          </span>
+        </>
+      )}
+    </div>
+
+    <!-- 内容 -->
     <div class="card-content">
-      <div class="prose dark:prose-invert max-w-none text-[var(--content-text)] text-[15px] leading-[1.7]">
+      <div class="prose dark:prose-invert max-w-none text-[var(--text-color)] text-[15px] leading-[1.8]">
         <Markdown class="moment-markdown">
           <Content />
         </Markdown>
       </div>
     </div>
 
-    <!-- 图片网格 -->
+    <!-- 图片 -->
     {imagesArray && imagesArray.length > 0 && (
-      <div class={`card-images ${imagesArray.length === 1 ? 'single-image' : ''}`}>
-        <div class={`image-grid ${imagesArray.length === 1 ? 'grid-cols-1' : getGridCols(Math.min(imagesArray.length, 9))}`}>
-          {displayImages.map((img, index) => {
-            const imgSrc = getImgSrc(img);
-            const isMoreTrigger = index === maxImages - 1 && remainingCount > 0;
-            
-            return (
-              <div class={`image-item ${imagesArray.length === 1 ? 'single' : ''} ${isMoreTrigger ? 'has-more' : ''}`}>
-                {typeof img === 'string' ? (
-                  <img 
-                    src={img} 
-                    alt="Moment image" 
-                    class="image-img"
-                    loading="lazy"
-                    data-fancybox={`gallery-${moment.id}`}
-                    data-src={imgSrc}
-                  />
-                ) : (
-                  <Image 
-                    src={img} 
-                    alt="Moment image" 
-                    class="image-img"
-                    loading="lazy"
-                    data-fancybox={`gallery-${moment.id}`}
-                    data-src={imgSrc}
-                  />
-                )}
-                
-                {isMoreTrigger && (
-                  <div class="more-overlay">
-                    <span class="more-text">+{remainingCount + 1}</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        {hiddenImages.map((img) => {
+      <div class={`card-images image-cols-${getGridCols(imagesArray.length)} ${imagesArray.length === 1 ? 'single-image' : ''}`}>
+        {displayImages.map((img, index) => {
           const imgSrc = getImgSrc(img);
-          return typeof img === 'string' ? (
-            <img 
-              src={img} 
-              alt="Hidden moment image" 
-              class="hidden"
-              data-fancybox={`gallery-${moment.id}`}
-              data-src={imgSrc}
-            />
-          ) : (
-            <Image 
-              src={img} 
-              alt="Hidden moment image" 
-              class="hidden"
-              data-fancybox={`gallery-${moment.id}`}
-              data-src={imgSrc}
-            />
+          const isMoreTrigger = index === maxImages - 1 && remainingCount > 0;
+          
+          return (
+            <div class={`image-item ${isMoreTrigger ? 'has-more' : ''}`}>
+              {typeof img === 'string' ? (
+                <img 
+                  src={img} 
+                  alt="Moment image" 
+                  class="image-img"
+                  loading="lazy"
+                  data-fancybox={`gallery-${moment.id}`}
+                  data-src={imgSrc}
+                />
+              ) : (
+                <Image 
+                  src={img} 
+                  alt="Moment image" 
+                  class="image-img"
+                  loading="lazy"
+                  data-fancybox={`gallery-${moment.id}`}
+                  data-src={imgSrc}
+                />
+              )}
+              
+              {isMoreTrigger && (
+                <div class="more-overlay">
+                  <span class="more-text">+{remainingCount + 1}</span>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -218,208 +186,200 @@ const formatTimeAgo = (date: Date): string => {
     {tags && tags.length > 0 && (
       <div class="card-tags">
         {tags.map((tag) => (
-          <a 
-            href={getTagUrl(tag)} 
-            class="tag-item"
-          >
+          <a href={getTagUrl(tag)} class="tag-item">
             #{tag.trim()}
           </a>
         ))}
       </div>
     )}
 
-    <!-- 底部互动栏 -->
+    <!-- 底部互动 -->
     <div class="card-actions">
-      <!-- 评论 -->
-      <button 
-        class="action-btn comment-btn"
-        onclick="document.getElementById('waline-comment')?.scrollIntoView({behavior: 'smooth'})"
-      >
-        <Icon name="material-symbols:chat-bubble-outline-rounded" class="action-icon" />
-        <span class="action-label">评论</span>
-      </button>
-
       <!-- 点赞 -->
       <button 
         class="action-btn like-btn"
         data-id={momentId}
+        title="点赞"
       >
-        <div class="like-icons">
-          <Icon name="material-symbols:favorite-outline-rounded" class="action-icon icon-outline" />
-          <Icon name="material-symbols:favorite-rounded" class="action-icon icon-filled" />
-        </div>
-        <span class="action-label like-count">点赞</span>
+        <Icon name="material-symbols:favorite" class="action-icon" />
+        <span class="like-count">赞</span>
+      </button>
+
+      <!-- 评论 -->
+      <button 
+        class="action-btn comment-btn"
+        data-moment-id={momentId}
+        title="评论"
+      >
+        <Icon name="material-symbols:chat-bubble-outline" class="action-icon" />
+        <span class="action-text">评论</span>
       </button>
 
       <!-- 分享 -->
       <button class="action-btn share-btn" title="分享">
         <Icon name="material-symbols:share" class="action-icon" />
-        <span class="action-label">分享</span>
+        <span class="action-text">分享</span>
       </button>
     </div>
   </div>
 </div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const likeBtns = document.querySelectorAll(".like-btn");
+<script is:inline>
+  // 点赞功能
+  document.querySelectorAll(".like-btn").forEach(btn => {
+    const id = btn.getAttribute("data-id");
+    if (!id) return;
     
-    likeBtns.forEach(btn => {
-      const id = btn.getAttribute("data-id");
-      if (!id) return;
+    const storageKey = `moment_like_${id}`;
+    const countKey = `moment_like_count_${id}`;
+    
+    const isLiked = localStorage.getItem(storageKey) === "true";
+    let likeCount = parseInt(localStorage.getItem(countKey) || String(Math.floor(Math.random() * 20) + 5));
+    
+    const countSpan = btn.querySelector(".like-count");
+    
+    if (isLiked) {
+      if(countSpan) countSpan.textContent = String(likeCount);
+      btn.classList.add("liked");
+    } else {
+      if(countSpan) countSpan.textContent = "赞";
+    }
+
+    btn.addEventListener("click", () => {
+      const currentlyLiked = localStorage.getItem(storageKey) === "true";
       
-      const storageKey = `moment_like_${id}`;
-      const countKey = `moment_like_count_${id}`;
-      
-      const isLiked = localStorage.getItem(storageKey) === "true";
-      let likeCount = parseInt(localStorage.getItem(countKey) || String(Math.floor(Math.random() * 20) + 5));
-      
-      const outlineIcon = btn.querySelector(".icon-outline");
-      const filledIcon = btn.querySelector(".icon-filled");
-      const countSpan = btn.querySelector(".like-count");
-      
-      if (isLiked) {
-        outlineIcon?.classList.add("hidden");
-        filledIcon?.classList.remove("hidden");
-        filledIcon?.classList.add("active");
+      if (currentlyLiked) {
+        localStorage.setItem(storageKey, "false");
+        likeCount = Math.max(0, likeCount - 1);
+        localStorage.setItem(countKey, String(likeCount));
+        
+        if(countSpan) countSpan.textContent = "赞";
+        btn.classList.remove("liked");
+      } else {
+        localStorage.setItem(storageKey, "true");
+        likeCount += 1;
+        localStorage.setItem(countKey, String(likeCount));
+        
         if(countSpan) countSpan.textContent = String(likeCount);
         btn.classList.add("liked");
-      } else {
-        if(countSpan) countSpan.textContent = "点赞";
+        
+        btn.classList.add("popping");
+        setTimeout(() => btn.classList.remove("popping"), 300);
       }
-
-      btn.addEventListener("click", () => {
-        const currentlyLiked = localStorage.getItem(storageKey) === "true";
-        
-        if (currentlyLiked) {
-          localStorage.setItem(storageKey, "false");
-          likeCount = Math.max(0, likeCount - 1);
-          localStorage.setItem(countKey, String(likeCount));
-          
-          outlineIcon?.classList.remove("hidden");
-          filledIcon?.classList.add("hidden");
-          filledIcon?.classList.remove("active");
-          if(countSpan) countSpan.textContent = "点赞";
-          btn.classList.remove("liked");
-        } else {
-          localStorage.setItem(storageKey, "true");
-          likeCount += 1;
-          localStorage.setItem(countKey, String(likeCount));
-          
-          outlineIcon?.classList.add("hidden");
-          filledIcon?.classList.remove("hidden");
-          filledIcon?.classList.add("active");
-          if(countSpan) countSpan.textContent = String(likeCount);
-          btn.classList.add("liked");
-          
-          // 点赞动画
-          btn.classList.add("popping");
-          setTimeout(() => {
-            btn.classList.remove("popping");
-          }, 300);
-        }
-      });
     });
+  });
 
-    // 分享功能
-    const shareBtns = document.querySelectorAll(".share-btn");
-    shareBtns.forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const url = window.location.href;
-        const title = document.title;
-        
-        if (navigator.share) {
-          try {
-            await navigator.share({ title, url });
-          } catch (e) {}
-        } else {
-          await navigator.clipboard.writeText(url);
-          // 可以添加一个 toast 提示
-        }
-      });
+  // 评论按钮滚动到评论区
+  document.querySelectorAll(".comment-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const walineEl = document.getElementById("waline");
+      if (walineEl) {
+        walineEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  });
+
+  // 分享功能
+  document.querySelectorAll(".share-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const url = window.location.href;
+      const title = document.title;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, url });
+        } catch (e) {}
+      } else {
+        await navigator.clipboard.writeText(url);
+        // 可以添加一个简单的提示
+      }
     });
   });
 </script>
 
 <style>
-  /* 卡片容器 */
+  /* 卡片主体 - QQ风格 */
   .moment-card {
-    width: 100%;
-  }
-
-  .card-inner {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px;
-    transition: all 0.3s ease;
-  }
-
-  .card-inner:hover {
-    border-color: var(--primary)/30;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  }
-
-  /* 用户信息头部 */
-  .card-header {
     display: flex;
-    align-items: flex-start;
     gap: 12px;
-    margin-bottom: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s;
   }
 
-  .user-avatar {
+  .moment-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  /* 头像 */
+  .card-avatar {
     flex-shrink: 0;
   }
 
   .avatar-img {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--primary)/10;
-    transition: border-color 0.3s;
+    border: 2px solid #4a9eff;
+    box-sizing: border-box;
   }
 
-  .card-inner:hover .avatar-img {
-    border-color: var(--primary)/30;
-  }
-
-  .user-info {
+  /* 卡片内容 */
+  .card-body {
     flex: 1;
     min-width: 0;
   }
 
-  .user-name-row {
+  /* 用户名行 */
+  .user-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .user-name {
     font-size: 15px;
     font-weight: 600;
-    color: var(--text-color);
+    color: #4a9eff;
   }
 
   .device-tag {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    background: var(--primary)/8;
-    border-radius: 20px;
-    font-size: 11px;
-    color: var(--primary);
+    gap: 3px;
+    padding: 1px 6px;
+    background: var(--bg-color);
+    border-radius: 10px;
+    font-size: 10px;
+    color: var(--content-meta);
   }
 
-  .user-meta {
+  .device-icon {
+    font-size: 12px;
+  }
+
+  .device-name {
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 元信息行 */
+  .meta-row {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 12px;
     color: var(--content-meta);
+    margin-bottom: 8px;
   }
 
   .meta-dot {
@@ -427,38 +387,28 @@ const formatTimeAgo = (date: Date): string => {
   }
 
   .location {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 2px;
-    max-width: 120px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .more-btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    color: var(--content-meta);
-    transition: all 0.2s;
-  }
-
-  .more-btn:hover {
-    background: var(--primary)/10;
-    color: var(--primary);
+  .location-icon {
+    font-size: 14px;
+    flex-shrink: 0;
   }
 
   /* 内容区域 */
   .card-content {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
 
   .moment-markdown :global(p) {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
   }
 
   .moment-markdown :global(p:last-child) {
@@ -466,49 +416,57 @@ const formatTimeAgo = (date: Date): string => {
   }
 
   .moment-markdown :global(img) {
-    border-radius: 12px;
-    margin: 0.75rem 0;
+    border-radius: 8px;
+    margin: 8px 0;
+    max-width: 100%;
   }
 
   /* 图片网格 */
   .card-images {
-    margin-bottom: 16px;
-  }
-
-  .single-image .image-grid {
-    max-width: 400px;
-  }
-
-  .image-grid {
     display: grid;
     gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .image-cols-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .image-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .image-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .single-image {
+    max-width: 280px;
   }
 
   .image-item {
     position: relative;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     background: var(--border);
-  }
-
-  .image-item.single {
-    border-radius: 16px;
-  }
-
-  .image-item:not(.single) {
     aspect-ratio: 1;
+  }
+
+  .single-image .image-item {
+    aspect-ratio: auto;
+    border-radius: 12px;
   }
 
   .image-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.4s ease;
+    transition: transform 0.3s ease;
   }
 
   .image-item:hover .image-img {
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
 
   .has-more .image-img {
@@ -524,10 +482,10 @@ const formatTimeAgo = (date: Date): string => {
   }
 
   .more-text {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: white;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
 
   /* 标签 */
@@ -535,161 +493,139 @@ const formatTimeAgo = (date: Date): string => {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .tag-item {
-    padding: 4px 12px;
-    background: var(--primary)/8;
-    border-radius: 20px;
-    font-size: 13px;
-    color: var(--primary);
-    transition: all 0.2s;
+    padding: 3px 10px;
+    background: rgba(74, 158, 255, 0.1);
+    border-radius: 12px;
+    font-size: 12px;
+    color: #4a9eff;
+    transition: background 0.2s;
   }
 
   .tag-item:hover {
-    background: var(--primary)/15;
-    transform: translateY(-1px);
+    background: rgba(74, 158, 255, 0.2);
   }
 
   /* 互动栏 */
   .card-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding-top: 16px;
+    gap: 24px;
+    padding-top: 10px;
     border-top: 1px solid var(--border);
   }
 
   .action-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 24px;
+    gap: 4px;
+    padding: 4px 0;
     color: var(--content-meta);
     font-size: 13px;
-    transition: all 0.2s;
+    transition: color 0.2s;
   }
 
   .action-icon {
-    font-size: 20px;
+    font-size: 18px;
     transition: transform 0.2s;
   }
 
-  .action-label {
-    font-weight: 500;
-  }
-
-  /* 评论按钮 */
-  .comment-btn:hover {
-    background: var(--primary)/10;
-    color: var(--primary);
-  }
-
-  .comment-btn:hover .action-icon {
-    transform: scale(1.1);
-  }
-
   /* 点赞按钮 */
-  .like-btn {
-    position: relative;
-  }
-
-  .like-icons {
-    position: relative;
-    width: 20px;
-    height: 20px;
-  }
-
-  .icon-outline {
-    position: absolute;
-    inset: 0;
-    transition: all 0.2s;
-  }
-
-  .icon-filled {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.2s;
-    color: #ef4444;
-  }
-
-  .icon-filled.active {
-    opacity: 1;
-    transform: scale(1);
-  }
-
   .like-btn:hover {
-    background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
+  }
+
+  .like-btn:hover .action-icon {
+    transform: scale(1.15);
   }
 
   .like-btn.liked {
     color: #ef4444;
   }
 
-  .like-btn.liked .icon-outline {
-    opacity: 0;
-  }
-
-  .like-btn.popping .icon-filled {
+  .like-btn.popping .action-icon {
     animation: like-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   @keyframes like-pop {
-    0% { transform: scale(0.5); }
-    50% { transform: scale(1.3); }
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
     100% { transform: scale(1); }
+  }
+
+  .like-count {
+    font-weight: 500;
+    min-width: 20px;
+  }
+
+  /* 评论按钮 */
+  .comment-btn:hover {
+    color: #4a9eff;
+  }
+
+  .comment-btn:hover .action-icon {
+    transform: scale(1.1);
   }
 
   /* 分享按钮 */
   .share-btn:hover {
-    background: var(--primary)/10;
-    color: var(--primary);
+    color: #10b981;
   }
 
   .share-btn:hover .action-icon {
-    transform: scale(1.1) rotate(-15deg);
+    transform: scale(1.1) rotate(-10deg);
+  }
+
+  .action-text {
+    font-weight: 500;
   }
 
   /* 响应式 */
-  @media (max-width: 640px) {
-    .card-inner {
-      padding: 16px;
-      border-radius: 16px;
+  @media (max-width: 480px) {
+    .moment-card {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
     }
 
     .avatar-img {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
     }
 
     .user-name {
       font-size: 14px;
     }
 
-    .action-btn {
-      padding: 6px 12px;
-      font-size: 12px;
+    .meta-row {
+      font-size: 11px;
+    }
+
+    .location {
+      max-width: 100px;
+    }
+
+    .card-actions {
+      gap: 16px;
     }
 
     .action-icon {
-      font-size: 18px;
+      font-size: 16px;
     }
 
-    .action-label {
-      display: none;
+    .action-text {
+      font-size: 12px;
     }
 
-    .action-btn {
-      padding: 8px;
-    }
-
-    .image-grid {
+    .card-images {
       gap: 4px;
+    }
+
+    .image-cols-3 {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 </style>

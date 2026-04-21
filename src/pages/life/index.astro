@@ -390,43 +390,8 @@ const navCards = [
 </MainGridLayout>
 
 <script>
-	// 滚动动画
-	function initPage() {
-		const observerOptions = {
-			threshold: 0,
-			rootMargin: '0px 0px -40px 0px'
-		};
-
-		const observer = new IntersectionObserver((entries) => {
-			entries.forEach(entry => {
-				if (entry.isIntersecting) {
-					entry.target.classList.add('visible');
-					observer.unobserve(entry.target);
-				}
-			});
-		}, observerOptions);
-
-		function triggerVisible() {
-			const items = document.querySelectorAll('.nav-card:not(.visible), .timeline-item:not(.visible)');
-			items.forEach(item => {
-				const rect = item.getBoundingClientRect();
-				if (rect.top < window.innerHeight + 100) {
-					item.classList.add('visible');
-				} else {
-					observer.observe(item);
-				}
-			});
-		}
-
-		triggerVisible();
-		window.addEventListener('scroll', triggerVisible, { passive: true });
-	}
-
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(initPage));
-	} else {
-		requestAnimationFrame(initPage);
-	}
+	// 悬停效果保持不变，移除页面加载时的动画逻辑
+	// 因为内容应该在首次加载时就可见
 </script>
 
 <style>
@@ -574,14 +539,7 @@ const navCards = [
 		border-radius: 20px;
 		overflow: hidden;
 		text-decoration: none;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		opacity: 0;
-		transform: translateY(12px);
-	}
-
-	.nav-card.visible {
-		opacity: 1;
-		transform: translateY(0);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, transform 0.4s ease;
 	}
 
 	.nav-card:hover {
@@ -753,18 +711,24 @@ const navCards = [
 	.timeline-item {
 		position: relative;
 		margin-bottom: 16px;
-		opacity: 0;
-		transform: translateX(-8px);
-		transition: all 0.4s ease;
-	}
-
-	.timeline-item.visible {
-		opacity: 1;
-		transform: translateX(0);
+		transition: all 0.25s ease;
 	}
 
 	.timeline-item:last-child {
 		margin-bottom: 0;
+	}
+
+	.timeline-item .timeline-card {
+		background: var(--bg-color);
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		padding: 14px 16px;
+		transition: all 0.25s ease;
+	}
+
+	.timeline-item:hover .timeline-card {
+		border-color: var(--primary)/30;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 	}
 
 	.timeline-dot {
@@ -782,19 +746,6 @@ const navCards = [
 
 	.dot-icon {
 		font-size: 13px;
-	}
-
-	.timeline-card {
-		background: var(--bg-color);
-		border: 1px solid var(--border);
-		border-radius: 14px;
-		padding: 14px 16px;
-		transition: all 0.25s ease;
-	}
-
-	.timeline-card:hover {
-		border-color: var(--primary)/30;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 	}
 
 	.timeline-card-header {
