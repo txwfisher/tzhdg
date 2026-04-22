@@ -50,9 +50,12 @@ const todoCount = ideasTodo.length;
 
 <MainGridLayout title="奇思妙想" description="随手记录的灵感与创意">
 	<div class="life-page flex w-full flex-col gap-5">
+		<a href="/life/" class="back-btn mb-2 inline-flex items-center gap-1 text-sm text-[var(--content-meta)] hover:text-[var(--primary)]">
+			<span>←</span> 返回生活
+		</a>
 		<section class="life-section card-base rounded-[var(--radius-large)] p-6">
 			<h1 class="mb-2 text-3xl font-bold text-[var(--primary)]">💡 奇思妙想</h1>
-			<p class="text-sm text-[var(--content-meta)]">随手记录灵感、短句和可执行的创意想法。在 `life/ideas/` 下新建 md 即可添加。</p>
+			<p class="text-sm text-[var(--content-meta)]">随手记录灵感、短句和可执行的创意想法。</p>
 
 			<div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
 				<div class="life-stat-card">

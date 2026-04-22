@@ -65,6 +65,9 @@ const thisMonthUpdates = sortedNotebooks.filter((item) => isSameMonth(item.updat
 
 <MainGridLayout title="笔记本" description="成长日记、学习复盘、灵感随笔">
 	<div class="diary-page flex w-full flex-col gap-6">
+		<a href="/life/" class="back-btn mb-2 inline-flex items-center gap-1 text-sm text-[var(--content-meta)] hover:text-[var(--primary)]">
+			<span>←</span> 返回生活
+		</a>
 		<!-- 页面标题 -->
 		<section class="card-base relative overflow-hidden rounded-[var(--radius-large)] p-8">
 			<!-- 装饰元素 -->
@@ -78,7 +81,7 @@ const thisMonthUpdates = sortedNotebooks.filter((item) => isSameMonth(item.updat
 						我的日记本
 					</h1>
 					<p class="text-[var(--content-meta)] max-w-lg">
-						记录生活点滴，每一页都是珍贵的回忆。在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-sm">life/notebooks/</code> 下创建文件夹即可添加新笔记本。
+						记录生活点滴，每一页都是珍贵的回忆。
 					</p>
 				</div>
 

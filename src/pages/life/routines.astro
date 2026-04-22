@@ -39,6 +39,9 @@ const totalEntries = entriesWithContent.length;
 
 <MainGridLayout title="日常规划" description="我的规划与思考">
 	<div class="routines-page flex w-full flex-col gap-5">
+		<a href="/life/" class="back-btn mb-2 inline-flex items-center gap-1 text-sm text-[var(--content-meta)] hover:text-[var(--primary)]">
+			<span>←</span> 返回生活
+		</a>
 		<!-- 标题区 -->
 		<section class="hero-section card-base relative overflow-hidden rounded-[var(--radius-large)] p-6 md:p-8">
 			<div class="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-[var(--primary)]/5 blur-3xl"></div>
@@ -68,7 +71,7 @@ const totalEntries = entriesWithContent.length;
 				</div>
 				<div class="stat-card md:col-span-1 col-span-2">
 					<div class="text-xs text-[var(--content-meta)]">说明</div>
-					<div class="mt-1 text-sm font-medium text-[var(--text-color)]">在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-xs">life/routines/</code> 下新建 md 即可添加</div>
+					<div class="mt-1 text-sm font-medium text-[var(--text-color)]">记录和规划生活中的各项事务</div>
 				</div>
 			</div>
 		</section>
@@ -83,9 +86,6 @@ const totalEntries = entriesWithContent.length;
 				<div class="rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-8 text-center">
 					<div class="text-5xl mb-4">📋</div>
 					<p class="text-[var(--content-meta)]">还没有日常规划</p>
-					<p class="mt-2 text-sm text-[var(--content-meta)] opacity-70">
-						在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono">life/routines/</code> 下新建 md 文件即可
-					</p>
 				</div>
 			) : (
 				<div class="space-y-6">
@@ -137,48 +137,6 @@ const totalEntries = entriesWithContent.length;
 			)}
 		</section>
 
-		<!-- 创建新规划说明 -->
-		{totalEntries > 0 && (
-			<section class="card-base rounded-[var(--radius-large)] p-6">
-				<h2 class="mb-4 flex items-center gap-2 text-lg font-bold text-[var(--text-color)]">
-					<span>💡</span> 创建新规划
-				</h2>
-				<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
-					<p class="mb-3 text-sm text-[var(--content-meta)]">在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-xs">src/content/life/routines/</code> 下创建 md 文件：</p>
-					<pre class="overflow-x-auto rounded bg-[var(--btn-regular-bg)] p-4 text-sm"><code>---
-name: 晨跑计划
-time: 早晨 6:30-7:30
-icon: 🏃
-color: "#22c55e"
-description: 每天早上进行30分钟有氧运动
-updatedAt: 2026-04-18
----
-
-## 目标
-
-保持健康的身体状态，提高一天的精力。
-
-## 具体安排
-
-1. 热身 5 分钟
-2. 慢跑 20 分钟
-3. 拉伸 5 分钟
-
-坚持一段时间后，可以逐渐增加运动强度。</code></pre>
-				</div>
-
-				<div class="mt-4 grid gap-4 md:grid-cols-2">
-					<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
-						<h3 class="mb-2 font-semibold text-[var(--text-color)]">📌 必填字段</h3>
-						<p class="text-xs text-[var(--content-meta)]">name - 规划名称</p>
-					</div>
-					<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
-						<h3 class="mb-2 font-semibold text-[var(--text-color)]">🎨 可选字段</h3>
-						<p class="text-xs text-[var(--content-meta)]">time、icon、color、description、updatedAt</p>
-					</div>
-				</div>
-			</section>
-		)}
 	</div>
 </MainGridLayout>
 

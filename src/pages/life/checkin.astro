@@ -49,10 +49,13 @@ items.forEach(item => {
 
 <MainGridLayout title="打卡记录" description="记录完成次数">
 	<div class="checkin-page flex w-full flex-col gap-5">
+		<a href="/life/" class="back-btn mb-2 inline-flex items-center gap-1 text-sm text-[var(--content-meta)] hover:text-[var(--primary)]">
+			<span>←</span> 返回生活
+		</a>
 		<!-- 标题区 -->
 		<section class="card-base rounded-[var(--radius-large)] p-6">
 			<h1 class="mb-2 text-3xl font-bold text-[var(--primary)]">✅ 打卡记录</h1>
-			<p class="text-sm text-[var(--content-meta)]">记录一件事情的完成次数和完成日期。在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-xs">life/checkin/</code> 下新建 md 即可添加。</p>
+			<p class="text-sm text-[var(--content-meta)]">记录一件事情的完成次数和完成日期。</p>
 
 			<!-- 统计卡片 -->
 			<div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -99,9 +102,6 @@ items.forEach(item => {
 				<div class="rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-8 text-center">
 					<div class="text-5xl mb-4">📝</div>
 					<p class="text-[var(--content-meta)]">还没有打卡记录</p>
-					<p class="mt-2 text-sm text-[var(--content-meta)] opacity-70">
-						在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono">life/checkin/</code> 下新建 md 文件即可
-					</p>
 				</div>
 			) : (
 				<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -138,36 +138,6 @@ items.forEach(item => {
 			)}
 		</section>
 
-		<!-- 使用说明 -->
-		<section class="card-base rounded-[var(--radius-large)] p-6">
-			<h2 class="mb-4 flex items-center gap-2 text-xl font-bold text-[var(--text-color)]">
-				<span>💡</span> 使用说明
-			</h2>
-			<div class="space-y-4 text-sm text-[var(--content-meta)]">
-				<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
-					<h3 class="mb-2 font-semibold text-[var(--text-color)]">创建打卡项目</h3>
-					<p>在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-xs">src/content/life/checkin/</code> 下创建 md 文件：</p>
-					<pre class="mt-2 overflow-x-auto rounded bg-[var(--btn-regular-bg)] p-3 text-xs"><code>---
-name: 早睡早起
-description: 23点前入睡，7点前起床
-checkins:
-  - 2026-04-01
-  - 2026-04-02
-  - 2026-04-05
----
-
-每次打卡后，在 checkins 数组中添加当天的日期。</code></pre>
-				</div>
-				<div class="rounded-lg border border-[var(--line-divider)] bg-[var(--card-bg)] p-4">
-					<h3 class="mb-2 font-semibold text-[var(--text-color)]">打卡格式说明</h3>
-					<ul class="list-disc list-inside space-y-1">
-						<li>日期格式: <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-xs">YYYY-MM-DD</code></li>
-						<li>每次打卡后，在 <code class="px-1.5 py-0.5 rounded bg-[var(--btn-regular-bg)] font-mono text-xs">checkins</code> 数组中添加新日期</li>
-						<li>日期会自动去重和排序</li>
-					</ul>
-				</div>
-			</div>
-		</section>
 	</div>
 </MainGridLayout>
 

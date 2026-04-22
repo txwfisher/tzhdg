@@ -64,9 +64,12 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 
 <MainGridLayout title="健康" description="运动、睡眠、饮食记录">
 	<div class="life-page flex w-full flex-col gap-5">
+		<a href="/life/" class="back-btn mb-2 inline-flex items-center gap-1 text-sm text-[var(--content-meta)] hover:text-[var(--primary)]">
+			<span>←</span> 返回生活
+		</a>
 		<section class="life-section card-base rounded-[var(--radius-large)] p-6">
 			<h1 class="mb-2 text-3xl font-bold text-[var(--primary)]">🏃 健康</h1>
-			<p class="text-sm text-[var(--content-meta)]">运动、睡眠、饮食记录，每次记录后新建 md 文件即可。</p>
+			<p class="text-sm text-[var(--content-meta)]">运动、睡眠、饮食记录。</p>
 
 			<div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
 				<div class="life-stat-card">
@@ -103,7 +106,7 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 			<div class="space-y-3">
 				{sortedWorkouts.length === 0 ? (
 					<div class="rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--content-meta)]">
-						暂无运动记录，在 `life/health/workout/` 下新建 md 即可添加。
+						暂无运动记录。
 					</div>
 				) : (
 					sortedWorkouts.map((record) => (
@@ -148,7 +151,7 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 			<div class="mt-4 space-y-3">
 				{sortedSleep.length === 0 ? (
 					<div class="rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--content-meta)]">
-						暂无睡眠记录，在 `life/health/sleep/` 下新建 md 即可添加。
+						暂无睡眠记录。
 					</div>
 				) : (
 					sortedSleep.map((record) => (
@@ -181,7 +184,7 @@ const totalAvoidFoods = sum(sortedFood.map((item) => item.data.avoidFoods?.lengt
 			<div class="mt-4 space-y-3">
 				{sortedFood.length === 0 ? (
 					<div class="rounded-xl border border-[var(--line-divider)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--content-meta)]">
-						暂无饮食记录，在 `life/health/food/` 下新建 md 即可添加。
+						暂无饮食记录。
 					</div>
 				) : (
 					sortedFood.map((record) => (
