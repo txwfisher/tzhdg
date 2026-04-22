@@ -1,11 +1,22 @@
 ---
 import { Icon } from "astro-icon/components";
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
-import { announcementConfig } from "@/config/announcementConfig";
+import { getCollection } from "astro:content";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 
-const config = announcementConfig;
+// 从 content/ziyuan/announcement.md 读取公告配置
+const ziyuanEntries = await getCollection("ziyuan");
+const announcementEntry = ziyuanEntries.find((e) => e.id === "announcement");
+const announcementData = announcementEntry?.data as any;
+
+// 兼容旧配置：如果没有数据则使用默认值
+const config = {
+  title: announcementData?.title || "公告",
+  content: announcementData?.content || "默认内容",
+  closable: announcementData?.closable ?? true,
+  link: announcementData?.link,
+};
 
 interface Props {
 	class?: string;

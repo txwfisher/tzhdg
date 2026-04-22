@@ -218,6 +218,38 @@ const danmuCollection = defineCollection({
 	}),
 });
 
+const ziyuanCollection = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/ziyuan" }),
+	schema: z.union([
+		z.object({
+			title: z.string(),
+			content: z.string(),
+			closable: z.boolean().optional().default(true),
+			link: z
+				.object({
+					enable: z.boolean().optional().default(true),
+					text: z.string(),
+					url: z.string(),
+					external: z.boolean().optional().default(false),
+				})
+				.optional(),
+			quotes: z.undefined().optional(),
+		}),
+		z.object({
+			title: z.string(),
+			quotes: z.array(
+				z.object({
+					text: z.string(),
+					author: z.string(),
+				})
+			),
+			content: z.undefined().optional(),
+			closable: z.undefined().optional(),
+			link: z.undefined().optional(),
+		}),
+	]),
+});
+
 const daohangCollection = defineCollection({
 	loader: glob({ pattern: "**/*.md", base: "./src/content/daohang" }),
 	schema: z.object({
@@ -249,4 +281,5 @@ export const collections = {
 	album: albumCollection,
 	danmu: danmuCollection,
 	daohang: daohangCollection,
+	ziyuan: ziyuanCollection,
 };
