@@ -141,6 +141,13 @@ const siteLang = lang.replace("_", "-");
 
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- 搜索引擎验证标签 -->
+    <!-- 百度搜索资源平台验证 -->
+    <!-- <meta name="baidu-site-verification" content="你的百度验证码" /> -->
+    <!-- 必应搜索验证 -->
+    <meta name="msvalidate.01" content="63A6A0006140D3F4ABB55B84399CF4D9" />
+    <!-- Google Search Console 验证 (DNS验证不需要在此添加) -->
     {
       favicons.map((favicon) => (
         <link
