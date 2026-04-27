@@ -20,7 +20,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	playMode: "list",
 
 	// 是否显启用歌词
-	showLyrics: false,
+	showLyrics: true,
 
 	// Meting API 配置
 	meting: {
@@ -46,11 +46,26 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	local: {
 		playlist: [
 			{
+				name: "知我",
+				artist: "国风堂",
+				url: "https://re.tsh520.cn/music/%E7%9F%A5%E6%88%91.mp3",
+				cover: "https://re.0824.uk/zl/tx.webp",
+				lrc: "https://re.tsh520.cn/music/%E7%9F%A5%E6%88%91.lrc",
+			},
+			{
+				name: "女孩",
+				artist: "韦礼安",
+				url: "https://re.tsh520.cn/music/%E5%A5%B3%E5%AD%A9.mp3",
+				cover: "https://re.0824.uk/zl/tx.webp",
+				lrc: "https://re.tsh520.cn/music/%E5%A5%B3%E5%AD%A9.lrc",
+				
+			},
+			{
 				name: "爱得起",
 				artist: "郑秀文",
 				url: "https://re.tsh520.cn/music/%E7%88%B1%E5%BE%97%E8%B5%B7.mp3",
 				cover: "https://re.0824.uk/zl/tx.webp",
-				lrc: "",
+				lrc: "https://re.tsh520.cn/music/%E7%88%B1%E5%BE%97%E8%B5%B7.lrc",
 			},
 		],
 	},
