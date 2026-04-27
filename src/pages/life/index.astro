@@ -86,22 +86,39 @@ const placesData = allLifeEntries
   }));
 
 const notebooksRaw = await getCollection("notebooks");
+
+// 首先收集所有笔记本文件夹的名称映射
+const notebookNameMap = new Map();
+notebooksRaw.forEach(entry => {
+  const normalizedId = entry.id.replace(/\\/g, "/");
+  // 匹配 _index 文件来获取笔记本名称
+  const isIndexFile = normalizedId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/);
+  if (isIndexFile) {
+    const folderName = isIndexFile[1];
+    notebookNameMap.set(folderName, entry.data.name || folderName);
+  }
+});
+
 const notebookEntries = notebooksRaw
   .filter(e => { const id = e.id.replace(/\\/g, "/"); return !id.endsWith("/_index"); })
   .sort((a, b) => { const aT = a.data.date instanceof Date ? a.data.date.getTime() : 0; const bT = b.data.date instanceof Date ? b.data.date.getTime() : 0; return bT - aT; });
 
-const notebookData = await Promise.all(notebookEntries.map(async e => {
-  const bodyText = e.body ? e.body.split("\n").filter(l => !l.trim().match(/^-{3}$/)).join("\n").trim() : "";
+const notebookData = notebookEntries.map(e => {
   const normalizedId = e.id.replace(/\\/g, "/");
   const folderName = normalizedId.split("/")[0];
+  const notebookName = notebookNameMap.get(folderName) || folderName;
   return {
-    id: e.id, type: "笔记", icon: "material-symbols:edit-note",
-    color: "#ec4899", bgColor: "rgba(236, 72, 153, 0.1)",
-    date: e.data.date, name: e.data.name || "未命名",
-    summary: e.data.summary, tags: e.data.tags || [], body: bodyText,
+    id: e.id, 
+    notebookName,  // 笔记本名称，如"我的宝宝"
+    type: "笔记", 
+    icon: "material-symbols:edit-note",
+    color: "#ec4899", 
+    bgColor: "rgba(236, 72, 153, 0.1)",
+    date: e.data.date, 
+    entryName: e.data.name || "未命名",  // 日记标题，如"我和宝宝"
     href: `/life/notebooks/${folderName}/`,
   };
-}));
+});
 
 const allItems = [...ideas, ...workoutEntries, ...sleepData, ...foodData, ...checkinData, ...routinesData, ...placesData, ...notebookData]
   .filter(i => i.date instanceof Date && !Number.isNaN(i.date.getTime()))
@@ -111,12 +128,12 @@ function formatDate(date) { if (!date) return ""; const d = date instanceof Date
 function formatTimeAgo(date) { const now = new Date(); const diff = now.getTime() - date.getTime(); const mins = Math.floor(diff / 60000); const hrs = Math.floor(diff / 3600000); const days = Math.floor(diff / 86400000); if (mins < 1) return "刚刚"; if (mins < 60) return mins + " 分钟前"; if (hrs < 24) return hrs + " 小时前"; if (days < 30) return days + " 天前"; return formatDate(date); }
 
 const navItems = [
-  { label: "健康", icon: "material-symbols:favorite-outline", href: "/life/health/", color: "#3b82f6" },
-  { label: "想法", icon: "material-symbols:lightbulb-outline", href: "/life/ideas/", color: "#f59e0b" },
-  { label: "打卡", icon: "material-symbols:check-circle-outline", href: "/life/checkin/", color: "#84cc16" },
+  { label: "笔记本", icon: "material-symbols:book-outline", href: "/life/notebooks/", color: "#ec4899" },
   { label: "规划", icon: "material-symbols:schedule-outline", href: "/life/routines/", color: "#06b6d4" },
+  { label: "想法", icon: "material-symbols:lightbulb-outline", href: "/life/ideas/", color: "#f59e0b" },
   { label: "足迹", icon: "material-symbols:location-on-outline", href: "/life/places/", color: "#10b981" },
-  { label: "笔记", icon: "material-symbols:book-outline", href: "/life/notebooks/", color: "#ec4899" },
+  { label: "健康", icon: "material-symbols:favorite-outline", href: "/life/health/", color: "#3b82f6" },
+  { label: "打卡", icon: "material-symbols:check-circle-outline", href: "/life/checkin/", color: "#84cc16" },
 ];
 
 const totalWorkouts = workoutEntries.length;
@@ -160,13 +177,27 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
       </div>
     </div>
     <div class="nav-tabs-wrapper" id="life-nav-wrapper">
-      <div class="nav-tabs" id="life-nav-tabs">
-        {navItems.map(item => (
-          <a href={url(item.href)} class="nav-tab" style={`--btn-color: ${item.color}`}>
-            <Icon name={item.icon} class="tab-icon" />
-            <span class="tab-label">{item.label}</span>
-          </a>
-        ))}
+      <div class="nav-container">
+        <!-- 左侧固定的"生活"按钮 -->
+        <a href={url("/life/")} class="nav-tab nav-tab-home" data-category-name="生活">
+          <Icon name="material-symbols:favorite" class="tab-icon" />
+          <span class="tab-label">生活</span>
+        </a>
+        <!-- 右侧可滚动区域 -->
+        <div class="nav-tabs-scroll" id="life-nav-tabs-scroll">
+          <div class="nav-tabs" id="life-nav-tabs">
+            {navItems.map(item => (
+              <a 
+                href={url(item.href)} 
+                class="nav-tab" 
+                data-category-name={item.label}
+              >
+                <Icon name={item.icon} class="tab-icon" />
+                <span class="tab-label">{item.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
     <div class="life-feed">
@@ -180,140 +211,85 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
         </div>
       ) : (
         allItems.map(item => {
-          const cardStyle = `color: ${item.color}; background: ${item.bgColor}`;
           const iconStyle = `background: ${item.bgColor}`;
           const iconColorStyle = `color: ${item.color}`;
-          const showCompleted = "isCompleted" in item;
-          const showRunKm = "runKm" in item;
-          const showSleepHours = "sleepHours" in item && !showRunKm;
-          const showAvoidFoods = "avoidFoods" in item;
-          const showCheckins = "checkins" in item && !showAvoidFoods;
-          const showBodyTime = "body" in item && "time" in item;
-          const showPlace = "province" in item && "city" in item && !("body" in item);
-          const showSummary = "summary" in item && !("province" in item);
+          const typeLabelStyle = `color: ${item.color}; background: ${item.bgColor}`;
+          
+          // 统一的摘要生成函数
+          let summary = "";
+          let subInfo = "";
+          let typeLabel = item.type; // 默认使用 item.type
+          
+          if (item.type === "想法") {
+            summary = item.content;
+            subInfo = item.isCompleted ? "✓ 已完成" : "○ 待完成";
+          } else if (item.type === "运动") {
+            summary = item.workoutType || "运动记录";
+            subInfo = `${item.runKm.toFixed(1)} km · ${item.workoutMinutes} 分钟`;
+          } else if (item.type === "睡眠") {
+            summary = "睡眠记录";
+            subInfo = `${item.sleepHours} 小时 · 质量 ${"★".repeat(item.sleepQuality)}${"☆".repeat(5 - item.sleepQuality)}`;
+          } else if (item.type === "饮食") {
+            // 主要内容显示日期
+            summary = formatDate(item.date);
+            // 次要信息显示饮食情况
+            const foodTags = [];
+            if (item.allowedFoods?.length > 0) {
+              foodTags.push(`<span class="food-tag allowed">✓ ${item.allowedFoods.join(", ")}</span>`);
+            }
+            if (item.avoidFoods?.length > 0) {
+              foodTags.push(`<span class="food-tag avoid">✗ ${item.avoidFoods.join(", ")}</span>`);
+            }
+            subInfo = foodTags.length > 0 ? foodTags.join("") : (item.weight ? `体重 ${item.weight}` : "无饮食记录");
+            // 特殊处理饮食类型，subInfo 需要 HTML
+            item._renderFoodSubInfo = true;
+          } else if (item.type === "打卡") {
+            summary = item.name || "打卡";
+            subInfo = `累计 ${item.checkins?.length || 0} 天`;
+          } else if (item.type === "规划") {
+            summary = item.name || "规划";
+            subInfo = item.time || "";
+          } else if (item.type === "足迹") {
+            summary = [item.province, item.city, item.district].filter(Boolean).join(" ");
+            subInfo = item.experience?.slice(0, 30) || `到访 ${item.visitCount} 次`;
+          } else if (item.type === "笔记") {
+            // 类型标签显示笔记本名称，summary显示日记标题
+            typeLabel = item.notebookName || "笔记";
+            summary = item.entryName || "未命名";
+            subInfo = "";
+          }
+          
           return (
-            <div class="life-card">
-              <div class="card-body">
-                <div class="card-header">
-                  <span class="card-type" style={cardStyle}>{item.type}</span>
-                  <span class="card-time">{formatTimeAgo(item.date)}</span>
-                  <a href={url(item.href)} class="card-link">
-                    查看详情
-                    <Icon name="material-symbols:chevron-right-rounded" class="link-icon" />
-                  </a>
+            <a href={url(item.href)} class="moment-card">
+              <div class="moment-icon" style={iconStyle}>
+                <span class="moment-icon-inner" style={iconColorStyle}>
+                  {item.icon ? (
+                    <Icon name={item.icon} />
+                  ) : item.emoji ? (
+                    <span class="moment-emoji">{item.emoji}</span>
+                  ) : (
+                    <Icon name="material-symbols:circle" />
+                  )}
+                </span>
+              </div>
+              <div class="moment-content">
+                <div class="moment-header">
+                  <span class="moment-type" style={typeLabelStyle}>{typeLabel}</span>
+                  <span class="moment-time">{formatTimeAgo(item.date)}</span>
                 </div>
-                {showCompleted && (
-                  <div class="card-content-full">
-                    <div class="content-text">{item.content}</div>
-                    <div class="content-meta-row">
-                      <span class="meta-tag" style={cardStyle}>{item.isCompleted ? "已完成" : "待完成"}</span>
-                      <span class="meta-date">创建: {formatDate(item.createdAt)}</span>
-                    </div>
-                  </div>
-                )}
-                {showRunKm && (
-                  <div class="card-content-full">
-                    <div class="content-title">{item.workoutType}</div>
-                    <div class="content-grid">
-                      <div class="grid-item">
-                        <span class="grid-label">距离</span>
-                        <span class="grid-value" style={iconColorStyle}>{item.runKm.toFixed(2)} km</span>
-                      </div>
-                      <div class="grid-item">
-                        <span class="grid-label">时长</span>
-                        <span class="grid-value">{item.workoutMinutes} 分钟</span>
-                      </div>
-                      <div class="grid-item">
-                        <span class="grid-label">步数</span>
-                        <span class="grid-value">{item.stepsToday}</span>
-                      </div>
-                    </div>
-                    <div class="content-meta-row">
-                      <span class="meta-date">{formatDate(item.date)}</span>
-                    </div>
-                  </div>
-                )}
-                {showSleepHours && (
-                  <div class="card-content-full">
-                    <div class="content-grid">
-                      <div class="grid-item">
-                        <span class="grid-label">睡眠时长</span>
-                        <span class="grid-value" style={iconColorStyle}>{item.sleepHours} 小时</span>
-                      </div>
-                      <div class="grid-item">
-                        <span class="grid-label">睡眠质量</span>
-                        <span class="grid-value">{"★".repeat(item.sleepQuality)}{"☆".repeat(5 - item.sleepQuality)}</span>
-                      </div>
-                    </div>
-                    <div class="content-meta-row">
-                      <span class="meta-date">{formatDate(item.date)}</span>
-                    </div>
-                  </div>
-                )}
-                {showAvoidFoods && (
-                  <div class="card-content-full">
-                    <div class="food-summary">
-                      {item.breakfast && <div class="food-meal"><span class="food-label">早餐</span><span class="food-value">{item.breakfast}</span></div>}
-                      {item.lunch && <div class="food-meal"><span class="food-label">午餐</span><span class="food-value">{item.lunch}</span></div>}
-                      {item.dinner && <div class="food-meal"><span class="food-label">晚餐</span><span class="food-value">{item.dinner}</span></div>}
-                      {item.snack && <div class="food-meal"><span class="food-label">零食</span><span class="food-value">{item.snack}</span></div>}
-                    </div>
-                    {(item.allowedFoods?.length > 0 || item.avoidFoods?.length > 0 || item.water || item.weight) && (
-                      <div class="content-meta-row">
-                        {item.allowedFoods?.length > 0 && <span class="meta-tag" style="color: #22c55e; background: rgba(34, 197, 94, 0.1)">宜: {item.allowedFoods.join(", ")}</span>}
-                        {item.avoidFoods?.length > 0 && <span class="meta-tag" style="color: #ef4444; background: rgba(239, 68, 68, 0.1)">忌: {item.avoidFoods.join(", ")}</span>}
-                        {item.water && <span class="meta-date">饮水: {item.water}</span>}
-                        {item.weight && <span class="meta-date">体重: {item.weight}</span>}
-                      </div>
-                    )}
-                    {item.note && <div class="food-note">{item.note}</div>}
-                    <div class="content-meta-row">
-                      <span class="meta-date">{formatDate(item.date)}</span>
-                    </div>
-                  </div>
-                )}
-                {showCheckins && (
-                  <div class="card-content-full">
-                    <div class="content-title">{item.name}</div>
-                    <div class="content-meta-row">
-                      <span class="meta-stat">累计 <strong style={iconColorStyle}>{item.checkins.length}</strong> 天</span>
-                    </div>
-                  </div>
-                )}
-                {showBodyTime && (
-                  <div class="card-content-full">
-                    <div class="content-title">{item.name}</div>
-                    <div class="content-meta-row">
-                      {item.time && <span class="meta-item">时间: {item.time}</span>}
-                      <span class="meta-date">{formatDate(item.date)}</span>
-                    </div>
-                    {item.body && (
-                      <div class="notebook-content" set:html={marked.parse(item.body.slice(0, 300))} />
-                    )}
-                  </div>
-                )}
-                {showPlace && (
-                  <div class="card-content-full">
-                    <div class="content-title" style={iconColorStyle}>{item.province || "未知"}{item.city && " - " + item.city}</div>
-                    <div class="content-meta-row">
-                      <span class="meta-stat">到访 <strong style={iconColorStyle}>{item.visitCount}</strong> 次</span>
-                      <span class="meta-date">{formatDate(item.date)}</span>
-                    </div>
-                  </div>
-                )}
-                {showSummary && (
-                  <div class="card-content-full">
-                    <div class="content-title">{item.name}</div>
-                    <div class="content-meta-row">
-                      <span class="meta-date">{formatDate(item.date)}</span>
-                    </div>
-                    {item.body && (
-                      <div class="notebook-content" set:html={marked.parse(item.body.slice(0, 300))} />
-                    )}
-                  </div>
+                <div class="moment-text">{summary}</div>
+                {subInfo && (
+                  item._renderFoodSubInfo ? (
+                    <div class="moment-sub food-tags" set:html={subInfo} />
+                  ) : (
+                    <div class="moment-sub">{subInfo}</div>
+                  )
                 )}
               </div>
-            </div>
+              <div class="moment-arrow">
+                <Icon name="material-symbols:chevron-right-rounded" />
+              </div>
+            </a>
           );
         })
       )}
@@ -363,106 +339,347 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
   .nav-tabs-wrapper.show-left::before { opacity: 1; }
   .nav-tabs-wrapper.show-right::after { opacity: 1; }
   
+  /* 整体容器 */
+  .nav-container {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--line-divider);
+    border-radius: 12px;
+    padding: 6px;
+  }
+  
+  /* 左侧固定的"生活"按钮 */
+  .nav-tab-home {
+    flex-shrink: 0;
+    background: var(--card-bg);
+  }
+  
+  /* 右侧可滚动区域 */
+  .nav-tabs-scroll {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
   .nav-tabs { 
     display: flex; 
-    gap: 8px; 
-    padding: 4px;
+    gap: 6px; 
+    padding: 2px;
     overflow-x: auto;
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
-    padding-left: 8px;
-    padding-right: 8px;
   }
   .nav-tabs::-webkit-scrollbar { display: none; }
   
+  /* 主页CategoryBar风格标签样式 */
   .nav-tab {
     flex-shrink: 0; 
     display: flex; 
     align-items: center; 
+    justify-content: center;
     gap: 6px; 
-    padding: 10px 18px; 
-    border-radius: 10px; 
-    color: var(--btn-color); 
+    padding: 6px 14px; 
+    border-radius: 8px; 
     font-size: 14px; 
     font-weight: 500; 
     text-decoration: none; 
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+    transition: all 0.2s ease;
     white-space: nowrap;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 1.5px solid var(--line-divider);
+    color: var(--btn-content);
   }
   .nav-tab:hover { 
-    background: var(--btn-color);
+    border-color: var(--primary);
+    color: var(--primary);
+    background: transparent;
+  }
+  .nav-tab[data-active] {
+    background: var(--primary);
+    border-color: var(--primary);
     color: white;
-    border-color: var(--btn-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--btn-color) 30%, transparent);
+  }
+  .nav-tab[data-active]:hover {
+    opacity: 0.9;
+    transform: none;
+    box-shadow: none;
   }
   .nav-tab:active {
-    transform: translateY(0) scale(0.98);
+    transform: scale(0.98);
   }
   .tab-icon { font-size: 18px; }
-  .life-feed { display: flex; flex-direction: column; gap: 12px; }
-  .life-card { padding: 18px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; transition: all 0.2s ease; }
-  .card-body { flex: 1; min-width: 0; }
-  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-  .card-type { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-  .card-time { font-size: 12px; color: var(--content-meta); }
-  .card-link { display: inline-flex; align-items: center; gap: 2px; margin-left: auto; padding: 4px 10px; border-radius: 6px; background: var(--bg-color); color: var(--content-meta); font-size: 12px; text-decoration: none; transition: all 0.2s; }
-  .card-link:hover { background: var(--primary); color: white; }
-  .link-icon { font-size: 14px; }
-  .card-content-full { display: flex; flex-direction: column; gap: 8px; }
-  .content-title { font-size: 18px; font-weight: 700; color: var(--text-color); line-height: 1.4; }
-  .content-text { font-size: 15px; color: var(--text-color); line-height: 1.7; padding: 12px 14px; background: var(--bg-color); border-radius: 10px; border-left: 3px solid var(--primary); }
-  .content-meta-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .meta-tag { padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-  .meta-date { font-size: 13px; color: var(--content-meta); }
-  .meta-item { font-size: 13px; color: var(--content-meta); }
-  .meta-stat { font-size: 14px; color: var(--content-meta); }
-  .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
-  .grid-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; background: var(--bg-color); border-radius: 8px; }
-  .grid-label { font-size: 11px; color: var(--content-meta); text-transform: uppercase; }
-  .grid-value { font-size: 15px; font-weight: 600; color: var(--text-color); }
-  .notebook-content { font-size: 14px; color: var(--text-color); line-height: 1.7; padding: 12px 14px; background: var(--bg-color); border-radius: 10px; border-left: 3px solid #ec4899; word-break: break-word; }
-  .notebook-content h1, .notebook-content h2, .notebook-content h3, .notebook-content h4 { margin: 0.5em 0; font-weight: 600; }
-  .notebook-content h1 { font-size: 1.2em; }
-  .notebook-content h2 { font-size: 1.1em; }
-  .notebook-content h3, .notebook-content h4 { font-size: 1em; }
-  .notebook-content p { margin: 0.5em 0; }
-  .notebook-content ul, .notebook-content ol { margin: 0.5em 0; padding-left: 1.5em; }
-  .notebook-content li { margin: 0.25em 0; }
-  .notebook-content code { background: rgba(0,0,0,0.1); padding: 0.15em 0.3em; border-radius: 4px; font-size: 0.9em; font-family: var(--font-mono); }
-  .notebook-content strong { font-weight: 600; }
-  .notebook-content a { color: var(--primary); text-decoration: none; }
-  .notebook-content a:hover { text-decoration: underline; }
-  .food-summary { display: flex; flex-direction: column; gap: 6px; }
-  .food-meal { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: var(--bg-color); border-radius: 8px; }
-  .food-label { flex-shrink: 0; min-width: 40px; font-size: 12px; font-weight: 600; color: var(--content-meta); }
-  .food-value { font-size: 14px; color: var(--text-color); }
-  .food-note { font-size: 13px; color: var(--content-meta); padding: 8px 0; font-style: italic; }
-  .empty-state { text-align: center; padding: 60px 20px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; }
-  .empty-icon { width: 64px; height: 64px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; background: var(--bg-color); border-radius: 50%; color: var(--content-meta); font-size: 32px; opacity: 0.5; }
-  .empty-title { font-size: 16px; font-weight: 600; color: var(--text-color); margin-bottom: 6px; }
-  .empty-desc { font-size: 14px; color: var(--content-meta); }
-  
-  /* 导航按钮滚动功能 */
-  .nav-tabs-wrapper {
+  /* ========== 微博/QQ动态风格 Feed ========== */
+  .life-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 统一卡片容器 - 微博动态风格 */
+  .moment-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    overflow: hidden;
   }
-  
-  /* 移动端样式优化 */
+
+  .moment-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.25s ease;
+  }
+
+  .moment-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .moment-card:hover::before {
+    background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 50%, transparent));
+  }
+
+  /* 左侧图标 */
+  .moment-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .moment-icon-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+  }
+
+  .moment-emoji {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  /* 饮食标签样式 */
+  .food-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .food-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .food-tag.allowed {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+  }
+
+  .food-tag.avoid {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+  }
+
+  :global(html.dark) .food-tag.allowed {
+    color: #4ade80;
+  }
+
+  :global(html.dark) .food-tag.avoid {
+    color: #f87171;
+  }
+
+  /* 右侧内容 */
+  .moment-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* 头部：类型标签 + 时间 */
+  .moment-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .moment-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .moment-time {
+    font-size: 12px;
+    color: var(--content-meta);
+    font-weight: 400;
+  }
+
+  /* 主要文字内容 */
+  .moment-text {
+    font-size: 15px;
+    color: var(--text-color);
+    line-height: 1.6;
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  /* 次要信息 */
+  .moment-sub {
+    font-size: 13px;
+    color: var(--content-meta);
+    line-height: 1.5;
+  }
+
+  /* 右侧箭头 */
+  .moment-arrow {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    color: var(--content-meta);
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.25s ease;
+  }
+
+  .moment-card:hover .moment-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--primary);
+  }
+
+  /* ========== 旧样式（保留兼容性） ========== */
+  .life-card { display: none; } /* 已弃用，使用 moment-card */
+  .card-body { display: none; }
+  .card-header { display: none; }
+  .card-type { display: none; }
+  .card-time { display: none; }
+  .card-link { display: none; }
+  .card-content-full { display: none; }
+  .content-title { display: none; }
+  .content-text { display: none; }
+  .content-meta-row { display: none; }
+  .meta-tag { display: none; }
+  .meta-date { display: none; }
+  .meta-item { display: none; }
+  .meta-stat { display: none; }
+  .content-grid { display: none; }
+  .grid-item { display: none; }
+  .grid-label { display: none; }
+  .grid-value { display: none; }
+  .notebook-content { display: none; }
+  .food-summary { display: none; }
+  .food-meal { display: none; }
+  .food-label { display: none; }
+  .food-value { display: none; }
+  .food-note { display: none; }
+  .link-icon { display: none; }
+
+  /* 空状态 */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-color);
+    border-radius: 50%;
+    color: var(--content-meta);
+    font-size: 32px;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 6px;
+  }
+
+  .empty-desc {
+    font-size: 14px;
+    color: var(--content-meta);
+  }
+
+  /* ========== 移动端适配 ========== */
   @media (max-width: 768px) {
-    .nav-tab {
-      padding: 8px 14px;
-      font-size: 13px;
+    .moment-card {
+      padding: 14px 16px;
+      gap: 12px;
     }
-    .tab-icon {
-      font-size: 16px;
+
+    .moment-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+    }
+
+    .moment-icon-inner {
+      width: 24px;
+      height: 24px;
+      font-size: 18px;
+    }
+
+    .moment-text {
+      font-size: 14px;
+    }
+
+    .moment-sub {
+      font-size: 12px;
+    }
+
+    .moment-arrow {
+      width: 24px;
+      height: 24px;
     }
   }
-  
+
   @media (max-width: 480px) {
     .life-container { padding: 0 12px 32px; }
     .profile-card { padding: 16px; border-radius: 12px; margin-bottom: 12px; }
@@ -470,8 +687,34 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
     .profile-name { font-size: 16px; }
     .profile-stats { gap: 14px; padding: 12px; }
     .stat-value { font-size: 16px; }
-    .life-card { padding: 14px; border-radius: 12px; }
-    .content-grid { grid-template-columns: repeat(2, 1fr); }
+    .moment-card {
+      padding: 12px 14px;
+      gap: 10px;
+      border-radius: 12px;
+    }
+    .moment-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+    }
+    .moment-icon-inner {
+      width: 22px;
+      height: 22px;
+      font-size: 16px;
+    }
+    .moment-type {
+      padding: 2px 8px;
+      font-size: 11px;
+    }
+    .moment-time {
+      font-size: 11px;
+    }
+    .moment-text {
+      font-size: 14px;
+    }
+    .moment-sub {
+      font-size: 12px;
+    }
     .nav-tab {
       padding: 8px 12px;
       font-size: 12px;
@@ -484,11 +727,63 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', initNavTabs);
+  document.addEventListener('astro:page-load', initNavTabs);
+  
+  function initNavTabs() {
     const wrapper = document.getElementById('life-nav-wrapper');
+    const tabsScroll = document.getElementById('life-nav-tabs-scroll');
     const tabs = document.getElementById('life-nav-tabs');
     
-    if (!wrapper || !tabs) return;
+    if (!wrapper || !tabsScroll || !tabs) return;
+    if (tabs.dataset.initialized) return;
+    tabs.dataset.initialized = 'true';
+    
+    // 获取整体容器
+    const navContainer = tabsScroll.closest('.nav-container');
+    
+    // 高亮当前导航项
+    function updateActiveNav() {
+      const pathname = window.location.pathname;
+      const navPills = tabs.querySelectorAll('.nav-tab:not(.nav-tab-home)');
+      
+      navPills.forEach(pill => {
+        pill.removeAttribute('data-active');
+        const href = pill.getAttribute('href');
+        if (href && pathname.startsWith(href)) {
+          pill.setAttribute('data-active', '');
+        }
+      });
+      
+      // 生活主页高亮
+      const homeTab = tabs.querySelector('.nav-tab-home');
+      if (homeTab) {
+        homeTab.removeAttribute('data-active');
+        if (pathname === '/life/' || pathname === '/life') {
+          homeTab.setAttribute('data-active', '');
+        }
+      }
+    }
+    
+    // 初始化高亮
+    updateActiveNav();
+    document.addEventListener('swup:contentReplaced', updateActiveNav);
+    
+    // 滚动到当前高亮的标签
+    function scrollToActiveTab() {
+      const activeTab = tabs.querySelector('.nav-tab[data-active]');
+      if (activeTab) {
+        const scrollLeft = activeTab.offsetLeft - tabsScroll.offsetLeft - (tabsScroll.clientWidth - activeTab.offsetWidth) / 2;
+        tabs.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      }
+    }
+    
+    // 高亮更新后滚动到当前标签
+    const originalUpdateActiveNav = updateActiveNav;
+    updateActiveNav = function() {
+      originalUpdateActiveNav();
+      scrollToActiveTab();
+    };
     
     // 更新滚动阴影指示器
     function updateScrollIndicators() {
@@ -503,44 +798,27 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
     // 监听滚动
     tabs.addEventListener('scroll', updateScrollIndicators);
     window.addEventListener('resize', updateScrollIndicators);
-    
-    // 初始化
     updateScrollIndicators();
     
-    // 桌面端：鼠标悬停时滚轮滚动
-    wrapper.addEventListener('mouseenter', () => {
-      if (window.innerWidth > 768) {
-        tabs.style.scrollbarWidth = 'none';
-        tabs.style.msOverflowStyle = 'none';
-        tabs.style.scrollbarColor = 'transparent transparent';
-      }
-    });
-    
-    wrapper.addEventListener('mouseleave', () => {
-      tabs.style.scrollbarWidth = 'none';
-      tabs.style.msOverflowStyle = 'none';
-    });
-    
     // 桌面端：鼠标悬停时滚轮水平滚动
-    let isHovering = false;
-    
-    wrapper.addEventListener('mouseenter', () => {
-      if (window.innerWidth > 768) {
-        isHovering = true;
-      }
-    });
-    
-    wrapper.addEventListener('mouseleave', () => {
-      isHovering = false;
-    });
-    
-    wrapper.addEventListener('wheel', (e) => {
-      if (window.innerWidth > 768 && tabs.scrollWidth > tabs.clientWidth) {
-        e.preventDefault();
-        tabs.scrollLeft += e.deltaY * 2;
-        updateScrollIndicators();
-      }
-    }, { passive: false });
+    if (navContainer) {
+      navContainer.addEventListener('mouseenter', () => {
+        document.body.style.overflow = 'hidden';
+      });
+      
+      navContainer.addEventListener('mouseleave', () => {
+        document.body.style.overflow = '';
+      });
+      
+      // 滚轮事件 - 水平滚动
+      navContainer.addEventListener('wheel', (e) => {
+        if (tabs.scrollWidth > tabs.clientWidth) {
+          e.stopPropagation();
+          tabs.scrollLeft += e.deltaY + e.deltaX;
+          updateScrollIndicators();
+        }
+      }, { capture: true, passive: false });
+    }
     
     // 移动端：触摸滑动
     let touchStartX = 0;
@@ -557,5 +835,5 @@ const totalCheckins = checkinEntries.reduce((acc, i) => acc + (i.data?.checkins?
       tabs.scrollLeft = touchScrollLeft + walk;
       updateScrollIndicators();
     }, { passive: true });
-  });
+  }
 </script>

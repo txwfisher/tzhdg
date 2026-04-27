@@ -32,11 +32,28 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		},
 	];
 
-	// 动态
+	// 动态（带下拉子菜单）
 	links.push({
 		name: "动态",
 		url: "/moments/",
 		icon: "material-symbols:local-cafe",
+		children: [
+			{
+				name: "说说",
+				url: "/moments/",
+				icon: "material-symbols:chat-bubble-outline",
+			},
+			{
+				name: "相册",
+				url: "/album/",
+				icon: "material-symbols:photo-album-outline",
+			},
+			{
+				name: "留言板",
+				url: "/guestbook/",
+				icon: "material-symbols:edit-outline",
+			},
+		],
 	});
 
 	// 生活 (原本的番组计划)
