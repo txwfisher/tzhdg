@@ -227,6 +227,7 @@ body:has(#wallpaper-wrapper) #navbar[data-transparent-mode="semifull"][data-enab
 }
 
 
+
 /* 调整下拉菜单和浮动面板的背景透明度 */
 /* 亮色主题 */
 #wallpaper-wrapper~* .dropdown-content,

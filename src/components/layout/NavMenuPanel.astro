@@ -20,11 +20,11 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 }));
 ---
 
-<!-- 抽屉遮罩层 -->
-<div id="nav-menu-overlay" class="nav-drawer-overlay" aria-hidden="true"></div>
+<!-- 抽屉菜单遮罩层 -->
+<div id="nav-menu-overlay" class="nav-drawer-overlay"></div>
 
 <!-- 抽屉菜单面板 -->
-<div id="nav-menu-panel" class="nav-drawer-panel" role="dialog" aria-modal="true" aria-label="导航菜单">
+<div id="nav-menu-panel" class="nav-drawer-panel" data-menu-open="false" role="dialog" aria-modal="true" aria-label="导航菜单" aria-hidden="true">
 	<!-- 抽屉头部 -->
 	<div class="nav-drawer-header">
 		<span class="nav-drawer-title">菜单</span>
@@ -100,45 +100,52 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	@reference "../../styles/main.css";
 
 	/* ============================================
-	 * 抽屉遮罩层 - 仅移动端显示
+	 * 抽屉遮罩层
 	 * ============================================ */
 	.nav-drawer-overlay {
+		display: none;
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(4px);
-		opacity: 0;
-		visibility: hidden;
-		transition: opacity 0.3s ease, visibility 0.3s ease;
+		background: transparent;
 		z-index: 998;
+		pointer-events: none;
+		transition: opacity 0.35s ease;
 	}
 
 	.nav-drawer-overlay.active {
-		opacity: 1;
-		visibility: visible;
 	}
 
 	/* ============================================
 	 * 抽屉面板 - 仅移动端显示
 	 * ============================================ */
 	.nav-drawer-panel {
-		position: fixed;
-		top: 0;
-		right: 0;
-		bottom: 0;
+		position: fixed !important;
+		top: 0 !important;
+		right: 0 !important;
+		bottom: 0 !important;
 		width: min(320px, 85vw);
+		height: 100dvh;
 		background: var(--card-bg);
-		box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
 		transform: translateX(100%);
 		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-		z-index: 999;
-		display: flex;
+		z-index: 999 !important;
+		display: flex !important;
 		flex-direction: column;
 		overflow: hidden;
 	}
 
-	.nav-drawer-panel.open {
-		transform: translateX(0);
+	.nav-drawer-panel[data-menu-open="true"] {
+		transform: translateX(0) !important;
+	}
+
+	/* 覆盖 float-panel-closed 的样式 */
+	.nav-drawer-panel.float-panel-closed {
+		opacity: 1 !important;
+		pointer-events: auto !important;
+	}
+
+	.nav-drawer-panel.float-panel-closed * {
+		pointer-events: auto !important;
 	}
 
 	/* 桌面端隐藏抽屉 */
@@ -194,23 +201,25 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	.nav-drawer-content {
 		flex: 1;
 		overflow-y: auto;
+		overflow-x: hidden;
 		padding: 0.75rem 0.75rem 1.5rem;
+		min-height: 0;
 	}
 
 	/* ============================================
 	 * 菜单项淡入动画
 	 * ============================================ */
 	.nav-drawer-item-wrapper {
-		opacity: 0;
-		transform: translateX(20px);
+		opacity: 0 !important;
+		transform: translateX(20px) !important;
 		transition: 
 			opacity 0.4s ease var(--item-delay),
-			transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) var(--item-delay);
+			transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) var(--item-delay) !important;
 	}
 
-	.nav-drawer-panel.open .nav-drawer-item-wrapper {
-		opacity: 1;
-		transform: translateX(0);
+	.nav-drawer-panel[data-menu-open="true"] .nav-drawer-item-wrapper {
+		opacity: 1 !important;
+		transform: translateX(0) !important;
 	}
 
 	/* ============================================
@@ -299,91 +308,161 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	:global(.dark) .nav-drawer-panel {
 		background: var(--card-bg);
 	}
-
-	:global(.dark) .nav-drawer-overlay {
-		background: rgba(0, 0, 0, 0.6);
-	}
 </style>
 
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-		const overlay = document.getElementById('nav-menu-overlay');
-		const panel = document.getElementById('nav-menu-panel');
-		const menuBtn = document.getElementById('nav-menu-switch');
-		const closeBtn = document.getElementById('nav-menu-close');
-		const mobileDropdowns = document.querySelectorAll('[data-mobile-dropdown]');
+// 移动端菜单控制器 - 使用 data 属性控制状态
+(function() {
+    // 打开菜单
+    function openMenu() {
+        const panel = document.getElementById('nav-menu-panel');
+        const overlay = document.getElementById('nav-menu-overlay');
+        if (panel) {
+            panel.setAttribute('data-menu-open', 'true');
+            panel.removeAttribute('aria-hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        if (overlay) {
+            overlay.classList.add('active');
+        }
+    }
 
-		function openDrawer() {
-			overlay?.classList.add('active');
-			panel?.classList.add('open');
-			document.body.style.overflow = 'hidden';
-			// 设置ARIA属性
-			overlay?.setAttribute('aria-hidden', 'false');
-			panel?.setAttribute('aria-hidden', 'false');
-		}
+    // 关闭菜单
+    function closeMenu() {
+        const panel = document.getElementById('nav-menu-panel');
+        const overlay = document.getElementById('nav-menu-overlay');
+        if (panel) {
+            panel.setAttribute('data-menu-open', 'false');
+            // 关闭前把焦点移到触发按钮，避免 aria-hidden 与 focus 冲突
+            const closeBtn = panel.querySelector('#nav-menu-close');
+            const menuSwitch = document.getElementById('nav-menu-switch');
+            if (document.activeElement && panel.contains(document.activeElement)) {
+                menuSwitch ? menuSwitch.focus() : closeBtn ? closeBtn.blur() : null;
+            }
+            panel.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+    }
 
-		function closeDrawer() {
-			overlay?.classList.remove('active');
-			panel?.classList.remove('open');
-			document.body.style.overflow = '';
-			// 设置ARIA属性
-			overlay?.setAttribute('aria-hidden', 'true');
-			panel?.setAttribute('aria-hidden', 'true');
-		}
+    // 切换菜单状态
+    function toggleMenu() {
+        console.log('[Menu] toggleMenu called');
+        const panel = document.getElementById('nav-menu-panel');
+        if (!panel) {
+            console.log('[Menu] panel not found in toggleMenu!');
+            return;
+        }
 
-		// 菜单按钮点击
-		menuBtn?.addEventListener('click', function() {
-			if (panel?.classList.contains('open')) {
-				closeDrawer();
-			} else {
-				openDrawer();
-			}
-		});
+        const isOpen = panel.getAttribute('data-menu-open') === 'true';
 
-		// 关闭按钮点击
-		closeBtn?.addEventListener('click', closeDrawer);
+        if (isOpen) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    }
 
-		// 遮罩层点击关闭
-		overlay?.addEventListener('click', closeDrawer);
+    // 处理子菜单点击
+    function handleDropdownClick(e) {
+        const trigger = e.target.closest('[data-mobile-dropdown-trigger]');
+        if (!trigger) return;
 
-		// ESC键关闭
-		document.addEventListener('keydown', function(e) {
-			if (e.key === 'Escape' && panel?.classList.contains('open')) {
-				closeDrawer();
-			}
-		});
+        e.preventDefault();
+        const dropdown = trigger.closest('[data-mobile-dropdown]');
+        if (!dropdown) return;
 
-		// 子菜单展开/折叠
-		mobileDropdowns.forEach(dropdown => {
-			const trigger = dropdown.querySelector('[data-mobile-dropdown-trigger]');
-			
-			if (!trigger) return;
-			
-			trigger.addEventListener('click', function(e) {
-				e.preventDefault();
-				const isExpanded = dropdown.getAttribute('data-expanded') === 'true';
-				
-				// 关闭其他打开的下拉菜单
-				mobileDropdowns.forEach(otherDropdown => {
-					if (otherDropdown !== dropdown) {
-						otherDropdown.setAttribute('data-expanded', 'false');
-						const otherTrigger = otherDropdown.querySelector('[data-mobile-dropdown-trigger]');
-						if (otherTrigger) {
-							otherTrigger.setAttribute('aria-expanded', 'false');
-						}
-					}
-				});
-				
-				// 切换当前下拉菜单
-				const newState = !isExpanded;
-				dropdown.setAttribute('data-expanded', newState.toString());
-				trigger.setAttribute('aria-expanded', newState.toString());
-			});
-		});
+        const isExpanded = dropdown.getAttribute('data-expanded') === 'true';
 
-		// 处理页面切换 - 重置菜单状态
-		document.addEventListener('swup:content:replace', function() {
-			closeDrawer();
-		});
-	});
+        // 关闭其他子菜单
+        document.querySelectorAll('[data-mobile-dropdown]').forEach(function(other) {
+            if (other !== dropdown) {
+                other.setAttribute('data-expanded', 'false');
+                const otherTrigger = other.querySelector('[data-mobile-dropdown-trigger]');
+                if (otherTrigger) {
+                    otherTrigger.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+
+        // 切换当前子菜单
+        dropdown.setAttribute('data-expanded', (!isExpanded).toString());
+        trigger.setAttribute('aria-expanded', (!isExpanded).toString());
+    }
+
+    // 事件处理函数
+    function handleClick(e) {
+        // 菜单按钮点击
+        if (e.target.closest('#nav-menu-switch')) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu();
+            return;
+        }
+
+        // 遮罩层点击 - 关闭菜单
+        if (e.target.id === 'nav-menu-overlay' || e.target.classList.contains('nav-drawer-overlay')) {
+            e.preventDefault();
+            closeMenu();
+            return;
+        }
+
+        // 关闭按钮点击
+        if (e.target.closest('#nav-menu-close')) {
+            e.preventDefault();
+            closeMenu();
+            return;
+        }
+
+        // 子菜单触发器点击
+        if (e.target.closest('[data-mobile-dropdown-trigger]')) {
+            handleDropdownClick(e);
+            return;
+        }
+    }
+
+    // ESC 键处理
+    function handleKeydown(e) {
+        if (e.key === 'Escape') {
+            const panel = document.getElementById('nav-menu-panel');
+            if (panel && panel.getAttribute('data-menu-open') === 'true') {
+                closeMenu();
+            }
+        }
+    }
+
+    // 初始化函数
+    function init() {
+        document.addEventListener('click', handleClick);
+        document.addEventListener('keydown', handleKeydown);
+    }
+
+    // 页面切换后关闭菜单并重新初始化
+    function onPageTransition() {
+        closeMenu();
+        // 移除旧监听器，避免重复注册
+        document.removeEventListener('click', handleClick);
+        document.removeEventListener('keydown', handleKeydown);
+        // 重新初始化
+        init();
+    }
+
+    // 初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Swup 事件监听
+    document.addEventListener('swup:page:view', onPageTransition);
+    document.addEventListener('swup:content:replace', onPageTransition);
+
+    // 暴露到全局
+    window.openNavMenu = openMenu;
+    window.closeNavMenu = closeMenu;
+    window.toggleNavMenu = toggleMenu;
+})();
 </script>
