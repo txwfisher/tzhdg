@@ -9,5 +9,3 @@ category: 分类名称
 pinned: false
 image: https://example.com/cover.jpg
 ---
-
-文章正文内容...
