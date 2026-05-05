@@ -263,6 +263,24 @@ html {
         -webkit-backdrop-filter: blur(12px);
     }
 
+    /* 全屏壁纸模式下导航页面卡片透明 */
+    .wallpaper-transparent .featured-card,
+    .wallpaper-transparent .category-nav,
+    .wallpaper-transparent .category-section,
+    .wallpaper-transparent .site-card {
+        background-color: var(--card-bg-transparent) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* 全屏壁纸模式下生活页面卡片透明 */
+    .wallpaper-transparent .life-card,
+    .wallpaper-transparent .nav-tabs-wrapper {
+        background-color: var(--card-bg-transparent) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
     h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
         @apply transition-colors duration-150;
     }

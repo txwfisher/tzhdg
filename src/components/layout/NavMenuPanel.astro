@@ -231,7 +231,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	.nav-fullscreen-title {
 		font-weight: 600;
 		font-size: 1.125rem;
-		color: var(--text-primary);
+		color: var(--text-color);
 	}
 
 	.nav-fullscreen-close {
@@ -241,14 +241,15 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		width: 2.5rem;
 		height: 2.5rem;
 		border-radius: 0.625rem;
-		color: var(--text-secondary);
+		background: var(--btn-regular-bg);
+		color: var(--content-meta);
 		transition: background-color 0.2s ease, color 0.2s ease;
 		cursor: pointer;
 	}
 
 	.nav-fullscreen-close:hover {
-		background: var(--btn-plain-bg-hover);
-		color: var(--primary);
+		background: var(--primary);
+		color: white;
 	}
 
 	.nav-fullscreen-close:active {
@@ -296,7 +297,8 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		justify-content: space-between;
 		padding: 0.875rem 1rem;
 		border-radius: 0.75rem;
-		color: var(--text-primary);
+		background: var(--bg-secondary);
+		color: var(--text-color);
 		transition:
 			background-color 0.2s ease,
 			color 0.2s ease,
@@ -305,7 +307,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	}
 
 	.nav-fullscreen-link:hover {
-		background: var(--btn-plain-bg-hover);
+		background: var(--btn-regular-bg-hover);
 		color: var(--primary);
 	}
 
@@ -328,7 +330,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		height: 2.25rem;
 		border-radius: 0.5rem;
 		background: var(--btn-regular-bg);
-		color: var(--text-secondary);
+		color: var(--content-meta);
 		font-size: 1.125rem;
 		transition:
 			background-color 0.2s ease,
@@ -383,7 +385,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		justify-content: space-between;
 		padding: 0.75rem 1rem;
 		border-radius: 0.625rem;
-		color: var(--text-secondary);
+		color: var(--text-color);
 		transition:
 			background-color 0.2s ease,
 			color 0.2s ease;
@@ -391,12 +393,12 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	}
 
 	.nav-fullscreen-sublink:hover {
-		background: var(--btn-plain-bg-hover);
+		background: var(--btn-regular-bg-hover);
 		color: var(--primary);
 	}
 
 	.nav-fullscreen-sublink:active {
-		background: var(--btn-plain-bg-active);
+		background: var(--btn-regular-bg-active);
 	}
 
 	.nav-fullscreen-sublink-icon {
@@ -422,10 +424,33 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	}
 
 	/* ============================================
+	 * 暗色模式 - 使用更强选择器确保生效
+	 * ============================================ */
+		/* ============================================
 	 * 暗色模式
 	 * ============================================ */
-	:global(.dark) .nav-fullscreen-panel {
+	:global(html.dark) .nav-fullscreen-panel {
 		background: var(--page-bg);
+	}
+
+	:global(html.dark) .nav-fullscreen-title {
+		color: var(--text-color) !important;
+	}
+
+	:global(html.dark) .nav-fullscreen-close {
+		color: var(--text-color) !important;
+		background: var(--btn-regular-bg) !important;
+	}
+
+	:global(html.dark) .nav-fullscreen-link,
+	:global(html.dark) .nav-fullscreen-sublink {
+		color: var(--text-color) !important;
+		background: var(--bg-secondary) !important;
+	}
+
+	:global(html.dark) .nav-fullscreen-link-icon {
+		color: var(--content-meta) !important;
+		background: var(--btn-regular-bg) !important;
 	}
 </style>
 
