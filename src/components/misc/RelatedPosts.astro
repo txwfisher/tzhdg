@@ -1,0 +1,153 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { getSortedPosts } from "@utils/content-utils";
+import { getPostUrlBySlug, removeFileExtension } from "@utils/url-utils";
+
+interface Props {
+    currentSlug: string;
+    currentTags: string[];
+    currentCategory?: string;
+    maxCount?: number;
+}
+
+const { currentSlug, currentTags, currentCategory, maxCount = 3 } = Astro.props;
+
+// 获取所有文章
+const allPosts = await getSortedPosts();
+
+// 过滤掉当前文章
+const otherPosts = allPosts.filter((post) => {
+    const slug = removeFileExtension(post.id);
+    return slug !== currentSlug;
+});
+
+// 计算相关度分数
+function calculateRelevance(post: any): number {
+    let score = 0;
+
+    // 同分类 +3 分
+    if (currentCategory && post.data.category === currentCategory) {
+        score += 3;
+    }
+
+    // 共享标签，每个 +1 分
+    if (post.data.tags && Array.isArray(post.data.tags)) {
+        const sharedTags = post.data.tags.filter((tag: string) =>
+            currentTags.includes(tag)
+        );
+        score += sharedTags.length;
+    }
+
+    return score;
+}
+
+// 计算所有文章的相关度并排序
+const relatedPosts = otherPosts
+    .map((post) => ({
+        post,
+        score: calculateRelevance(post),
+    }))
+    .filter((item) => item.score > 0) // 只保留有关联的文章
+    .sort((a, b) => {
+        // 首先按相关度排序，然后按发布时间排序
+        if (b.score !== a.score) {
+            return b.score - a.score;
+        }
+        return new Date(b.post.data.published).getTime() - new Date(a.post.data.published).getTime();
+    })
+    .slice(0, maxCount); // 只取前 maxCount 篇
+
+// 如果相关推荐不够，用最新文章填充
+if (relatedPosts.length < maxCount) {
+    const existingSlugs = new Set(relatedPosts.map((item) => removeFileExtension(item.post.id)));
+    const latestPosts = otherPosts
+        .filter((post) => {
+            const slug = removeFileExtension(post.id);
+            return !existingSlugs.has(slug);
+        })
+        .sort((a, b) => new Date(b.data.published).getTime() - new Date(a.data.published).getTime())
+        .slice(0, maxCount - relatedPosts.length);
+
+    latestPosts.forEach((post) => {
+        relatedPosts.push({ post, score: 0 });
+    });
+}
+---
+
+{relatedPosts.length > 0 && (
+    <div class="related-posts card-base p-6 mb-4">
+        <div class="flex items-center gap-2 mb-4">
+            <Icon name="material-symbols:library-books-outline-rounded" class="text-xl text-(--primary)" />
+            <h3 class="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                {i18n(I18nKey.relatedPosts)}
+            </h3>
+        </div>
+        <div class="grid gap-3">
+            {relatedPosts.map(({ post, score }) => {
+                const slug = removeFileExtension(post.id);
+                const postUrl = getPostUrlBySlug(slug);
+                return (
+                    <a
+                        href={postUrl}
+                        class="group block p-3 rounded-lg bg-(--btn-plain-bg) hover:bg-(--btn-plain-bg-hover) dark:bg-(--btn-plain-bg-dark) dark:hover:bg-(--btn-plain-bg-hover-dark) transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        <div class="flex items-start gap-3">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-neutral-900 dark:text-neutral-100 text-sm leading-snug line-clamp-2 group-hover:text-(--primary) transition-colors">
+                                    {post.data.title}
+                                </h4>
+                                <div class="flex items-center gap-2 mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                                    <span class="flex items-center gap-1">
+                                        <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
+                                        {new Date(post.data.published).toLocaleDateString("zh-CN", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                        })}
+                                    </span>
+                                    {post.data.category && (
+                                        <span class="px-1.5 py-0.5 rounded bg-(--primary)/10 text-(--primary)">
+                                            {post.data.category}
+                                        </span>
+                                    )}
+                                </div>
+                                {score > 0 && post.data.tags && post.data.tags.length > 0 && (
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        {post.data.tags.slice(0, 3).map((tag: string) => (
+                                            <span class="text-xs px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-neutral-600 dark:text-neutral-400">
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <Icon
+                                name="material-symbols:arrow-forward-rounded"
+                                class="text-lg text-neutral-400 group-hover:text-(--primary) transition-colors shrink-0 mt-1"
+                            />
+                        </div>
+                    </a>
+                );
+            })}
+        </div>
+    </div>
+)}
+
+<style>
+    .related-posts {
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

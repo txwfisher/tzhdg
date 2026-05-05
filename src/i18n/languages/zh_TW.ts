@@ -281,4 +281,7 @@ export const zh_TW: Translation = {
 	[Key.codeCollapsibleShowLess]: "顯示更少",
 	[Key.codeCollapsibleExpanded]: "代碼區塊已展開",
 	[Key.codeCollapsibleCollapsed]: "代碼區塊已折疊",
+
+	// 相關閱讀
+	[Key.relatedPosts]: "相關閱讀",
 };

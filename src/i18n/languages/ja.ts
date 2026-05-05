@@ -287,4 +287,7 @@ export const ja: Translation = {
 	[Key.codeCollapsibleShowLess]: "少なく表示",
 	[Key.codeCollapsibleExpanded]: "コードブロックが展開されました",
 	[Key.codeCollapsibleCollapsed]: "コードブロックが折りたたまれました",
+
+	// 関連投稿
+	[Key.relatedPosts]: "関連投稿",
 };

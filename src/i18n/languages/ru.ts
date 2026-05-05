@@ -289,4 +289,7 @@ export const ru: Translation = {
 	[Key.codeCollapsibleShowLess]: "Показать меньше",
 	[Key.codeCollapsibleExpanded]: "Блок кода развернут",
 	[Key.codeCollapsibleCollapsed]: "Блок кода свернут",
+
+	// Похожие посты
+	[Key.relatedPosts]: "Похожие посты",
 };

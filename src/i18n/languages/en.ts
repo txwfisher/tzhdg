@@ -292,4 +292,7 @@ export const en: Translation = {
 	[Key.codeCollapsibleShowLess]: "Show less",
 	[Key.codeCollapsibleExpanded]: "Code block expanded",
 	[Key.codeCollapsibleCollapsed]: "Code block collapsed",
+
+	// Related Posts
+	[Key.relatedPosts]: "Related Posts",
 };

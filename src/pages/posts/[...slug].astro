@@ -5,6 +5,7 @@ import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
 import KatexManager from "@components/features/KatexManager.astro";
 import License from "@components/misc/License.astro";
+import RelatedPosts from "@components/misc/RelatedPosts.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
@@ -425,6 +426,14 @@ const jsonLd = {
       }
     </a>
   </div>
+
+  <!-- 相关阅读 -->
+  <RelatedPosts
+    currentSlug={entry.id}
+    currentTags={entry.data.tags || []}
+    currentCategory={entry.data.category || undefined}
+    maxCount={3}
+  />
 
   <!-- 评论 -->
   {entry.data.comment && <Comment post={entry} />}

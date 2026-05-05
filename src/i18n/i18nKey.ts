@@ -278,6 +278,9 @@ enum I18nKey {
 	codeCollapsibleShowLess = "codeCollapsibleShowLess",
 	codeCollapsibleExpanded = "codeCollapsibleExpanded",
 	codeCollapsibleCollapsed = "codeCollapsibleCollapsed",
+
+	// 相关阅读
+	relatedPosts = "relatedPosts",
 }
 
 export default I18nKey;

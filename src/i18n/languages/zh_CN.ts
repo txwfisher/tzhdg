@@ -284,4 +284,7 @@ export const zh_CN: Translation = {
 	[Key.codeCollapsibleShowLess]: "显示更少",
 	[Key.codeCollapsibleExpanded]: "代码块已展开",
 	[Key.codeCollapsibleCollapsed]: "代码块已折叠",
+
+	// 相关阅读
+	[Key.relatedPosts]: "相关阅读",
 };
