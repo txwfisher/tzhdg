@@ -81,380 +81,369 @@ const getImgSrc = (img: string | ImageMetadata): string => {
 
 // 相对时间
 const formatTimeAgo = (date: Date): string => {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  
-  if (minutes < 1) return "刚刚";
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  if (days < 30) return `${days}天前`;
-  return formatDateToYYYYMMDD(date);
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const minutes = Math.floor(diff / 60000);
+	const hours = Math.floor(diff / 3600000);
+	const days = Math.floor(diff / 86400000);
+
+	if (minutes < 1) return "刚刚";
+	if (minutes < 60) return `${minutes}分钟前`;
+	if (hours < 24) return `${hours}小时前`;
+	if (days < 30) return `${days}天前`;
+	return formatDateToYYYYMMDD(date);
 };
 ---
 
-<div id={moment.id} class="moment-card">
-  <!-- 卡片头部：头像 + 用户信息 -->
-  <div class="card-header">
-    <div class="card-avatar">
-      {avatar ? (
-        <img src={avatar} alt={author} class="avatar-img" loading="lazy" />
-      ) : (
-        <img src="/avatar.png" alt={author} class="avatar-img" loading="lazy" 
-          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23999%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M20 21a8 8 0 1 0-16 0%22/></svg>'" />
-      )}
-    </div>
-    <div class="card-user-info">
-      <div class="user-row">
-        <span class="user-name">{author || "匿名"}</span>
-      </div>
-      <div class="meta-row">
-        <time datetime={published.toISOString()} title={formatDateToYYYYMMDD(published)}>
-          {formatTimeAgo(published)}
-        </time>
-        {location && (
-          <>
-            <span class="meta-dot">·</span>
-            <span class="location">
-              <Icon name="material-symbols:location-on-outline" class="location-icon" />
-              {location}
-            </span>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
+<div id={moment.id} class="moment-card group">
+	<!-- 卡片头部：头像 + 用户信息 -->
+	<div class="card-header">
+		<div class="card-avatar">
+			{avatar ? (
+				<img
+					src={avatar}
+					alt={author}
+					class="avatar-img"
+					loading="lazy"
+				/>
+			) : (
+				<img
+					src="/avatar.png"
+					alt={author}
+					class="avatar-img"
+					loading="lazy"
+					onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23999%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M20 21a8 8 0 1 0-16 0%22/></svg>'"
+				/>
+			)}
+		</div>
+		<div class="card-user-info">
+			<div class="user-row">
+				<span class="user-name">{author || "匿名"}</span>
+			</div>
+			<div class="meta-row">
+				<time
+					datetime={published.toISOString()}
+					title={formatDateToYYYYMMDD(published)}
+				>
+					{formatTimeAgo(published)}
+				</time>
+				{location && (
+					<>
+						<span class="meta-dot">·</span>
+						<span class="location">
+							<Icon
+								name="material-symbols:location-on-outline"
+								class="location-icon"
+							/>
+							{location}
+						</span>
+					</>
+				)}
+			</div>
+		</div>
+	</div>
 
-  <!-- 内容 -->
-  <div class="card-content">
-    <div class="prose dark:prose-invert max-w-none text-[var(--text-color)] text-[15px] leading-[1.8]">
-      <Markdown class="moment-markdown">
-        <Content />
-      </Markdown>
-    </div>
-  </div>
+	<!-- 内容 -->
+	<div class="card-content">
+		<div
+			class="moment-markdown text-[var(--text-color)] text-[0.9375rem] leading-[1.75]"
+		>
+			<Markdown class="moment-markdown-content">
+				<Content />
+			</Markdown>
+		</div>
+	</div>
 
-  <!-- 图片 -->
-  {imagesArray && imagesArray.length > 0 && (
-    <div class={`card-images image-cols-${getGridCols(imagesArray.length)} ${imagesArray.length === 1 ? 'single-image' : ''}`}>
-      {displayImages.map((img, index) => {
-        const imgSrc = getImgSrc(img);
-        const isMoreTrigger = index === maxImages - 1 && remainingCount > 0;
-        
-        return (
-          <div class={`image-item ${isMoreTrigger ? 'has-more' : ''}`}>
-            {typeof img === 'string' ? (
-              <img 
-                src={img} 
-                alt="Moment image" 
-                class="image-img"
-                loading="lazy"
-                data-fancybox={`gallery-${moment.id}`}
-                data-src={imgSrc}
-              />
-            ) : (
-              <Image 
-                src={img} 
-                alt="Moment image" 
-                class="image-img"
-                loading="lazy"
-                data-fancybox={`gallery-${moment.id}`}
-                data-src={imgSrc}
-              />
-            )}
-            
-            {isMoreTrigger && (
-              <div class="more-overlay">
-                <span class="more-text">+{remainingCount + 1}</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  )}
+	<!-- 图片 -->
+	{imagesArray && imagesArray.length > 0 && (
+		<div
+			class={`card-images image-cols-${getGridCols(imagesArray.length)} ${imagesArray.length === 1 ? "single-image" : ""}`}
+		>
+			{displayImages.map((img, index) => {
+				const imgSrc = getImgSrc(img);
+				const isMoreTrigger = index === maxImages - 1 && remainingCount > 0;
 
-  <!-- 底部互动 -->
-  <div class="card-actions">
-    <!-- 标签 -->
-    {tags && tags.length > 0 && (
-      <div class="card-tags">
-        {tags.map((tag) => (
-          <a href={getTagUrl(tag)} class="tag-item">
-            #{tag.trim()}
-          </a>
-        ))}
-      </div>
-    )}
-  </div>
+				return (
+					<div class={`image-item ${isMoreTrigger ? "has-more" : ""}`}>
+						{typeof img === "string" ? (
+							<img
+								src={img}
+								alt="Moment image"
+								class="image-img"
+								loading="lazy"
+								data-fancybox={`gallery-${moment.id}`}
+								data-src={imgSrc}
+							/>
+						) : (
+							<Image
+								src={img}
+								alt="Moment image"
+								class="image-img"
+								loading="lazy"
+								data-fancybox={`gallery-${moment.id}`}
+								data-src={imgSrc}
+							/>
+						)}
+
+						{isMoreTrigger && (
+							<div class="more-overlay">
+								<span class="more-text">+{remainingCount + 1}</span>
+							</div>
+						)}
+					</div>
+				);
+			})}
+		</div>
+	)}
+
+	<!-- 底部标签 -->
+	{tags && tags.length > 0 && (
+		<div class="card-tags">
+			{tags.map((tag) => (
+				<a href={getTagUrl(tag)} class="tag-item">
+					#{tag.trim()}
+				</a>
+			))}
+		</div>
+	)}
 </div>
 
-<script is:inline>
-  // 分享功能
-  document.querySelectorAll(".share-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const url = window.location.href;
-      const title = document.title;
-      
-      if (navigator.share) {
-        try {
-          await navigator.share({ title, url });
-        } catch (e) {}
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-    });
-  });
-</script>
-
 <style>
-  /* 卡片主体 - 微博/朋友圈风格 */
-  .moment-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    border: 1px solid var(--border);
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
+	@reference "../../styles/main.css";
 
-  .moment-card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-  }
+	/* ============================================
+	 * 卡片主体
+	 * ============================================ */
+	.moment-card {
+		background: var(--card-bg);
+		border-radius: var(--radius-large);
+		padding: 1rem;
+		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--border);
+		transition:
+			box-shadow 0.2s ease,
+			transform 0.2s ease;
+	}
 
-  /* 卡片头部 */
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
+	.moment-card:hover {
+		box-shadow: var(--shadow-md);
+		transform: translateY(-1px);
+	}
 
-  /* 头像 */
-  .card-avatar {
-    flex-shrink: 0;
-  }
+	/* ============================================
+	 * 卡片头部
+	 * ============================================ */
+	.card-header {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		margin-bottom: 0.75rem;
+	}
 
-  .avatar-img {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--primary);
-    box-sizing: border-box;
-  }
+	/* 头像 */
+	.card-avatar {
+		flex-shrink: 0;
+	}
 
-  .card-user-info {
-    flex: 1;
-    min-width: 0;
-  }
+	.avatar-img {
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 2px solid var(--primary);
+		box-sizing: border-box;
+	}
 
-  /* 用户名行 */
-  .user-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
+	.card-user-info {
+		flex: 1;
+		min-width: 0;
+	}
 
-  .user-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--primary);
-  }
+	.user-row {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-bottom: 0.125rem;
+	}
 
-  /* 元信息行 */
-  .meta-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--content-meta);
-  }
+	.user-name {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--primary);
+	}
 
-  .meta-dot {
-    opacity: 0.5;
-  }
+	.meta-row {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.75rem;
+		color: var(--content-meta);
+	}
 
-  .location {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+	.meta-dot {
+		opacity: 0.5;
+	}
 
-  .location-icon {
-    font-size: 14px;
-    flex-shrink: 0;
-  }
+	.location {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.125rem;
+		max-width: 120px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 
-  /* 内容区域 */
-  .card-content {
-    margin-bottom: 12px;
-  }
+	.location-icon {
+		font-size: 0.875rem;
+		flex-shrink: 0;
+	}
 
-  .moment-markdown :global(p) {
-    margin-bottom: 0.5rem;
-    word-break: break-word;
-    line-height: 1.7;
-  }
+	/* ============================================
+	 * 内容区域
+	 * ============================================ */
+	.card-content {
+		margin-bottom: 0.75rem;
+	}
 
-  .moment-markdown :global(p:last-child) {
-    margin-bottom: 0;
-  }
+	.moment-markdown :global(p) {
+		margin-bottom: 0.375rem;
+		word-break: break-word;
+	}
 
-  .moment-markdown :global(img) {
-    border-radius: 8px;
-    margin: 8px 0;
-    max-width: 100%;
-  }
+	.moment-markdown :global(p:last-child) {
+		margin-bottom: 0;
+	}
 
-  /* 图片网格 */
-  .card-images {
-    display: grid;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
+	.moment-markdown :global(img) {
+		border-radius: var(--radius);
+		margin: 0.5rem 0;
+		max-width: 100%;
+	}
 
-  .image-cols-1 {
-    grid-template-columns: 1fr;
-    max-width: 500px;
-  }
+	/* ============================================
+	 * 图片网格
+	 * ============================================ */
+	.card-images {
+		display: grid;
+		gap: 0.375rem;
+		margin-bottom: 0.75rem;
+	}
 
-  .image-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
+	.image-cols-1 {
+		grid-template-columns: 1fr;
+		max-width: 400px;
+	}
 
-  .image-cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
+	.image-cols-2 {
+		grid-template-columns: repeat(2, 1fr);
+	}
 
-  .image-item {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    background: var(--border);
-    aspect-ratio: 1;
-  }
+	.image-cols-3 {
+		grid-template-columns: repeat(3, 1fr);
+	}
 
-  .single-image .image-item {
-    aspect-ratio: auto;
-    border-radius: 12px;
-  }
+	.image-item {
+		position: relative;
+		border-radius: var(--radius);
+		overflow: hidden;
+		cursor: pointer;
+		background: var(--bg-secondary);
+		aspect-ratio: 1;
+	}
 
-  .image-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
+	.single-image .image-item {
+		aspect-ratio: auto;
+		border-radius: var(--radius-large);
+	}
 
-  .image-item:hover .image-img {
-    transform: scale(1.03);
-  }
+	.image-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease;
+	}
 
-  .has-more .image-img {
-    filter: brightness(0.6);
-  }
+	.image-item:hover .image-img {
+		transform: scale(1.03);
+	}
 
-  .more-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+	.has-more .image-img {
+		filter: brightness(0.6);
+	}
 
-  .more-text {
-    font-size: 24px;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  }
+	.more-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 
-  /* 标签 - 胶囊描边样式 */
+	.more-text {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: white;
+		text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	}
 
-  .tag-item {
-    padding: 4px 12px;
-    background: transparent;
-    border: 1px solid var(--primary);
-    border-radius: 20px;
-    font-size: 12px;
-    color: var(--primary);
-    transition: all 0.2s;
-  }
+	/* ============================================
+	 * 标签 - 胶囊描边样式
+	 * ============================================ */
+	.card-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+		padding-top: 0.625rem;
+		border-top: 1px solid var(--border);
+	}
 
-  .tag-item:hover {
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-  }
+	.tag-item {
+		padding: 0.25rem 0.625rem;
+		background: transparent;
+		border: 1px solid var(--primary);
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		color: var(--primary);
+		transition: all 0.2s ease;
+	}
 
-  /* 互动栏 */
-  .card-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 16px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-  }
+	.tag-item:hover {
+		background: color-mix(in srgb, var(--primary) 10%, transparent);
+	}
 
-  .card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+	/* ============================================
+	 * 响应式
+	 * ============================================ */
+	@media (max-width: 480px) {
+		.moment-card {
+			padding: 0.875rem;
+			border-radius: var(--radius);
+		}
 
-  /* 响应式 */
-  @media (max-width: 480px) {
-    .moment-card {
-      padding: 16px;
-      margin-bottom: 12px;
-      border-radius: 12px;
-    }
+		.avatar-img {
+			width: 2.25rem;
+			height: 2.25rem;
+		}
 
-    .avatar-img {
-      width: 40px;
-      height: 40px;
-    }
+		.user-name {
+			font-size: 0.875rem;
+		}
 
-    .user-name {
-      font-size: 14px;
-    }
+		.meta-row {
+			font-size: 0.6875rem;
+		}
 
-    .meta-row {
-      font-size: 11px;
-    }
+		.location {
+			max-width: 80px;
+		}
 
-    .location {
-      max-width: 100px;
-    }
+		.card-images {
+			gap: 0.25rem;
+		}
 
-    .card-actions {
-      gap: 20px;
-    }
-
-    .action-icon {
-      font-size: 16px;
-    }
-
-    .action-text {
-      font-size: 12px;
-    }
-
-    .card-images {
-      gap: 4px;
-    }
-
-    .image-cols-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
+		.more-text {
+			font-size: 1.25rem;
+		}
+	}
 </style>
