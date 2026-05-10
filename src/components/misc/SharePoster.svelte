@@ -185,7 +185,9 @@ async function generatePoster() {
 		const authorLineHeight = 24 * scale;
 		const authorHeight = authorLines.length * authorLineHeight + 24 * scale; // +24 for "作者" label
 		
-		const footerHeight = Math.max(64 * scale, authorHeight); // Avatar/QR height or author height, whichever is larger
+		// Footer includes QR code (64*scale) + scan text below (20*scale) + spacing
+		const qrWithTextHeight = qrSize + 32 * scale;
+		const footerHeight = Math.max(qrWithTextHeight, authorHeight);
 		currentY += footerHeight;
 		currentY += padding; // Bottom padding
 
@@ -441,6 +443,12 @@ async function generatePoster() {
 				qrInnerSize,
 			);
 		}
+
+		// Scan to read text below QR
+		ctx.textAlign = "center";
+		ctx.fillStyle = "#9ca3af";
+		ctx.font = `${12 * scale}px 'Roboto', sans-serif`;
+		ctx.fillText("扫码阅读文章👆", qrX + qrSize / 2, footerY + qrSize + 20 * scale);
 
 		// Finalize
 		posterImage = canvas.toDataURL("image/png");
