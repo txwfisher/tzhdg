@@ -23,13 +23,14 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 }));
 ---
 
-<!-- 全屏遮罩层 -->
-<div id="nav-menu-overlay" class="nav-fullscreen-overlay"></div>
+<!-- 抽屉遮罩层 -->
+<div id="nav-menu-overlay" class="nav-drawer-overlay"></div>
 
-<!-- 全屏菜单面板 -->
+<!-- 抽屉菜单面板 -->
 <div
 	id="nav-menu-panel"
-	class="nav-fullscreen-panel"
+	class="nav-drawer-panel"
+	data-drawer-side="right"
 	data-menu-open="false"
 	role="dialog"
 	aria-modal="true"
@@ -37,58 +38,58 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	aria-hidden="true"
 >
 	<!-- 顶部区域 -->
-	<div class="nav-fullscreen-header">
-		<div class="nav-fullscreen-brand">
+	<div class="nav-drawer-header">
+		<div class="nav-drawer-brand">
 			{siteLogo ? (
-				<img src={siteLogo} alt={siteTitle} class="nav-fullscreen-logo" />
+				<img src={siteLogo} alt={siteTitle} class="nav-drawer-logo" />
 			) : (
-				<div class="nav-fullscreen-logo-placeholder">
+				<div class="nav-drawer-logo-placeholder">
 					<Icon name="material-symbols:home-rounded" class="text-2xl" />
 				</div>
 			)}
-			<span class="nav-fullscreen-title">{siteTitle}</span>
+			<span class="nav-drawer-title">{siteTitle}</span>
 		</div>
-		<button class="nav-fullscreen-close" aria-label="关闭菜单" id="nav-menu-close">
+		<button class="nav-drawer-close" aria-label="关闭菜单" id="nav-menu-close">
 			<Icon name="material-symbols:close" class="text-xl" />
 		</button>
 	</div>
 
 	<!-- 菜单内容 -->
-	<div class="nav-fullscreen-content">
-		<nav class="nav-fullscreen-nav">
+	<div class="nav-drawer-content">
+		<nav class="nav-drawer-nav">
 			{processedLinks.map((link, index) => (
-				<div class="nav-fullscreen-item-wrapper" style={`--item-delay: ${index * 50}ms`}>
+				<div class="nav-drawer-item-wrapper" style={`--item-delay: ${index * 50}ms`}>
 					{link.children && link.children.length > 0 ? (
 						<!-- 有子菜单的项目 -->
-						<div class="nav-fullscreen-dropdown" data-mobile-dropdown>
+						<div class="nav-drawer-dropdown" data-mobile-dropdown>
 							<button
-								class="nav-fullscreen-link nav-fullscreen-dropdown-trigger"
+								class="nav-drawer-link nav-drawer-dropdown-trigger"
 								data-mobile-dropdown-trigger
 								aria-expanded="false"
 							>
-								<span class="nav-fullscreen-link-content">
+								<span class="nav-drawer-link-content">
 									{link.icon && (
-										<span class="nav-fullscreen-link-icon">
+										<span class="nav-drawer-link-icon">
 											<Icon name={link.icon} />
 										</span>
 									)}
-									<span class="nav-fullscreen-link-text">{link.name}</span>
+									<span class="nav-drawer-link-text">{link.name}</span>
 								</span>
 								<Icon
 									name="material-symbols:chevron-right-rounded"
-									class="nav-fullscreen-arrow transition-transform duration-300"
+									class="nav-drawer-arrow transition-transform duration-300"
 								/>
 							</button>
-							<div class="nav-fullscreen-submenu" data-mobile-submenu>
+							<div class="nav-drawer-submenu" data-mobile-submenu>
 								{link.children.map((child) => (
 									<a
 										href={child.external ? child.url : url(child.url)}
-										class="nav-fullscreen-sublink"
+										class="nav-drawer-sublink"
 										target={child.external ? "_blank" : undefined}
 									>
-										<span class="nav-fullscreen-link-content">
+										<span class="nav-drawer-link-content">
 											{child.icon && (
-												<span class="nav-fullscreen-link-icon nav-fullscreen-sublink-icon">
+												<span class="nav-drawer-link-icon nav-drawer-sublink-icon">
 													<Icon name={child.icon} />
 												</span>
 											)}
@@ -108,16 +109,16 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 						<!-- 普通链接项目 -->
 						<a
 							href={link.external ? link.url : url(link.url)}
-							class="nav-fullscreen-link"
+							class="nav-drawer-link"
 							target={link.external ? "_blank" : undefined}
 						>
-							<span class="nav-fullscreen-link-content">
+							<span class="nav-drawer-link-content">
 								{link.icon && (
-									<span class="nav-fullscreen-link-icon">
+									<span class="nav-drawer-link-icon">
 										<Icon name={link.icon} />
 									</span>
 								)}
-								<span class="nav-fullscreen-link-text">{link.name}</span>
+								<span class="nav-drawer-link-text">{link.name}</span>
 							</span>
 							{link.external && (
 								<Icon
@@ -133,8 +134,8 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	</div>
 
 	<!-- 底部装饰 -->
-	<div class="nav-fullscreen-footer">
-		<div class="nav-fullscreen-footer-decoration"></div>
+	<div class="nav-drawer-footer">
+		<div class="nav-drawer-footer-decoration"></div>
 	</div>
 </div>
 
@@ -142,60 +143,86 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	@reference "../../styles/main.css";
 
 	/* ============================================
-	 * 全屏遮罩层
+	 * 抽屉遮罩层
 	 * ============================================ */
-	.nav-fullscreen-overlay {
-		display: none;
+	.nav-drawer-overlay {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.6);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
+		background: rgba(0, 0, 0, 0.38);
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
 		z-index: 998;
 		opacity: 0;
-		transition: opacity 0.3s ease;
+		transition: opacity 0.3s ease, visibility 0.3s ease;
+		visibility: hidden;
 		pointer-events: none;
 	}
 
-	.nav-fullscreen-overlay.active {
-		display: block;
+	.nav-drawer-overlay.active {
 		opacity: 1;
+		visibility: visible;
 		pointer-events: auto;
 	}
 
 	/* ============================================
-	 * 全屏菜单面板
+	 * 抽屉菜单面板
 	 * ============================================ */
-	.nav-fullscreen-panel {
+	.nav-drawer-panel {
 		position: fixed !important;
-		inset: 0 !important;
-		width: 100vw !important;
+		top: 0 !important;
+		right: 0 !important;
+		bottom: 0 !important;
+		width: min(86vw, 23rem) !important;
 		height: 100dvh !important;
-		background: var(--page-bg);
-		transform: translateX(100%);
-		transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+		background: color-mix(in srgb, var(--page-bg) 96%, transparent);
+		backdrop-filter: blur(18px);
+		-webkit-backdrop-filter: blur(18px);
+		border-left: 1px solid var(--line-divider);
+		box-shadow: -18px 0 40px rgba(0, 0, 0, 0.16);
+		transform: translate3d(100%, 0, 0);
+		transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
 		z-index: 999 !important;
 		display: flex !important;
 		flex-direction: column;
 		overflow: hidden;
+		will-change: transform;
 	}
 
-	.nav-fullscreen-panel[data-menu-open="true"] {
-		transform: translateX(0);
+	.nav-drawer-panel[data-menu-open="true"] {
+		transform: translate3d(0, 0, 0);
 	}
 
-	/* 桌面端隐藏全屏菜单 */
+	.nav-drawer-panel[data-drawer-side="left"] {
+		left: 0 !important;
+		right: auto !important;
+		border-right: 1px solid var(--line-divider);
+		border-left: 0;
+		box-shadow: 18px 0 40px rgba(0, 0, 0, 0.16);
+		transform: translate3d(-100%, 0, 0);
+	}
+
+	.nav-drawer-panel[data-drawer-side="left"][data-menu-open="true"] {
+		transform: translate3d(0, 0, 0);
+	}
+
+	/* 桌面端隐藏抽屉菜单 */
 	@media (min-width: 1024px) {
-		.nav-fullscreen-overlay,
-		.nav-fullscreen-panel {
+		.nav-drawer-overlay,
+		.nav-drawer-panel {
 			display: none !important;
+		}
+	}
+
+	@media (max-width: 420px) {
+		.nav-drawer-panel {
+			width: min(90vw, 22rem) !important;
 		}
 	}
 
 	/* ============================================
 	 * 顶部区域
 	 * ============================================ */
-	.nav-fullscreen-header {
+	.nav-drawer-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -204,20 +231,21 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		flex-shrink: 0;
 	}
 
-	.nav-fullscreen-brand {
+	.nav-drawer-brand {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
+		min-width: 0;
 	}
 
-	.nav-fullscreen-logo {
+	.nav-drawer-logo {
 		width: 2.5rem;
 		height: 2.5rem;
 		border-radius: 0.625rem;
 		object-fit: cover;
 	}
 
-	.nav-fullscreen-logo-placeholder {
+	.nav-drawer-logo-placeholder {
 		width: 2.5rem;
 		height: 2.5rem;
 		border-radius: 0.625rem;
@@ -228,13 +256,16 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		color: var(--primary);
 	}
 
-	.nav-fullscreen-title {
+	.nav-drawer-title {
 		font-weight: 600;
 		font-size: 1.125rem;
 		color: var(--text-color);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	.nav-fullscreen-close {
+	.nav-drawer-close {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -247,26 +278,26 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		cursor: pointer;
 	}
 
-	.nav-fullscreen-close:hover {
+	.nav-drawer-close:hover {
 		background: var(--primary);
 		color: white;
 	}
 
-	.nav-fullscreen-close:active {
+	.nav-drawer-close:active {
 		background: var(--btn-plain-bg-active);
 	}
 
 	/* ============================================
 	 * 菜单内容
 	 * ============================================ */
-	.nav-fullscreen-content {
+	.nav-drawer-content {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
 		padding: 1rem 1rem 2rem;
 	}
 
-	.nav-fullscreen-nav {
+	.nav-drawer-nav {
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
@@ -275,15 +306,15 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	/* ============================================
 	 * 菜单项动画
 	 * ============================================ */
-	.nav-fullscreen-item-wrapper {
+	.nav-drawer-item-wrapper {
 		opacity: 0;
-		transform: translateX(20px);
+		transform: translateX(16px);
 		transition:
 			opacity 0.4s ease var(--item-delay),
 			transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) var(--item-delay) !important;
 	}
 
-	.nav-fullscreen-panel[data-menu-open="true"] .nav-fullscreen-item-wrapper {
+	.nav-drawer-panel[data-menu-open="true"] .nav-drawer-item-wrapper {
 		opacity: 1;
 		transform: translateX(0);
 	}
@@ -291,7 +322,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	/* ============================================
 	 * 菜单链接
 	 * ============================================ */
-	.nav-fullscreen-link {
+	.nav-drawer-link {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -306,23 +337,24 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		font-weight: 500;
 	}
 
-	.nav-fullscreen-link:hover {
+	.nav-drawer-link:hover {
 		background: var(--btn-regular-bg-hover);
 		color: var(--primary);
 	}
 
-	.nav-fullscreen-link:active {
+	.nav-drawer-link:active {
 		background: var(--btn-plain-bg-active);
 		transform: scale(0.98);
 	}
 
-	.nav-fullscreen-link-content {
+	.nav-drawer-link-content {
 		display: flex;
 		align-items: center;
 		gap: 0.875rem;
+		min-width: 0;
 	}
 
-	.nav-fullscreen-link-icon {
+	.nav-drawer-link-icon {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -337,16 +369,16 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 			color 0.2s ease;
 	}
 
-	.nav-fullscreen-link:hover .nav-fullscreen-link-icon {
+	.nav-drawer-link:hover .nav-drawer-link-icon {
 		background: var(--primary);
 		color: white;
 	}
 
-	.nav-fullscreen-link-text {
+	.nav-drawer-link-text {
 		font-size: 1rem;
 	}
 
-	.nav-fullscreen-arrow {
+	.nav-drawer-arrow {
 		color: var(--text-tertiary);
 		font-size: 1.25rem;
 	}
@@ -354,32 +386,32 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	/* ============================================
 	 * 子菜单
 	 * ============================================ */
-	.nav-fullscreen-dropdown {
+	.nav-drawer-dropdown {
 		width: 100%;
 	}
 
-	.nav-fullscreen-dropdown-trigger {
+	.nav-drawer-dropdown-trigger {
 		width: 100%;
 		cursor: pointer;
 	}
 
-	.nav-fullscreen-dropdown[data-expanded="true"] .nav-fullscreen-arrow {
+	.nav-drawer-dropdown[data-expanded="true"] .nav-drawer-arrow {
 		transform: rotate(90deg);
 	}
 
-	.nav-fullscreen-submenu {
+	.nav-drawer-submenu {
 		max-height: 0;
 		overflow: hidden;
 		transition: max-height 0.3s ease-in-out, padding 0.3s ease;
 		padding-left: 0.5rem;
 	}
 
-	.nav-fullscreen-dropdown[data-expanded="true"] .nav-fullscreen-submenu {
+	.nav-drawer-dropdown[data-expanded="true"] .nav-drawer-submenu {
 		max-height: 500px;
-		padding-left: 3.25rem;
+		padding-left: 2.75rem;
 	}
 
-	.nav-fullscreen-sublink {
+	.nav-drawer-sublink {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -392,16 +424,16 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		font-size: 0.9375rem;
 	}
 
-	.nav-fullscreen-sublink:hover {
+	.nav-drawer-sublink:hover {
 		background: var(--btn-regular-bg-hover);
 		color: var(--primary);
 	}
 
-	.nav-fullscreen-sublink:active {
+	.nav-drawer-sublink:active {
 		background: var(--btn-regular-bg-active);
 	}
 
-	.nav-fullscreen-sublink-icon {
+	.nav-drawer-sublink-icon {
 		width: 1.75rem;
 		height: 1.75rem;
 		font-size: 0.875rem;
@@ -410,12 +442,12 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	/* ============================================
 	 * 底部装饰
 	 * ============================================ */
-	.nav-fullscreen-footer {
+	.nav-drawer-footer {
 		padding: 1.5rem;
 		flex-shrink: 0;
 	}
 
-	.nav-fullscreen-footer-decoration {
+	.nav-drawer-footer-decoration {
 		height: 4px;
 		width: 40px;
 		margin: 0 auto;
@@ -429,26 +461,27 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		/* ============================================
 	 * 暗色模式
 	 * ============================================ */
-	:global(html.dark) .nav-fullscreen-panel {
-		background: var(--page-bg);
+	:global(html.dark) .nav-drawer-panel {
+		background: color-mix(in srgb, var(--page-bg) 94%, transparent);
+		box-shadow: -18px 0 40px rgba(0, 0, 0, 0.34);
 	}
 
-	:global(html.dark) .nav-fullscreen-title {
+	:global(html.dark) .nav-drawer-title {
 		color: var(--text-color) !important;
 	}
 
-	:global(html.dark) .nav-fullscreen-close {
+	:global(html.dark) .nav-drawer-close {
 		color: var(--text-color) !important;
 		background: var(--btn-regular-bg) !important;
 	}
 
-	:global(html.dark) .nav-fullscreen-link,
-	:global(html.dark) .nav-fullscreen-sublink {
+	:global(html.dark) .nav-drawer-link,
+	:global(html.dark) .nav-drawer-sublink {
 		color: var(--text-color) !important;
 		background: var(--bg-secondary) !important;
 	}
 
-	:global(html.dark) .nav-fullscreen-link-icon {
+	:global(html.dark) .nav-drawer-link-icon {
 		color: var(--content-meta) !important;
 		background: var(--btn-regular-bg) !important;
 	}
@@ -459,6 +492,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	// 独立于 Swup，始终可用
 
 	let isMenuOpen = false;
+	const MENU_PORTAL_ID = "nav-menu-portal";
 
 	function getPanel() {
 		return document.getElementById("nav-menu-panel");
@@ -477,7 +511,29 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		return panel ? panel.querySelector("#nav-menu-close") : null;
 	}
 
+	function ensureMenuPortal() {
+		const panel = getPanel();
+		const overlay = getOverlay();
+		if (!panel || !overlay || !document.body) return;
+
+		let portal = document.getElementById(MENU_PORTAL_ID);
+		if (!portal) {
+			portal = document.createElement("div");
+			portal.id = MENU_PORTAL_ID;
+			portal.setAttribute("data-nav-menu-portal", "");
+			document.body.appendChild(portal);
+		}
+
+		if (overlay.parentElement !== portal) {
+			portal.appendChild(overlay);
+		}
+		if (panel.parentElement !== portal) {
+			portal.appendChild(panel);
+		}
+	}
+
 	function openMenu() {
+		ensureMenuPortal();
 		const panel = getPanel();
 		const overlay = getOverlay();
 		if (panel) {
@@ -487,6 +543,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		if (overlay) {
 			overlay.classList.add("active");
 		}
+		document.body.classList.add("nav-menu-open");
 		document.body.style.overflow = "hidden";
 		isMenuOpen = true;
 	}
@@ -512,6 +569,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		if (overlay) {
 			overlay.classList.remove("active");
 		}
+		document.body.classList.remove("nav-menu-open");
 		document.body.style.overflow = "";
 		isMenuOpen = false;
 	}
@@ -565,7 +623,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 		}
 
 		// 检查是否点击了遮罩层
-		if (targetEl.id === "nav-menu-overlay" || targetEl.classList?.contains("nav-fullscreen-overlay")) {
+		if (targetEl.id === "nav-menu-overlay" || targetEl.classList?.contains("nav-drawer-overlay")) {
 			e.preventDefault();
 			closeMenu();
 			return;
@@ -624,6 +682,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	function init() {
 		// 重置状态
 		isMenuOpen = false;
+		ensureMenuPortal();
 
 		// 绑定直接点击事件
 		bindDirectClick();
@@ -659,7 +718,7 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 	}
 
 	// 暴露全局方法
-	window.openNavMenu = openMenu;
-	window.closeNavMenu = closeMenu;
-	window.toggleNavMenu = toggleMenu;
+	(window as any).openNavMenu = openMenu;
+	(window as any).closeNavMenu = closeMenu;
+	(window as any).toggleNavMenu = toggleMenu;
 </script>
