@@ -87,7 +87,7 @@ function getTimeAgo(date: Date): string {
 		<div class="photo-section">
 			{photos.length > 0 ? (
 				<>
-					<div class="photo-masonry" id="photo-masonry">
+					<div class="photo-masonry" id="photo-masonry" data-total-pages={totalPages}>
 						{photos.map((photo) => (
 							<div
 								class="photo-item"
@@ -584,206 +584,221 @@ function getTimeAgo(date: Date): string {
 	}
 </style>
 
-<script define:vars={{ totalPages }}>
-	const PHOTOS_PER_PAGE = 25;
+<script is:inline>
+	(function() {
+		const PHOTOS_PER_PAGE = 25;
+		let totalPages = 1;
 
-	let currentPage = 1;
+		let currentPage = 1;
 
-	let masonry, allItems, prevBtn, nextBtn, pageCurrent;
+		let masonry, allItems, prevBtn, nextBtn, pageCurrent;
 
-	// 灯箱元素引用
-	let lightbox, lightboxImage, lightboxCaption, lightboxDimensions,
-		lightboxCounter, lightboxClose, lightboxPrev, lightboxNext,
-		lightboxDownload, lightboxInfoToggle, lightboxInfo;
-	let currentPhotoIndex = 0;
-	let isInfoVisible = true;
+		// 灯箱元素引用
+		let lightbox, lightboxImage, lightboxCaption, lightboxDimensions,
+			lightboxCounter, lightboxClose, lightboxPrev, lightboxNext,
+			lightboxDownload, lightboxInfoToggle, lightboxInfo;
+		let currentPhotoIndex = 0;
+		let isInfoVisible = true;
 
-	function initDOM() {
-		masonry = document.getElementById('photo-masonry');
-		if (!masonry) { console.error('photo-masonry not found'); return; }
-		allItems = masonry.querySelectorAll('.photo-item');
-		prevBtn = document.getElementById('paginate-prev');
-		nextBtn = document.getElementById('paginate-next');
-		pageCurrent = document.getElementById('paginate-current');
+		function initDOM() {
+			masonry = document.getElementById('photo-masonry');
+			if (!masonry) return;
 
-		lightbox = document.getElementById('photo-lightbox');
-		lightboxImage = document.getElementById('lightbox-image');
-		lightboxCaption = document.getElementById('lightbox-caption');
-		lightboxDimensions = document.getElementById('lightbox-dimensions');
-		lightboxCounter = document.getElementById('lightbox-counter');
-		lightboxClose = document.getElementById('lightbox-close');
-		lightboxPrev = document.getElementById('lightbox-prev');
-		lightboxNext = document.getElementById('lightbox-next');
-		lightboxDownload = document.getElementById('lightbox-download');
-		lightboxInfoToggle = document.getElementById('lightbox-info-toggle');
-		lightboxInfo = document.getElementById('lightbox-info');
+			const tp = parseInt(masonry.getAttribute('data-total-pages') || '1', 10);
+			totalPages = Math.max(1, tp);
 
-		bindEvents();
-		showPage(1);
-	}
+			allItems = masonry.querySelectorAll('.photo-item');
+			prevBtn = document.getElementById('paginate-prev');
+			nextBtn = document.getElementById('paginate-next');
+			pageCurrent = document.getElementById('paginate-current');
 
-	// ---- 分页 ----
-	function showPage(page) {
-		if (!allItems) return;
-		currentPage = Math.max(1, Math.min(page, totalPages));
+			lightbox = document.getElementById('photo-lightbox');
+			lightboxImage = document.getElementById('lightbox-image');
+			lightboxCaption = document.getElementById('lightbox-caption');
+			lightboxDimensions = document.getElementById('lightbox-dimensions');
+			lightboxCounter = document.getElementById('lightbox-counter');
+			lightboxClose = document.getElementById('lightbox-close');
+			lightboxPrev = document.getElementById('lightbox-prev');
+			lightboxNext = document.getElementById('lightbox-next');
+			lightboxDownload = document.getElementById('lightbox-download');
+			lightboxInfoToggle = document.getElementById('lightbox-info-toggle');
+			lightboxInfo = document.getElementById('lightbox-info');
 
-		allItems.forEach(item => {
-			const itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
-			if (itemPage === currentPage) {
-				item.classList.remove('hidden-page');
-			} else {
-				item.classList.add('hidden-page');
+			bindEvents();
+			showPage(1);
+		}
+
+		// ---- 分页 ----
+		function showPage(page) {
+			if (!allItems) return;
+			currentPage = Math.max(1, Math.min(page, totalPages));
+
+			allItems.forEach(item => {
+				const itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
+				if (itemPage === currentPage) {
+					item.classList.remove('hidden-page');
+				} else {
+					item.classList.add('hidden-page');
+				}
+			});
+
+			if (pageCurrent) {
+				pageCurrent.textContent = String(currentPage);
 			}
-		});
 
-		if (pageCurrent) {
-			pageCurrent.textContent = String(currentPage);
+			if (prevBtn) prevBtn.disabled = currentPage <= 1;
+			if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+			closeLightbox();
+			scrollToTop();
 		}
 
-		if (prevBtn) prevBtn.disabled = currentPage <= 1;
-		if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-
-		closeLightbox();
-		scrollToTop();
-	}
-
-	function scrollToTop() {
-		if (!masonry) return;
-		const masonryRect = masonry.getBoundingClientRect();
-		const top = masonryRect.top + window.scrollY - 100;
-		if (window.scrollY > top) {
-			window.scrollTo({ top, behavior: 'smooth' });
+		function scrollToTop() {
+			if (!masonry) return;
+			const masonryRect = masonry.getBoundingClientRect();
+			const top = masonryRect.top + window.scrollY - 100;
+			if (window.scrollY > top) {
+				window.scrollTo({ top, behavior: 'smooth' });
+			}
 		}
-	}
 
-	function bindEvents() {
-		prevBtn?.addEventListener('click', () => showPage(currentPage - 1));
-		nextBtn?.addEventListener('click', () => showPage(currentPage + 1));
+		function bindEvents() {
+			prevBtn?.addEventListener('click', () => showPage(currentPage - 1));
+			nextBtn?.addEventListener('click', () => showPage(currentPage + 1));
 
-		if (masonry) {
-			masonry.addEventListener('click', (e) => {
-				const item = e.target.closest('.photo-item');
-				if (!item) return;
-				const pageItems = getCurrentPageItems();
-				const idx = pageItems.indexOf(item);
-				if (idx >= 0) openLightbox(idx);
+			if (masonry) {
+				masonry.addEventListener('click', (e) => {
+					const item = e.target.closest('.photo-item');
+					if (!item) return;
+					const pageItems = getCurrentPageItems();
+					const idx = pageItems.indexOf(item);
+					if (idx >= 0) openLightbox(idx);
+				});
+			}
+
+			lightboxClose?.addEventListener('click', closeLightbox);
+			lightboxPrev?.addEventListener('click', () => {
+				const count = getVisibleCount();
+				currentPhotoIndex = (currentPhotoIndex - 1 + count) % count;
+				updateLightbox();
+			});
+			lightboxNext?.addEventListener('click', () => {
+				const count = getVisibleCount();
+				currentPhotoIndex = (currentPhotoIndex + 1) % count;
+				updateLightbox();
+			});
+			lightboxInfoToggle?.addEventListener('click', toggleInfo);
+
+			lightbox?.addEventListener('click', (e) => {
+				if (e.target === lightbox) closeLightbox();
+			});
+
+			document.addEventListener('keydown', (e) => {
+				if (!lightbox?.classList.contains('active')) return;
+				const count = getVisibleCount();
+				switch (e.key) {
+					case 'Escape': closeLightbox(); break;
+					case 'ArrowLeft':
+						currentPhotoIndex = (currentPhotoIndex - 1 + count) % count;
+						updateLightbox();
+						break;
+					case 'ArrowRight':
+						currentPhotoIndex = (currentPhotoIndex + 1) % count;
+						updateLightbox();
+						break;
+					case 'i': toggleInfo(); break;
+				}
 			});
 		}
 
-		lightboxClose?.addEventListener('click', closeLightbox);
-		lightboxPrev?.addEventListener('click', () => {
-			const count = getVisibleCount();
-			currentPhotoIndex = (currentPhotoIndex - 1 + count) % count;
-			updateLightbox();
-		});
-		lightboxNext?.addEventListener('click', () => {
-			const count = getVisibleCount();
-			currentPhotoIndex = (currentPhotoIndex + 1) % count;
-			updateLightbox();
-		});
-		lightboxInfoToggle?.addEventListener('click', toggleInfo);
+		// ---- 灯箱 ----
+		function getCurrentPageItems() {
+			return Array.from(allItems).filter(item => {
+				const itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
+				return itemPage === currentPage;
+			});
+		}
 
-		lightbox?.addEventListener('click', (e) => {
-			if (e.target === lightbox) closeLightbox();
-		});
+		function getVisibleCount() {
+			return getCurrentPageItems().length;
+		}
 
-		document.addEventListener('keydown', (e) => {
-			if (!lightbox?.classList.contains('active')) return;
-			const count = getVisibleCount();
-			switch (e.key) {
-				case 'Escape': closeLightbox(); break;
-				case 'ArrowLeft':
-					currentPhotoIndex = (currentPhotoIndex - 1 + count) % count;
-					updateLightbox();
-					break;
-				case 'ArrowRight':
-					currentPhotoIndex = (currentPhotoIndex + 1) % count;
-					updateLightbox();
-					break;
-				case 'i': toggleInfo(); break;
+		function openLightbox(index) {
+			currentPhotoIndex = index;
+			updateLightbox();
+			lightbox?.classList.add('active');
+			lightbox?.setAttribute('aria-hidden', 'false');
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closeLightbox() {
+			lightbox?.classList.remove('active');
+			lightbox?.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+		}
+
+		function updateLightbox() {
+			const pageItems = getCurrentPageItems();
+			const photo = pageItems[currentPhotoIndex];
+			if (!photo) return;
+
+			const src = photo.getAttribute('data-src') || '';
+			const alt = photo.getAttribute('data-alt') || '';
+			const caption = photo.getAttribute('data-caption') || '';
+			const width = photo.getAttribute('data-width') || '';
+			const height = photo.getAttribute('data-height') || '';
+
+			if (lightboxImage) {
+				lightboxImage.src = src;
+				lightboxImage.alt = alt;
 			}
-		});
-	}
 
-	// ---- 灯箱 ----
-	function getCurrentPageItems() {
-		return Array.from(allItems).filter(item => {
-			const itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
-			return itemPage === currentPage;
-		});
-	}
+			if (lightboxCaption) {
+				lightboxCaption.textContent = caption;
+				lightboxCaption.style.display = caption ? 'block' : 'none';
+			}
 
-	function getVisibleCount() {
-		return getCurrentPageItems().length;
-	}
+			if (lightboxDimensions) {
+				if (width && height) {
+					lightboxDimensions.textContent = width + ' × ' + height;
+					lightboxDimensions.style.display = 'block';
+				} else {
+					lightboxDimensions.style.display = 'none';
+				}
+			}
 
-	function openLightbox(index) {
-		currentPhotoIndex = index;
-		updateLightbox();
-		lightbox?.classList.add('active');
-		lightbox?.setAttribute('aria-hidden', 'false');
-		document.body.style.overflow = 'hidden';
-	}
+			if (lightboxCounter) {
+				const count = getVisibleCount();
+				lightboxCounter.textContent = (currentPhotoIndex + 1) + ' / ' + count;
+			}
 
-	function closeLightbox() {
-		lightbox?.classList.remove('active');
-		lightbox?.setAttribute('aria-hidden', 'true');
-		document.body.style.overflow = '';
-	}
-
-	function updateLightbox() {
-		const pageItems = getCurrentPageItems();
-		const photo = pageItems[currentPhotoIndex];
-		if (!photo) return;
-
-		const src = photo.getAttribute('data-src') || '';
-		const alt = photo.getAttribute('data-alt') || '';
-		const caption = photo.getAttribute('data-caption') || '';
-		const width = photo.getAttribute('data-width') || '';
-		const height = photo.getAttribute('data-height') || '';
-
-		if (lightboxImage) {
-			lightboxImage.src = src;
-			lightboxImage.alt = alt;
-		}
-
-		if (lightboxCaption) {
-			lightboxCaption.textContent = caption;
-			lightboxCaption.style.display = caption ? 'block' : 'none';
-		}
-
-		if (lightboxDimensions) {
-			if (width && height) {
-				lightboxDimensions.textContent = width + ' × ' + height;
-				lightboxDimensions.style.display = 'block';
-			} else {
-				lightboxDimensions.style.display = 'none';
+			if (lightboxDownload) {
+				lightboxDownload.onclick = () => {
+					const link = document.createElement('a');
+					link.href = src;
+					link.download = alt || 'photo-' + (currentPhotoIndex + 1);
+					link.target = '_blank';
+					link.click();
+				};
 			}
 		}
 
-		if (lightboxCounter) {
-			const count = getVisibleCount();
-			lightboxCounter.textContent = (currentPhotoIndex + 1) + ' / ' + count;
+		function toggleInfo() {
+			isInfoVisible = !isInfoVisible;
+			if (lightboxInfo) {
+				lightboxInfo.style.opacity = isInfoVisible ? '1' : '0';
+				lightboxInfo.style.pointerEvents = isInfoVisible ? 'auto' : 'none';
+			}
 		}
 
-		if (lightboxDownload) {
-			lightboxDownload.onclick = () => {
-				const link = document.createElement('a');
-				link.href = src;
-				link.download = alt || 'photo-' + (currentPhotoIndex + 1);
-				link.target = '_blank';
-				link.click();
-			};
+		// 首次加载时初始化
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', initDOM);
+		} else {
+			initDOM();
 		}
-	}
 
-	function toggleInfo() {
-		isInfoVisible = !isInfoVisible;
-		if (lightboxInfo) {
-			lightboxInfo.style.opacity = isInfoVisible ? '1' : '0';
-			lightboxInfo.style.pointerEvents = isInfoVisible ? 'auto' : 'none';
-		}
-	}
-
-	initDOM();
+		// Swup 导航后重新初始化
+		document.addEventListener('swup:contentReplaced', initDOM);
+	})();
 </script>

@@ -642,12 +642,25 @@ const processedLinks = Astro.props.links.map((link: NavBarLink) => ({
 			return;
 		}
 
-		// 如果菜单是打开的，检查是否点击了菜单外部
+		// 如果菜单是打开的
 		if (isMenuOpen) {
 			const panel = getPanel();
 			const switchBtn = getSwitch();
+
+			// 点击菜单内部但不在任何下拉菜单内 → 关闭所有展开的下拉
+			const insideDropdown = targetEl.closest?.("[data-mobile-dropdown]");
+			if (!insideDropdown) {
+				document.querySelectorAll("[data-mobile-dropdown]").forEach((dd) => {
+					(dd as Element).setAttribute("data-expanded", "false");
+					const ddTrigger = (dd as Element).querySelector("[data-mobile-dropdown-trigger]");
+					if (ddTrigger) {
+						(ddTrigger as Element).setAttribute("aria-expanded", "false");
+					}
+				});
+			}
+
+			// 检查是否点击了菜单外部
 			if (panel && !panel.contains(targetEl) && (!switchBtn || !switchBtn.contains(targetEl))) {
-				// 点击了菜单外部
 				const submenuTrigger = targetEl.closest?.("[data-mobile-submenu]");
 				if (!submenuTrigger) {
 					closeMenu();
