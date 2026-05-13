@@ -87,16 +87,6 @@ const lifeCollection = defineCollection({
 		content: z.string().optional().default(""),
 		status: z.enum(["done", "todo"]).optional(),
 
-		// Health record (one file per day)
-		workoutType: z.string().optional().default(""),
-		runKm: z.number().optional().default(0),
-		stepsToday: z.number().optional(),
-		workoutMinutes: z.number().optional(),
-		sleepHours: z.number().optional(),
-		allowedFoods: z.array(z.string()).optional().default([]),
-		avoidFoods: z.array(z.string()).optional().default([]),
-		sleepQuality: z.number().min(1).max(5).optional().default(3),
-
 		// Notebook
 		name: z.string().optional().default(""),
 		cover: z.string().optional().default(""),
@@ -105,8 +95,8 @@ const lifeCollection = defineCollection({
 		updatedAt: z.union([z.string(), z.date()]).optional(),
 		tags: z.array(z.string()).optional().default([]),
 
-	// Plan
-	planName: z.string().optional().default(""),
+		// Plan
+		planName: z.string().optional().default(""),
 		targetDesc: z.string().optional().default(""),
 		dailyTarget: z.number().optional().default(1),
 		monthlyTarget: z.number().optional().default(20),
@@ -131,35 +121,6 @@ const lifeCollection = defineCollection({
 	}),
 });
 
-const lifeWorkoutCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/health/workout" }),
-	schema: z.object({
-		date: z.date(),
-		workoutType: z.string().optional().default(""),
-		runKm: z.number().optional().default(0),
-		workoutMinutes: z.number().optional(),
-		stepsToday: z.number().optional(),
-	}),
-});
-
-const lifeSleepCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/health/sleep" }),
-	schema: z.object({
-		date: z.date(),
-		sleepHours: z.number().optional(),
-		sleepQuality: z.number().min(1).max(5).optional().default(3),
-	}),
-});
-
-const lifeFoodCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/health/food" }),
-	schema: z.object({
-		date: z.date(),
-		allowedFoods: z.array(z.string()).optional().default([]),
-		avoidFoods: z.array(z.string()).optional().default([]),
-	}),
-});
-
 const notebooksCollection = defineCollection({
 	loader: glob({ pattern: "**/*.{md,json}", base: "./src/content/life/notebooks" }),
 	schema: z.object({
@@ -167,15 +128,6 @@ const notebooksCollection = defineCollection({
 		cover: z.string().optional().default(""),
 		summary: z.string().optional().default(""),
 		date: z.coerce.date().optional(),
-	}),
-});
-
-const checkinCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/checkin" }),
-	schema: z.object({
-		name: z.string(),
-		description: z.string().optional().default(""),
-		checkins: z.array(z.coerce.date()).optional().default([]),
 	}),
 });
 
@@ -285,11 +237,7 @@ export const collections = {
 	moments: momentsCollection,
 	bangumi: bangumiCollection,
 	life: lifeCollection,
-	lifeWorkout: lifeWorkoutCollection,
-	lifeSleep: lifeSleepCollection,
-	lifeFood: lifeFoodCollection,
 	notebooks: notebooksCollection,
-	checkin: checkinCollection,
 	routines: routinesCollection,
 	album: albumCollection,
 	danmu: danmuCollection,

@@ -12,45 +12,12 @@ const { class: className, style } = Astro.props;
 
 // 获取生活相关 collection
 const lifeEntries = await getCollection("life");
-const workoutEntries = await getCollection("lifeWorkout");
-const sleepEntries = await getCollection("lifeSleep");
-const foodEntries = await getCollection("lifeFood");
 const notebookEntries = await getCollection("notebooks");
-const checkinEntries = await getCollection("checkin");
 const routinesEntries = await getCollection("routines");
 
 // 辅助函数
 const isIn = (entryId: string, folder: string) =>
 	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
-
-// 统计想法
-const ideas = lifeEntries.filter((entry) => isIn(entry.id, "ideas")).map((e) => e.data);
-const ideasDone = ideas.filter((item) => item.completedAt).length;
-const ideasTotal = ideas.length;
-
-// 统计打卡
-const checkinCount = checkinEntries.length;
-const totalCheckinCount = checkinEntries.reduce((acc, item) => acc + (item.data.checkins?.length || 0), 0);
-
-// 统计运动
-const workouts = workoutEntries.map((e) => e.data);
-const workoutCount = workouts.length;
-const totalRunKm = workouts.reduce((acc, w) => acc + (w.runKm || 0), 0);
-const totalWorkoutMins = workouts.reduce((acc, w) => acc + (w.workoutMinutes || 0), 0);
-
-// 统计睡眠
-const sleeps = sleepEntries.map((e) => e.data);
-const sleepCount = sleeps.length;
-const avgSleepHours = sleepCount > 0
-	? sleeps.reduce((acc, s) => acc + (s.sleepHours || 0), 0) / sleepCount
-	: 0;
-const avgSleepQuality = sleepCount > 0
-	? sleeps.reduce((acc, s) => acc + (s.sleepQuality || 3), 0) / sleepCount
-	: 0;
-
-// 统计饮食
-const foods = foodEntries.map((e) => e.data);
-const foodCount = foods.length;
 
 // 统计地点
 const places = lifeEntries.filter((entry) => isIn(entry.id, "places")).map((e) => e.data);
@@ -80,26 +47,6 @@ function formatNumber(num: number): string {
 // 构建统计数据
 const stats = [
 	{
-		icon: "material-symbols:favorite-outline",
-		label: "想法完成",
-		value: `${ideasDone}/${ideasTotal}`,
-	},
-	{
-		icon: "material-symbols:straighten",
-		label: "跑步里程",
-		value: `${formatNumber(Math.round(totalRunKm * 10) / 10)} km`,
-	},
-	{
-		icon: "material-symbols:timer-outline",
-		label: "运动时长",
-		value: `${formatNumber(totalWorkoutMins)} 分钟`,
-	},
-	{
-		icon: "material-symbols:star-outline",
-		label: "睡眠质量",
-		value: avgSleepQuality.toFixed(1),
-	},
-	{
 		icon: "material-symbols:apartment",
 		label: "去过城市",
 		value: visitedCities,
@@ -110,14 +57,9 @@ const stats = [
 		value: notebooksCount,
 	},
 	{
-		icon: "material-symbols:check-circle-outline",
-		label: "打卡项目",
-		value: checkinCount,
-	},
-	{
-		icon: "material-symbols:event-available-outline",
-		label: "打卡总数",
-		value: formatNumber(totalCheckinCount),
+		icon: "material-symbols:location-on-outline",
+		label: "足迹记录",
+		value: placesCount,
 	},
 	{
 		icon: "material-symbols:schedule-outline",

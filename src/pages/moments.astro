@@ -10,17 +10,25 @@ const sortedMoments = moments.sort(
 	(a, b) => b.data.published.getTime() - a.data.published.getTime(),
 );
 
+const MOMENTS_PER_PAGE = 10;
+const totalPages = Math.max(1, Math.ceil(sortedMoments.length / MOMENTS_PER_PAGE));
+
 const albums = await getCollection("album");
 const albumCount = albums.length;
 ---
 
 <MainGridLayout title="动态" description="记录生活中的点点滴滴">
 	<!-- 动态列表 -->
-	<div class="moments-feed">
+	<div class="moments-feed" id="moments-feed" data-total-pages={totalPages}>
 		{sortedMoments.length > 0 ? (
-			sortedMoments.map((moment) => (
-				<MomentCard moment={moment} />
-			))
+			sortedMoments.map((moment, index) => {
+				const page = Math.floor(index / MOMENTS_PER_PAGE) + 1;
+				return (
+					<div class="moment-item-wrapper" data-page={page} data-index={index}>
+						<MomentCard moment={moment} />
+					</div>
+				);
+			})
 		) : (
 			<div class="empty-state">
 				<div class="empty-icon">
@@ -31,6 +39,22 @@ const albumCount = albums.length;
 			</div>
 		)}
 	</div>
+
+	{totalPages > 1 && (
+		<div id="moments-pagination" class="moments-pagination">
+			<button id="moments-prev" class="paginate-btn" disabled>
+				<Icon name="material-symbols:chevron-left" class="text-lg" />
+				<span>上一页</span>
+			</button>
+			<div class="paginate-info" id="moments-paginate-info">
+				第 <span id="moments-current">1</span> / {totalPages} 页
+			</div>
+			<button id="moments-next" class="paginate-btn">
+				<span>下一页</span>
+				<Icon name="material-symbols:chevron-right" class="text-lg" />
+			</button>
+		</div>
+	)}
 
 	<!-- 评论区 - 使用统一的 Comment 组件 -->
 	<Comment customPath="/moments/" />
@@ -44,25 +68,76 @@ const albumCount = albums.length;
 </MainGridLayout>
 
 <script is:inline>
-	// 访客统计
-	const countElements = document.querySelectorAll(
-		'.waline-count[data-path="/moments/"]',
-	);
-	if (countElements.length > 0) {
-		const serverURL = "https://co.tsh520.cn";
+	(function() {
+		var MOMENTS_PER_PAGE = 10;
+		var totalPages = 1;
+		var currentPage = 1;
+		var feed, allItems, prevBtn, nextBtn, pageCurrent;
 
-		fetch(`${serverURL}/api/uv?path=/moments/`)
-			.then((res) => res.json())
-			.then((data) => {
-				const count = data.data?.unique_visitor || data.uv || 0;
-				countElements.forEach((el) => {
-					el.textContent = String(count);
-				});
+		function initPagination() {
+			feed = document.getElementById('moments-feed');
+			if (!feed) return;
+
+			var tp = parseInt(feed.getAttribute('data-total-pages') || '1', 10);
+			totalPages = Math.max(1, tp);
+
+			allItems = feed.querySelectorAll('.moment-item-wrapper');
+			prevBtn = document.getElementById('moments-prev');
+			nextBtn = document.getElementById('moments-next');
+			pageCurrent = document.getElementById('moments-current');
+
+			if (prevBtn) prevBtn.addEventListener('click', function() { showPage(currentPage - 1); });
+			if (nextBtn) nextBtn.addEventListener('click', function() { showPage(currentPage + 1); });
+
+			showPage(1);
+		}
+
+		function showPage(page) {
+			if (!allItems || !allItems.length) return;
+			currentPage = Math.max(1, Math.min(page, totalPages));
+
+			allItems.forEach(function(item) {
+				var itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
+				item.style.display = itemPage === currentPage ? '' : 'none';
+			});
+
+			if (pageCurrent) pageCurrent.textContent = String(currentPage);
+			if (prevBtn) prevBtn.disabled = currentPage <= 1;
+			if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+			// 滚动到列表顶部
+			if (feed) {
+				var rect = feed.getBoundingClientRect();
+				var top = rect.top + window.scrollY - 100;
+				if (window.scrollY > top) {
+					window.scrollTo({ top: top, behavior: 'smooth' });
+				}
+			}
+		}
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', initPagination);
+		} else {
+			initPagination();
+		}
+
+		document.addEventListener('swup:contentReplaced', initPagination);
+	})();
+</script>
+
+<script is:inline>
+	// 访客统计
+	var countElements = document.querySelectorAll('.waline-count[data-path="/moments/"]');
+	if (countElements.length > 0) {
+		var serverURL = "https://co.tsh520.cn";
+		fetch(serverURL + "/api/uv?path=/moments/")
+			.then(function(res) { return res.json(); })
+			.then(function(data) {
+				var count = data.data ? data.data.unique_visitor || data.uv || 0 : (data.uv || 0);
+				countElements.forEach(function(el) { el.textContent = String(count); });
 			})
-			.catch(() => {
-				countElements.forEach((el) => {
-					el.textContent = "-";
-				});
+			.catch(function() {
+				countElements.forEach(function(el) { el.textContent = "-"; });
 			});
 	}
 </script>
@@ -110,6 +185,55 @@ const albumCount = albums.length;
 		color: var(--content-meta);
 	}
 
+	/* 分页 */
+	.moments-pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 20px;
+		margin-top: 8px;
+		padding: 20px 0 24px;
+		border-top: 1px solid var(--border);
+	}
+
+	.paginate-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 18px;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-color);
+		background: var(--card-bg);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.paginate-btn:hover:not(:disabled) {
+		background: var(--primary);
+		color: white;
+		border-color: var(--primary);
+	}
+
+	.paginate-btn:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
+
+	.paginate-info {
+		font-size: 14px;
+		color: var(--content-meta);
+		min-width: 100px;
+		text-align: center;
+	}
+
+	.paginate-info span {
+		font-weight: 600;
+		color: var(--text-color);
+	}
+
 	/* 访客统计 */
 	.visitor-stat {
 		display: flex;
@@ -132,6 +256,11 @@ const albumCount = albums.length;
 	}
 
 	/* 响应式 */
+	@media (max-width: 768px) {
+		.moments-pagination { gap: 12px; margin-top: 4px; }
+		.paginate-btn { padding: 6px 14px; font-size: 13px; }
+	}
+
 	@media (max-width: 480px) {
 		.moments-feed {
 			gap: 0.5rem;

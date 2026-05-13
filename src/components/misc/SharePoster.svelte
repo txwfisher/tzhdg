@@ -118,10 +118,11 @@ async function generatePoster() {
 			width: 100 * scale,
 			color: { dark: "#000000", light: "#ffffff" },
 		});
-		const customCoverUrl = "https://re.tsh520.cn/img/zdy/50.webp";
+		const defaultCoverUrl = "https://re.tsh520.cn/img/zdy/50.webp";
+		const coverUrl = coverImage || defaultCoverUrl;
 		const [qrImg, coverImg, avatarImg] = await Promise.all([
 			loadImage(qrCodeUrl),
-			loadImage(customCoverUrl),
+			loadImage(coverUrl),
 			avatar ? loadImage(avatar) : Promise.resolve(null),
 		]);
 
@@ -449,6 +450,13 @@ async function generatePoster() {
 		ctx.fillStyle = "#9ca3af";
 		ctx.font = `${12 * scale}px 'Roboto', sans-serif`;
 		ctx.fillText("扫码阅读文章👆", qrX + qrSize / 2, footerY + qrSize + 20 * scale);
+
+		// Site branding below QR text
+		if (siteTitle) {
+			ctx.font = '700 ' + (10 * scale) + 'px Roboto, sans-serif';
+			ctx.fillStyle = '#9ca3af';
+			ctx.fillText(siteTitle, width / 2, footerY + qrSize + 42 * scale);
+		}
 
 		// Finalize
 		posterImage = canvas.toDataURL("image/png");

@@ -197,33 +197,33 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 <script is:inline>
 	(function() {
 		function initDesktopDropdowns() {
-			const dropdowns = document.querySelectorAll('[data-dropdown]');
+			var dropdowns = document.querySelectorAll('[data-dropdown]');
 
-			dropdowns.forEach(dropdown => {
-				const trigger = dropdown.querySelector('[data-dropdown-trigger]');
-				const menu = dropdown.querySelector('[data-dropdown-menu]');
+			dropdowns.forEach(function(dropdown) {
+				var trigger = dropdown.querySelector('[data-dropdown-trigger]');
+				var menu = dropdown.querySelector('[data-dropdown-menu]');
 				if (!trigger || !menu) return;
 
 				// 清除旧的事件监听器（通过克隆节点）
-				const newTrigger = trigger.cloneNode(true) as HTMLElement;
-				trigger.parentNode?.replaceChild(newTrigger, trigger);
+				var newTrigger = trigger.cloneNode(true);
+				trigger.parentNode && trigger.parentNode.replaceChild(newTrigger, trigger);
 
 				// 点击触发器 → 切换下拉菜单
 				newTrigger.addEventListener('click', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
 					dropdown.classList.toggle('dropdown-open');
-					const isOpen = dropdown.classList.contains('dropdown-open');
+					var isOpen = dropdown.classList.contains('dropdown-open');
 					newTrigger.setAttribute('aria-expanded', String(isOpen));
 				});
 
 				// 键盘导航支持
-				newTrigger.addEventListener('keydown', function(e: KeyboardEvent) {
+				newTrigger.addEventListener('keydown', function(e) {
 					if (e.key === 'ArrowDown') {
 						e.preventDefault();
 						dropdown.classList.add('dropdown-open');
 						newTrigger.setAttribute('aria-expanded', 'true');
-						const firstItem = menu.querySelector('.dropdown-item') as HTMLElement | null;
+						var firstItem = menu.querySelector('.dropdown-item');
 						if (firstItem) firstItem.focus();
 					} else if (e.key === 'Escape') {
 						dropdown.classList.remove('dropdown-open');
@@ -235,24 +235,25 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 
 			// 点击外部关闭所有下拉菜单
 			document.addEventListener('click', function(e) {
-				dropdowns.forEach(dropdown => {
-					if (!dropdown.contains(e.target as Node)) {
+				var target = e.target;
+				dropdowns.forEach(function(dropdown) {
+					if (!dropdown.contains(target)) {
 						dropdown.classList.remove('dropdown-open');
-						const trigger = dropdown.querySelector('[data-dropdown-trigger]');
+						var trigger = dropdown.querySelector('[data-dropdown-trigger]');
 						if (trigger) trigger.setAttribute('aria-expanded', 'false');
 					}
 				});
 			});
 
 			// Escape 关闭所有下拉菜单
-			document.addEventListener('keydown', function(e: KeyboardEvent) {
+			document.addEventListener('keydown', function(e) {
 				if (e.key === 'Escape') {
-					dropdowns.forEach(dropdown => {
+					dropdowns.forEach(function(dropdown) {
 						dropdown.classList.remove('dropdown-open');
-						const trigger = dropdown.querySelector('[data-dropdown-trigger]');
+						var trigger = dropdown.querySelector('[data-dropdown-trigger]');
 						if (trigger) {
 							trigger.setAttribute('aria-expanded', 'false');
-							(trigger as HTMLElement).focus();
+							trigger.focus();
 						}
 					});
 				}

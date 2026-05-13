@@ -7,10 +7,7 @@ import { url } from "@/utils/url-utils";
 const navItems = [
   { label: "笔记本", icon: "material-symbols:book-outline", href: "/life/notebooks/", color: "#ec4899" },
   { label: "规划", icon: "material-symbols:schedule-outline", href: "/life/routines/", color: "#06b6d4" },
-  { label: "想法", icon: "material-symbols:lightbulb-outline", href: "/life/ideas/", color: "#f59e0b" },
   { label: "足迹", icon: "material-symbols:location-on-outline", href: "/life/places/", color: "#10b981" },
-  { label: "健康", icon: "material-symbols:favorite-outline", href: "/life/health/", color: "#3b82f6" },
-  { label: "打卡", icon: "material-symbols:check-circle-outline", href: "/life/checkin/", color: "#84cc16" },
 ];
 
 const allEntries = await getCollection("notebooks");

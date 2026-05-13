@@ -12,21 +12,8 @@ const posts = await getCollection("posts", ({ data }) => {
 });
 const moments = await getCollection("moments");
 const bangumi = await getCollection("bangumi");
-const workoutEntries = await getCollection("lifeWorkout");
-const sleepEntries = await getCollection("lifeSleep");
-const foodEntries = await getCollection("lifeFood");
-const ideas = await getCollection("life");
 const notebooksEntries = await getCollection("notebooks");
-const checkinEntries = await getCollection("checkin");
 const routinesEntries = await getCollection("routines");
-
-// 辅助函数
-const isIn = (entryId: string, folder: string) =>
-	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
-
-// 获取想法数据
-const lifeIdeas = ideas.filter((entry) => isIn(entry.id, "ideas"));
-const completedIdeas = lifeIdeas.filter((item) => item.data.completedAt);
 
 // 转换所有项为统一格式
 const allItems = [
@@ -75,58 +62,6 @@ const allItems = [
 				: (b.data.image as any).src,
 		id: b.id,
 	})),
-	// 生活动态 - 运动（按日期排序取前2个）
-	...workoutEntries
-		.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-		.slice(0, 2)
-		.map((w) => ({
-		type: "life-workout",
-		title: `运动: ${w.data.workoutType || "锻炼"} - ${w.data.runKm || 0}km`,
-		date: w.data.date,
-		url: "/life/health/",
-		image: "https://re.tsh520.cn/zl/life-workout.webp",
-		id: w.id,
-	})),
-	// 生活动态 - 睡眠（按日期排序取前2个）
-	...sleepEntries
-		.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-		.slice(0, 2)
-		.map((s) => ({
-		type: "life-sleep",
-		title: `睡眠: ${s.data.sleepHours || 0}小时`,
-		date: s.data.date,
-		url: "/life/health/",
-		image: "https://re.tsh520.cn/zl/life-sleep.webp",
-		id: s.id,
-	})),
-	// 生活动态 - 饮食（按日期排序取前2个）
-	...foodEntries
-		.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-		.slice(0, 2)
-		.map((f) => ({
-		type: "life-food",
-		title: `饮食记录`,
-		date: f.data.date,
-		url: "/life/health/",
-		image: "https://re.tsh520.cn/zl/life-food.webp",
-		id: f.id,
-	})),
-	// 生活动态 - 想法（按完成日期排序取前2个）
-	...completedIdeas
-		.sort((a, b) => {
-			const dateA = a.data.completedAt ? new Date(a.data.completedAt).getTime() : 0;
-			const dateB = b.data.completedAt ? new Date(b.data.completedAt).getTime() : 0;
-			return dateB - dateA;
-		})
-		.slice(0, 2)
-		.map((i) => ({
-		type: "life-idea",
-		title: `想法: ${(i.data.content || "").slice(0, 20)}...`,
-		date: i.data.completedAt || i.data.createdAt || new Date(),
-		url: "/life/ideas/",
-		image: "https://re.tsh520.cn/zl/life-idea.webp",
-		id: i.id,
-	})),
 	// 生活动态 - 日记（排除 _index 元数据条目，按日期排序取前2个）
 	...notebooksEntries
 		.filter((n) => !n.id.includes("_index"))
@@ -144,22 +79,6 @@ const allItems = [
 			image: "https://re.tsh520.cn/zl/life-notebook.webp",
 			id: n.id,
 		})),
-	// 生活动态 - 打卡（按最后一次打卡日期排序取前2个）
-	...checkinEntries
-		.sort((a, b) => {
-			const dateA = a.data.checkins?.length ? new Date(a.data.checkins[a.data.checkins.length - 1]).getTime() : 0;
-			const dateB = b.data.checkins?.length ? new Date(b.data.checkins[b.data.checkins.length - 1]).getTime() : 0;
-			return dateB - dateA;
-		})
-		.slice(0, 2)
-		.map((c) => ({
-		type: "life-checkin",
-		title: `打卡: ${c.data.name}`,
-		date: c.data.checkins?.[c.data.checkins.length - 1] || new Date(),
-		url: "/life/checkin/",
-		image: "https://re.tsh520.cn/zl/life-checkin.webp",
-		id: c.id,
-	})),
 	// 生活动态 - 规划（按更新日期排序取前2个）
 	...routinesEntries
 		.sort((a, b) => {
@@ -169,16 +88,16 @@ const allItems = [
 		})
 		.slice(0, 2)
 		.map((r) => ({
-		type: "life-routine",
-		title: `规划: ${r.data.name}`,
-		date: r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(),
-		url: "/life/routines/",
-		image: "https://re.tsh520.cn/zl/life-routine.webp",
-		id: r.id,
-	})),
+			type: "life-routine",
+			title: `规划: ${r.data.name}`,
+			date: r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(),
+			url: "/life/routines/",
+			image: "https://re.tsh520.cn/zl/life-routine.webp",
+			id: r.id,
+		})),
 ];
 
-// 排序并获取前 8 个（留位置给生活动态）
+// 排序并获取前 8 个
 const recentItems = allItems
 	.sort((a, b) => b.date.getTime() - a.date.getTime())
 	.slice(0, 8);
@@ -199,9 +118,9 @@ const style = Astro.props.style;
     {recentItems.map(item => (
       <a href={item.url} class="flex gap-3 group items-center transition-all">
         <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
-          <img 
-            src={item.image || (item.type === 'moment' ? 'https://re.0824.uk/zl/tx.webp' : defaultImage)} 
-            alt={item.title} 
+          <img
+            src={item.image || (item.type === 'moment' ? 'https://re.0824.uk/zl/tx.webp' : defaultImage)}
+            alt={item.title}
             class="w-full h-full object-cover"
             onerror={`this.onerror=null;this.src='${item.type === 'moment' ? 'https://re.0824.uk/zl/tx.webp' : defaultImage}';`}
             loading="lazy"

@@ -12,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { album } = Astro.props;
-const PHOTOS_PER_PAGE = 25;
+const PHOTOS_PER_PAGE = 10;
 
 const photos = (album.data.photos || []).map((photo: any, index: number) => {
 	let src, alt, caption, width, height;
@@ -88,7 +88,7 @@ function getTimeAgo(date: Date): string {
 			{photos.length > 0 ? (
 				<>
 					<div class="photo-masonry" id="photo-masonry" data-total-pages={totalPages}>
-						{photos.map((photo) => (
+						{photos.map((photo: any) => (
 							<div
 								class="photo-item"
 								data-index={photo.index}
@@ -183,16 +183,12 @@ function getTimeAgo(date: Date): string {
 
 <style>
 	.page-nav {
-		display: flex;
-		align-items: center;
+		display: flex; align-items: center;
 	}
 
 	.nav-back {
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		width: 40px; height: 40px;
+		display: flex; align-items: center; justify-content: center;
 		color: var(--text-color);
 		background: var(--card-bg);
 		border: 1px solid var(--border);
@@ -201,371 +197,204 @@ function getTimeAgo(date: Date): string {
 	}
 
 	.nav-back:hover {
-		background: var(--primary);
-		color: white;
-		border-color: var(--primary);
-		transform: scale(1.05);
+		background: var(--primary); color: white;
+		border-color: var(--primary); transform: scale(1.05);
 	}
 
 	.album-header {
-		text-align: left;
-		padding: 0 0 24px 0;
-		margin-bottom: 24px;
-		border-bottom: 1px solid var(--border);
+		text-align: left; padding: 0 0 24px 0;
+		margin-bottom: 24px; border-bottom: 1px solid var(--border);
 	}
 
 	.album-title {
-		font-size: 28px;
-		font-weight: 700;
-		color: var(--text-color);
-		margin-bottom: 8px;
+		font-size: 28px; font-weight: 700;
+		color: var(--text-color); margin-bottom: 8px;
 		letter-spacing: -0.5px;
 	}
 
 	.album-subtitle {
-		font-size: 15px;
-		color: var(--content-meta);
-		margin-bottom: 16px;
-		line-height: 1.6;
+		font-size: 15px; color: var(--content-meta);
+		margin-bottom: 16px; line-height: 1.6;
 	}
 
 	.album-meta {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		flex-wrap: wrap;
+		display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 	}
 
 	.meta-item {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 14px;
-		color: var(--content-meta);
+		display: flex; align-items: center; gap: 6px;
+		font-size: 14px; color: var(--content-meta);
 	}
 
-	.meta-item :global(svg) {
-		color: var(--primary);
-	}
+	.meta-item :global(svg) { color: var(--primary); }
 
 	.meta-divider {
-		width: 4px;
-		height: 4px;
-		background: var(--border);
-		border-radius: 50%;
+		width: 4px; height: 4px;
+		background: var(--border); border-radius: 50%;
 	}
 
-	.photo-section {
-		animation: fadeIn 0.5s ease-out;
-	}
+	.photo-section { animation: fadeIn 0.5s ease-out; }
 
 	@keyframes fadeIn {
 		from { opacity: 0; transform: translateY(10px); }
 		to { opacity: 1; transform: translateY(0); }
 	}
 
-	.photo-masonry {
-		column-count: 5;
-		column-gap: 6px;
-	}
+	.photo-masonry { column-count: 5; column-gap: 6px; }
 
-	@media (max-width: 1400px) {
-		.photo-masonry {
-			column-count: 4;
-		}
-	}
-
-	@media (max-width: 1024px) {
-		.photo-masonry {
-			column-count: 3;
-		}
-	}
-
-	@media (max-width: 640px) {
-		.photo-masonry {
-			column-count: 2;
-			column-gap: 4px;
-		}
-	}
+	@media (max-width: 1400px) { .photo-masonry { column-count: 4; } }
+	@media (max-width: 1024px) { .photo-masonry { column-count: 3; } }
+	@media (max-width: 640px)  { .photo-masonry { column-count: 2; column-gap: 4px; } }
 
 	.photo-item {
-		position: relative;
-		border-radius: 4px;
-		overflow: hidden;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		background: var(--card-bg);
-		border: 1px solid var(--border);
-		break-inside: avoid;
-		margin-bottom: 6px;
+		position: relative; border-radius: 4px; overflow: hidden;
+		cursor: pointer; transition: all 0.3s ease;
+		background: var(--card-bg); border: 1px solid var(--border);
+		break-inside: avoid; margin-bottom: 6px;
 	}
 
-	.photo-item.hidden-page {
-		display: none;
-	}
+	.photo-item.hidden-page { display: none; }
 
 	.photo-item:hover {
-		transform: scale(1.02);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+		transform: scale(1.02); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 	}
 
 	.photo-img {
-		width: 100%;
-		height: auto;
-		display: block;
+		width: 100%; height: auto; display: block;
 		transition: transform 0.4s ease;
 	}
 
-	.photo-item:hover .photo-img {
-		transform: scale(1.05);
-	}
+	.photo-item:hover .photo-img { transform: scale(1.05); }
 
 	.photo-overlay {
-		position: absolute;
-		inset: 0;
+		position: absolute; inset: 0;
 		background: rgba(0, 0, 0, 0.3);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		opacity: 0;
-		transition: opacity 0.3s;
-		color: white;
+		display: flex; align-items: center; justify-content: center;
+		opacity: 0; transition: opacity 0.3s; color: white;
 	}
 
-	.photo-item:hover .photo-overlay {
-		opacity: 1;
-	}
+	.photo-item:hover .photo-overlay { opacity: 1; }
 
 	.photo-caption {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 10px;
+		position: absolute; bottom: 0; left: 0; right: 0; padding: 10px;
 		background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-		color: white;
-		font-size: 12px;
-		opacity: 0;
-		transform: translateY(5px);
-		transition: all 0.3s;
+		color: white; font-size: 12px; opacity: 0;
+		transform: translateY(5px); transition: all 0.3s;
 	}
 
-	.photo-item:hover .photo-caption {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	.photo-item:hover .photo-caption { opacity: 1; transform: translateY(0); }
 
-	/* ---- 分页控件 ---- */
 	.pagination {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 20px;
-		margin-top: 32px;
-		padding-top: 24px;
+		display: flex; align-items: center; justify-content: center;
+		gap: 20px; margin-top: 32px; padding-top: 24px;
 		border-top: 1px solid var(--border);
 	}
 
 	.paginate-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		padding: 8px 18px;
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--text-color);
-		background: var(--card-bg);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		cursor: pointer;
-		transition: all 0.2s;
+		display: inline-flex; align-items: center; gap: 6px;
+		padding: 8px 18px; font-size: 14px; font-weight: 500;
+		color: var(--text-color); background: var(--card-bg);
+		border: 1px solid var(--border); border-radius: 8px;
+		cursor: pointer; transition: all 0.2s;
 	}
 
 	.paginate-btn:hover:not(:disabled) {
-		background: var(--primary);
-		color: white;
-		border-color: var(--primary);
+		background: var(--primary); color: white; border-color: var(--primary);
 	}
 
-	.paginate-btn:disabled {
-		opacity: 0.35;
-		cursor: not-allowed;
-	}
+	.paginate-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 	.paginate-info {
-		font-size: 14px;
-		color: var(--content-meta);
-		min-width: 100px;
-		text-align: center;
+		font-size: 14px; color: var(--content-meta);
+		min-width: 100px; text-align: center;
 	}
 
-	.paginate-info span {
-		font-weight: 600;
-		color: var(--text-color);
-	}
+	.paginate-info span { font-weight: 600; color: var(--text-color); }
 
-	.empty-state {
-		text-align: center;
-		padding: 60px 20px;
-	}
+	.empty-state { text-align: center; padding: 60px 20px; }
 
-	/* ---- 灯箱 ---- */
 	.lightbox {
-		position: fixed;
-		inset: 0;
-		z-index: 9999;
+		position: fixed; inset: 0; z-index: 9999;
 		background: rgba(0, 0, 0, 0.95);
-		display: flex;
-		flex-direction: column;
-		opacity: 0;
-		visibility: hidden;
-		transition: all 0.3s ease;
+		display: flex; flex-direction: column;
+		opacity: 0; visibility: hidden; transition: all 0.3s ease;
 	}
 
-	.lightbox.active {
-		opacity: 1;
-		visibility: visible;
-	}
+	.lightbox.active { opacity: 1; visibility: visible; }
 
 	.lightbox-toolbar {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+		display: flex; justify-content: space-between; align-items: center;
 		padding: 16px 20px;
 		background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 10;
+		position: absolute; top: 0; left: 0; right: 0; z-index: 10;
 	}
 
 	.counter-text {
-		color: white;
-		font-size: 14px;
-		font-weight: 500;
-		padding: 6px 14px;
-		background: rgba(255,255,255,0.1);
-		border-radius: 20px;
-		backdrop-filter: blur(8px);
+		color: white; font-size: 14px; font-weight: 500;
+		padding: 6px 14px; background: rgba(255,255,255,0.1);
+		border-radius: 20px; backdrop-filter: blur(8px);
 	}
 
-	.toolbar-right {
-		display: flex;
-		gap: 8px;
-	}
+	.toolbar-right { display: flex; gap: 8px; }
 
 	.toolbar-btn {
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: white;
-		background: rgba(255,255,255,0.1);
-		border-radius: 50%;
-		transition: all 0.2s;
-		backdrop-filter: blur(8px);
+		width: 40px; height: 40px; display: flex;
+		align-items: center; justify-content: center; color: white;
+		background: rgba(255,255,255,0.1); border-radius: 50%;
+		transition: all 0.2s; backdrop-filter: blur(8px);
 	}
 
 	.toolbar-btn:hover {
-		background: rgba(255,255,255,0.2);
-		transform: scale(1.05);
+		background: rgba(255,255,255,0.2); transform: scale(1.05);
 	}
 
 	.nav-btn {
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 56px;
-		height: 56px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: white;
-		background: rgba(255,255,255,0.1);
-		border-radius: 50%;
-		transition: all 0.3s;
-		backdrop-filter: blur(8px);
-		z-index: 10;
+		position: absolute; top: 50%; transform: translateY(-50%);
+		width: 56px; height: 56px; display: flex;
+		align-items: center; justify-content: center; color: white;
+		background: rgba(255,255,255,0.1); border-radius: 50%;
+		transition: all 0.3s; backdrop-filter: blur(8px); z-index: 10;
 	}
 
 	.nav-btn:hover {
-		background: rgba(255,255,255,0.2);
-		transform: translateY(-50%) scale(1.1);
+		background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.1);
 	}
 
 	.nav-prev { left: 20px; }
 	.nav-next { right: 20px; }
 
 	.lightbox-content {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 80px 100px;
-		min-height: 0;
+		flex: 1; display: flex; align-items: center; justify-content: center;
+		padding: 80px 100px; min-height: 0;
 	}
 
 	.lightbox-img {
-		max-width: 100%;
-		max-height: 100%;
-		object-fit: contain;
-		border-radius: 8px;
-		box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+		max-width: 100%; max-height: 100%; object-fit: contain;
+		border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 		transition: transform 0.3s ease;
 	}
 
 	.lightbox-info {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-end;
+		display: flex; justify-content: space-between; align-items: flex-end;
 		padding: 20px;
 		background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		z-index: 10;
+		position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
 	}
 
-	.info-main {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	.caption-text {
-		color: white;
-		font-size: 15px;
-		max-width: 600px;
-	}
-
-	.dimensions-text {
-		color: rgba(255,255,255,0.6);
-		font-size: 12px;
-	}
-
-	.info-actions {
-		display: flex;
-		gap: 8px;
-	}
+	.info-main { display: flex; flex-direction: column; gap: 4px; }
+	.caption-text { color: white; font-size: 15px; max-width: 600px; }
+	.dimensions-text { color: rgba(255,255,255,0.6); font-size: 12px; }
+	.info-actions { display: flex; gap: 8px; }
 
 	.action-btn {
-		width: 44px;
-		height: 44px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: white;
-		background: rgba(255,255,255,0.15);
-		border-radius: 50%;
+		width: 44px; height: 44px; display: flex;
+		align-items: center; justify-content: center; color: white;
+		background: rgba(255,255,255,0.15); border-radius: 50%;
 		transition: all 0.2s;
 	}
 
 	.action-btn:hover {
-		background: rgba(255,255,255,0.25);
-		transform: scale(1.05);
+		background: rgba(255,255,255,0.25); transform: scale(1.05);
 	}
 
 	@media (max-width: 768px) {
@@ -573,12 +402,10 @@ function getTimeAgo(date: Date): string {
 		.album-header { padding: 30px 16px; }
 		.album-meta { gap: 12px; }
 		.meta-item { font-size: 13px; }
-
 		.lightbox-content { padding: 60px 60px; }
 		.nav-btn { width: 44px; height: 44px; }
 		.nav-prev { left: 8px; }
 		.nav-next { right: 8px; }
-
 		.pagination { gap: 12px; margin-top: 24px; }
 		.paginate-btn { padding: 6px 14px; font-size: 13px; }
 	}
@@ -586,25 +413,21 @@ function getTimeAgo(date: Date): string {
 
 <script is:inline>
 	(function() {
-		const PHOTOS_PER_PAGE = 25;
-		let totalPages = 1;
-
-		let currentPage = 1;
-
-		let masonry, allItems, prevBtn, nextBtn, pageCurrent;
-
-		// 灯箱元素引用
-		let lightbox, lightboxImage, lightboxCaption, lightboxDimensions,
+		var PHOTOS_PER_PAGE = 10;
+		var totalPages = 1;
+		var currentPage = 1;
+		var masonry, allItems, prevBtn, nextBtn, pageCurrent;
+		var lightbox, lightboxImage, lightboxCaption, lightboxDimensions,
 			lightboxCounter, lightboxClose, lightboxPrev, lightboxNext,
 			lightboxDownload, lightboxInfoToggle, lightboxInfo;
-		let currentPhotoIndex = 0;
-		let isInfoVisible = true;
+		var currentPhotoIndex = 0;
+		var isInfoVisible = true;
 
 		function initDOM() {
 			masonry = document.getElementById('photo-masonry');
 			if (!masonry) return;
 
-			const tp = parseInt(masonry.getAttribute('data-total-pages') || '1', 10);
+			var tp = parseInt(masonry.getAttribute('data-total-pages') || '1', 10);
 			totalPages = Math.max(1, tp);
 
 			allItems = masonry.querySelectorAll('.photo-item');
@@ -628,13 +451,12 @@ function getTimeAgo(date: Date): string {
 			showPage(1);
 		}
 
-		// ---- 分页 ----
 		function showPage(page) {
 			if (!allItems) return;
 			currentPage = Math.max(1, Math.min(page, totalPages));
 
-			allItems.forEach(item => {
-				const itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
+			allItems.forEach(function(item) {
+				var itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
 				if (itemPage === currentPage) {
 					item.classList.remove('hidden-page');
 				} else {
@@ -642,10 +464,7 @@ function getTimeAgo(date: Date): string {
 				}
 			});
 
-			if (pageCurrent) {
-				pageCurrent.textContent = String(currentPage);
-			}
-
+			if (pageCurrent) pageCurrent.textContent = String(currentPage);
 			if (prevBtn) prevBtn.disabled = currentPage <= 1;
 			if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
 
@@ -655,47 +474,49 @@ function getTimeAgo(date: Date): string {
 
 		function scrollToTop() {
 			if (!masonry) return;
-			const masonryRect = masonry.getBoundingClientRect();
-			const top = masonryRect.top + window.scrollY - 100;
+			var rect = masonry.getBoundingClientRect();
+			var top = rect.top + window.scrollY - 100;
 			if (window.scrollY > top) {
-				window.scrollTo({ top, behavior: 'smooth' });
+				window.scrollTo({ top: top, behavior: 'smooth' });
 			}
 		}
 
 		function bindEvents() {
-			prevBtn?.addEventListener('click', () => showPage(currentPage - 1));
-			nextBtn?.addEventListener('click', () => showPage(currentPage + 1));
+			if (prevBtn) prevBtn.addEventListener('click', function() { showPage(currentPage - 1); });
+			if (nextBtn) nextBtn.addEventListener('click', function() { showPage(currentPage + 1); });
 
 			if (masonry) {
-				masonry.addEventListener('click', (e) => {
-					const item = e.target.closest('.photo-item');
+				masonry.addEventListener('click', function(e) {
+					var item = e.target.closest('.photo-item');
 					if (!item) return;
-					const pageItems = getCurrentPageItems();
-					const idx = pageItems.indexOf(item);
+					var pageItems = getCurrentPageItems();
+					var idx = pageItems.indexOf(item);
 					if (idx >= 0) openLightbox(idx);
 				});
 			}
 
-			lightboxClose?.addEventListener('click', closeLightbox);
-			lightboxPrev?.addEventListener('click', () => {
-				const count = getVisibleCount();
+			if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+			if (lightboxPrev) lightboxPrev.addEventListener('click', function() {
+				var count = getVisibleCount();
 				currentPhotoIndex = (currentPhotoIndex - 1 + count) % count;
 				updateLightbox();
 			});
-			lightboxNext?.addEventListener('click', () => {
-				const count = getVisibleCount();
+			if (lightboxNext) lightboxNext.addEventListener('click', function() {
+				var count = getVisibleCount();
 				currentPhotoIndex = (currentPhotoIndex + 1) % count;
 				updateLightbox();
 			});
-			lightboxInfoToggle?.addEventListener('click', toggleInfo);
+			if (lightboxInfoToggle) lightboxInfoToggle.addEventListener('click', toggleInfo);
 
-			lightbox?.addEventListener('click', (e) => {
-				if (e.target === lightbox) closeLightbox();
-			});
+			if (lightbox) {
+				lightbox.addEventListener('click', function(e) {
+					if (e.target === lightbox) closeLightbox();
+				});
+			}
 
-			document.addEventListener('keydown', (e) => {
-				if (!lightbox?.classList.contains('active')) return;
-				const count = getVisibleCount();
+			document.addEventListener('keydown', function(e) {
+				if (!lightbox || !lightbox.classList.contains('active')) return;
+				var count = getVisibleCount();
 				switch (e.key) {
 					case 'Escape': closeLightbox(); break;
 					case 'ArrowLeft':
@@ -711,53 +532,43 @@ function getTimeAgo(date: Date): string {
 			});
 		}
 
-		// ---- 灯箱 ----
 		function getCurrentPageItems() {
-			return Array.from(allItems).filter(item => {
-				const itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
+			return Array.prototype.filter.call(allItems, function(item) {
+				var itemPage = parseInt(item.getAttribute('data-page') || '1', 10);
 				return itemPage === currentPage;
 			});
 		}
 
-		function getVisibleCount() {
-			return getCurrentPageItems().length;
-		}
+		function getVisibleCount() { return getCurrentPageItems().length; }
 
 		function openLightbox(index) {
 			currentPhotoIndex = index;
 			updateLightbox();
-			lightbox?.classList.add('active');
-			lightbox?.setAttribute('aria-hidden', 'false');
+			if (lightbox) { lightbox.classList.add('active'); lightbox.setAttribute('aria-hidden', 'false'); }
 			document.body.style.overflow = 'hidden';
 		}
 
 		function closeLightbox() {
-			lightbox?.classList.remove('active');
-			lightbox?.setAttribute('aria-hidden', 'true');
+			if (lightbox) { lightbox.classList.remove('active'); lightbox.setAttribute('aria-hidden', 'true'); }
 			document.body.style.overflow = '';
 		}
 
 		function updateLightbox() {
-			const pageItems = getCurrentPageItems();
-			const photo = pageItems[currentPhotoIndex];
+			var pageItems = getCurrentPageItems();
+			var photo = pageItems[currentPhotoIndex];
 			if (!photo) return;
 
-			const src = photo.getAttribute('data-src') || '';
-			const alt = photo.getAttribute('data-alt') || '';
-			const caption = photo.getAttribute('data-caption') || '';
-			const width = photo.getAttribute('data-width') || '';
-			const height = photo.getAttribute('data-height') || '';
+			var src = photo.getAttribute('data-src') || '';
+			var alt = photo.getAttribute('data-alt') || '';
+			var caption = photo.getAttribute('data-caption') || '';
+			var width = photo.getAttribute('data-width') || '';
+			var height = photo.getAttribute('data-height') || '';
 
-			if (lightboxImage) {
-				lightboxImage.src = src;
-				lightboxImage.alt = alt;
-			}
-
+			if (lightboxImage) { lightboxImage.src = src; lightboxImage.alt = alt; }
 			if (lightboxCaption) {
 				lightboxCaption.textContent = caption;
 				lightboxCaption.style.display = caption ? 'block' : 'none';
 			}
-
 			if (lightboxDimensions) {
 				if (width && height) {
 					lightboxDimensions.textContent = width + ' × ' + height;
@@ -766,15 +577,12 @@ function getTimeAgo(date: Date): string {
 					lightboxDimensions.style.display = 'none';
 				}
 			}
-
 			if (lightboxCounter) {
-				const count = getVisibleCount();
-				lightboxCounter.textContent = (currentPhotoIndex + 1) + ' / ' + count;
+				lightboxCounter.textContent = (currentPhotoIndex + 1) + ' / ' + getVisibleCount();
 			}
-
 			if (lightboxDownload) {
-				lightboxDownload.onclick = () => {
-					const link = document.createElement('a');
+				lightboxDownload.onclick = function() {
+					var link = document.createElement('a');
 					link.href = src;
 					link.download = alt || 'photo-' + (currentPhotoIndex + 1);
 					link.target = '_blank';
@@ -791,14 +599,12 @@ function getTimeAgo(date: Date): string {
 			}
 		}
 
-		// 首次加载时初始化
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', initDOM);
 		} else {
 			initDOM();
 		}
 
-		// Swup 导航后重新初始化
 		document.addEventListener('swup:contentReplaced', initDOM);
 	})();
 </script>
