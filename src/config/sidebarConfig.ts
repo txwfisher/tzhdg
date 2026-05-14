@@ -212,8 +212,8 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 		{
 			// 组件类型：用户资料组件
 			type: "profile",
-			// 是否启用该组件
-			enable: true,
+			// 是否启用该组件（移动端已关闭）
+			enable: false,
 			// 是否在文章详情页显示
 			showOnPostPage: true,
 		},

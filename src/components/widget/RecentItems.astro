@@ -51,17 +51,30 @@ const allItems = [
 			id: m.id,
 		};
 	}),
-	...bangumi.map((b) => ({
-		type: "bangumi",
-		title: b.data.title,
-		date: b.data.published || new Date(0),
-		url: b.data.link || "/bangumi/",
-		image:
-			typeof b.data.image === "string"
-				? b.data.image
-				: (b.data.image as any).src,
-		id: b.id,
-	})),
+	...bangumi.map((b) => {
+		let url = b.data.link || "";
+		if (!url) {
+			if (b.data.category === "book") {
+				const slug = b.id.replace(/\\/g, "/").replace(/\.(md|mdx|markdown)$/i, "");
+				url = `/books/${slug}/`;
+			} else if (b.data.category === "music") {
+				url = "/music/";
+			} else {
+				url = "/movies-games/";
+			}
+		}
+		return {
+			type: "bangumi",
+			title: b.data.title,
+			date: b.data.published || new Date(0),
+			url,
+			image:
+				typeof b.data.image === "string"
+					? b.data.image
+					: (b.data.image as any).src,
+			id: b.id,
+		};
+	}),
 	// 生活动态 - 日记（排除 _index 元数据条目，按日期排序取前2个）
 	...notebooksEntries
 		.filter((n) => !n.id.includes("_index"))

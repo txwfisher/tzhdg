@@ -50,6 +50,11 @@ export type SiteConfig = {
 		userId?: string; // Bangumi用户ID
 	};
 
+	// 添加豆瓣配置
+	douban?: {
+		userId?: string; // 豆瓣用户ID
+	};
+
 	generateOgImages: boolean;
 	favicon: Array<{
 		src: string;
@@ -78,6 +83,9 @@ export type SiteConfig = {
 		sponsor: boolean; // 赞助页面开关
 		guestbook: boolean; // 留言板页面开关
 		bangumi: boolean;
+		books: boolean; // 书架页面开关
+		moviesGames: boolean; // 影视与游戏页面开关
+		musicPage: boolean; // 音乐页面开关
 	};
 
 	// 分类导航栏开关
@@ -173,6 +181,9 @@ export enum LinkPreset {
 	Sponsor = 4,
 	Guestbook = 5,
 	Bangumi = 6,
+	Books = 7,
+	MoviesGames = 8,
+	MusicPage = 9,
 }
 
 export type NavBarLink = {

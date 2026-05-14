@@ -64,6 +64,9 @@ const bangumiCollection = defineCollection({
 			category: z
 				.enum(["book", "anime", "music", "game", "real"])
 				.default("anime"),
+			subcategory: z
+				.enum(["movie", "tv", "anime", "documentary"])
+				.optional(),
 			status: z.number().min(1).max(5).default(2), // 1: 想看, 2: 看过, 3: 在看, 4: 搁置, 5: 抛弃
 			image: image().or(z.string()),
 			link: z.string().optional(), // 对应文章的链接；为空时自动从文件路径推导

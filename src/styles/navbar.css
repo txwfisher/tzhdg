@@ -539,25 +539,13 @@ body.wallpaper-transparent .float-panel {
         transform: scale(0.95);
     }
 
-    /* 移动端汉堡菜单按钮 - 下划线位置微调 */
+    /* 移动端汉堡菜单按钮 */
     .nav-hamburger-btn {
         background: transparent !important;
     }
-
-    .nav-hamburger-btn::before {
-        display: none !important;
-    }
-
+    .nav-hamburger-btn::before,
     .nav-hamburger-btn::after {
-        bottom: 4px;
-    }
-
-    .nav-hamburger-btn:hover {
-        background: transparent !important;
-    }
-
-    .nav-hamburger-btn:active {
-        background: transparent !important;
+        display: none !important;
     }
 
     /* 移动端 Logo 链接也移除背景 */
@@ -624,21 +612,16 @@ body.wallpaper-transparent .float-panel {
 /* ============================================
  * 汉堡菜单按钮样式
  * ============================================ */
+/* ── Hamburger Icon ── */
 .nav-hamburger-btn {
-    position: relative;
-    overflow: hidden;
-    transition: color 0.2s ease;
+    color: var(--deep-text);
 }
-
 .nav-hamburger-btn:hover {
-    color: var(--primary) !important;
-}
-
-.nav-hamburger-icon {
-    color: var(--text-primary);
-    transition: color 0.2s ease;
-}
-
-.nav-hamburger-btn:hover .nav-hamburger-icon {
     color: var(--primary);
 }
+.nav-hamburger-btn .hamburger-icon-close,
+.hamburger-icon-menu {
+    transition: opacity 0.2s ease, transform 0.25s ease;
+}
+.nav-hamburger-btn.hamburger-open .hamburger-icon-menu { display: none; }
+.nav-hamburger-btn.hamburger-open .hamburger-icon-close { display: inline-block; }

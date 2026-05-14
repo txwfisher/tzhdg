@@ -97,7 +97,7 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			},
 			text: {
 				// 桌面端要显示的来源文本
-				desktop: "Pixiv - 晚晚喵",
+				desktop: "网站浏览量",
 				// 移动端要显示的来源文本
 				mobile: "Pixiv - KiraraShss",
 			},

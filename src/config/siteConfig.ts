@@ -116,15 +116,26 @@ export const siteConfig: SiteConfig = {
 		userId: "1219895",
 	},
 
+	// 豆瓣配置
+	douban: {
+		// 豆瓣用户ID，用于影视与游戏页面的跳转
+		userId: "",
+	},
+
 	// 页面开关配置 - 控制特定页面的访问权限，设为false会返回404
-	// bangumi的数据为编译时获取的，所以不是实时数据，请配置bangumi.userId
 	pages: {
 		// 赞助页面开关
 		sponsor: true,
 		// 留言板页面开关，需要配置评论系统
 		guestbook: true,
-		// 番组计划页面开关，含追番、游戏、书籍和音乐，dev调试时只获取一页数据，build才会获取全部数据
-		bangumi: true,
+		// 原番组计划页面开关（已拆分，保留关闭）
+		bangumi: false,
+		// 书架页面开关
+		books: true,
+		// 影视与游戏页面开关
+		moviesGames: true,
+		// 音乐页面开关
+		musicPage: true,
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航

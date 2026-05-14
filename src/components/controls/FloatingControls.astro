@@ -1,80 +1,353 @@
 ---
 import type { MarkdownHeading } from "astro";
-import BackToHome from "./BackToHome.astro";
-import BackToTop from "./BackToTop.astro";
-import FloatingTOC from "./FloatingTOC.astro";
+import { Icon } from "astro-icon/components";
+import { sidebarLayoutConfig } from "@/config/sidebarConfig";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import { url } from "@/utils/url-utils";
 
 interface Props {
 	headings?: MarkdownHeading[];
 }
 
 const { headings } = Astro.props;
+const hasTOC = headings && headings.length > 0;
 ---
 
-<div class="floating-controls-container">
-  <FloatingTOC headings={headings ?? []} />
-  <BackToHome />
-  <BackToTop />
+<div class="fab-container" id="fab-container">
+	<div class="fab-menu" id="fab-menu">
+		<!-- 笔记本 -->
+		<button class="fab-item hide" id="fab-item-notebook" aria-label="笔记本" title="笔记本">
+			<Icon name="material-symbols:book-outline" />
+		</button>
+
+		<!-- 回到顶部 -->
+		<button class="fab-item" id="fab-item-top" aria-label="回到顶部" title="回到顶部">
+			<Icon name="material-symbols:keyboard-arrow-up-rounded" />
+		</button>
+
+		<!-- 跳转评论区 -->
+		<button class="fab-item hide" id="fab-item-comment" aria-label="跳转到评论区" title="跳转到评论区">
+			<Icon name="material-symbols:chat-bubble-outline-rounded" />
+		</button>
+
+		<!-- 回到首页 -->
+		<button class="fab-item hide" id="fab-item-home" aria-label={i18n(I18nKey.home)} title={i18n(I18nKey.home)}>
+			<Icon name="material-symbols:home-outline-rounded" />
+		</button>
+
+		<!-- 目录 -->
+		{hasTOC && (
+			<button class="fab-item hide" id="fab-item-toc" aria-label="目录" title="目录">
+				<Icon name="material-symbols:format-list-bulleted" />
+			</button>
+		)}
+	</div>
+
+	<!-- 三点触发器 -->
+	<button class="fab-trigger" id="fab-trigger" aria-label="更多操作" title="更多操作">
+		<Icon name="material-symbols:more-horiz" />
+	</button>
+
+	<!-- TOC 面板 -->
+	{hasTOC && (
+		<div id="floating-toc-panel" class="toc-panel hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white/60 dark:bg-black/60 dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
+			<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+				<div class="flex items-center justify-between">
+					<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
+						{i18n(I18nKey.tableOfContents)}
+					</h3>
+					<button onclick="window.closeTOCPanel()" aria-label="Close TOC" class="btn-plain rounded-lg h-8 w-8 active:scale-90">
+						<Icon name="material-symbols:close" class="text-lg" />
+					</button>
+				</div>
+			</div>
+			<div class="toc-scroll-container p-4">
+				<div class="toc-content" id="floating-toc-content"></div>
+			</div>
+		</div>
+	)}
 </div>
 
 <style>
-  .floating-controls-container {
-    position: fixed;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: flex-end; /* 右对齐 */
-    pointer-events: none; /* 容器不阻挡点击 */
-    
-    /* 默认桌面端位置 - 对应 BackToTop 的位置 */
-    right: 1rem;
-    bottom: 4rem;
-  }
+	.fab-container {
+		position: fixed;
+		z-index: 1000;
+		right: 1rem;
+		bottom: 4rem;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.5rem;
+	}
 
-  /* 响应式调整 - 保持原有的位置逻辑 */
-  @media (max-width: 1024px) {
-    .floating-controls-container {
-      right: 1rem;
-      bottom: 4rem;
-    }
-  }
+	.fab-menu {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.5rem;
+		opacity: 0;
+		transform: translateY(12px);
+		pointer-events: none;
+		transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
 
-  @media (max-width: 768px) {
-    .floating-controls-container {
-      right: 0.75rem;
-      bottom: 4rem;
-      gap: 0.5rem;
-    }
-  }
+	.fab-container.expanded .fab-menu {
+		opacity: 1;
+		transform: translateY(0);
+		pointer-events: auto;
+	}
 
-  @media (max-width: 480px) {
-    .floating-controls-container {
-      right: 0.5rem;
-      bottom: 4rem;
-    }
-  }
+	.fab-item {
+		width: 3rem;
+		height: 3rem;
+		border-radius: 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--primary);
+		font-size: 1.5rem;
+		cursor: pointer;
+		pointer-events: auto;
+		flex-shrink: 0;
+		border: 1px solid rgba(0,0,0,0.1);
+		background: var(--card-bg);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+	}
 
-  /* 高缩放比例适配 */
-  @media (min-resolution: 2dppx) {
-    .floating-controls-container {
-      right: max(0.5rem, 2rem - 2vw);
-      bottom: max(3rem, 4rem - 5vh);
-    }
-  }
-  
-  /* 横屏模式适配 */
-  @media (orientation: landscape) and (max-height: 500px) {
-    .floating-controls-container {
-      bottom: 4rem; 
-    }
-  }
+	.fab-item:hover {
+		transform: scale(1.08);
+		box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+	}
 
-  /* 极低分辨率适配 */
-  @media (max-width: 320px) {
-    .floating-controls-container {
-        right: 0.125rem;
-        bottom: 4rem;
-    }
-  }
+	.fab-item:active {
+		transform: scale(0.9);
+	}
+
+	.fab-item.hide {
+		width: 0 !important;
+		height: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		border-width: 0 !important;
+		opacity: 0;
+		pointer-events: none;
+		overflow: hidden;
+	}
+
+	html.dark .fab-item {
+		border-color: rgba(255,255,255,0.15);
+		box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+	}
+	html.dark .fab-item:hover {
+		box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+	}
+
+	.fab-trigger {
+		width: 3rem;
+		height: 3rem;
+		border-radius: 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--deep-text);
+		font-size: 1.5rem;
+		cursor: pointer;
+		pointer-events: auto;
+		flex-shrink: 0;
+		border: 1px solid rgba(0,0,0,0.1);
+		background: var(--card-bg);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+	}
+
+	.fab-trigger:hover {
+		color: var(--primary);
+		transform: scale(1.05);
+		box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+	}
+
+	.fab-trigger:active {
+		transform: scale(0.9);
+	}
+
+	.fab-container.expanded .fab-trigger {
+		color: var(--primary);
+		transform: rotate(90deg);
+	}
+
+	html.dark .fab-trigger {
+		border-color: rgba(255,255,255,0.15);
+		box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+	}
+	html.dark .fab-trigger:hover {
+		box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+	}
+
+	/* TOC Panel */
+	.toc-panel {
+		position: absolute;
+		bottom: calc(100% + 1rem);
+		right: 0;
+		transition: all 0.3s ease;
+		transform: translateY(20px);
+		opacity: 0;
+		pointer-events: none;
+		z-index: 1001;
+	}
+	.toc-panel.show {
+		transform: translateY(0);
+		opacity: 1;
+		pointer-events: auto;
+	}
+	.toc-panel.hide {
+		transform: translateY(20px);
+		opacity: 0;
+		pointer-events: none;
+		visibility: hidden;
+	}
+	.toc-scroll-container {
+		max-height: calc(24rem - 5rem);
+		overflow-y: auto;
+	}
+
+	@media (max-width: 1024px) {
+		.toc-panel {
+			width: calc(100vw - 2rem);
+			max-width: 20rem;
+			max-height: 20rem;
+		}
+	}
+	@media (max-width: 768px) {
+		.fab-container { right: 0.75rem; bottom: 4rem; }
+		.fab-trigger, .fab-item { width: 2.75rem; height: 2.75rem; font-size: 1.35rem; border-radius: 0.875rem; }
+		.toc-panel { width: calc(100vw - 1.5rem); max-width: 20rem; max-height: 28rem; }
+	}
+	@media (max-width: 480px) {
+		.fab-container { right: 0.5rem; bottom: 4rem; }
+		.fab-trigger, .fab-item { width: 2.5rem; height: 2.5rem; font-size: 1.25rem; border-radius: 0.75rem; }
+	}
 </style>
+
+<script is:inline>
+(function() {
+	var container = document.getElementById('fab-container');
+	var trigger = document.getElementById('fab-trigger');
+	if (!container || !trigger) return;
+
+	var btnTop      = document.getElementById('fab-item-top');
+	var btnHome     = document.getElementById('fab-item-home');
+	var btnTOC      = document.getElementById('fab-item-toc');
+	var btnComment  = document.getElementById('fab-item-comment');
+	var btnNotebook = document.getElementById('fab-item-notebook');
+	var isExpanded  = false;
+
+	function expand()   { container.classList.add('expanded');    isExpanded = true;  }
+	function collapse() { container.classList.remove('expanded'); isExpanded = false; }
+	function toggle()   { isExpanded ? collapse() : expand(); }
+
+	trigger.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+
+	// Back to Top
+	if (btnTop) btnTop.addEventListener('click', function(e) {
+		e.stopPropagation();
+		window.scroll({ top: 0, behavior: 'smooth' });
+		collapse();
+	});
+
+	// Back to Home
+	if (btnHome) btnHome.addEventListener('click', function(e) {
+		e.stopPropagation();
+		if (window.swup) window.swup.navigate('/');
+		else window.location.href = '/';
+		collapse();
+	});
+
+	// Comments
+	if (btnComment) btnComment.addEventListener('click', function(e) {
+		e.stopPropagation();
+		var el = document.getElementById('scissor-divider') || document.querySelector('[id*="comment"]');
+		if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		else window.scrollTo({ top: document.body.scrollHeight * 0.85, behavior: 'smooth' });
+		collapse();
+	});
+
+	// Notebooks
+	if (btnNotebook) btnNotebook.addEventListener('click', function(e) {
+		e.stopPropagation();
+		window.location.href = '/life/notebooks/';
+		collapse();
+	});
+
+	// TOC
+	function toggleTOCPanel() {
+		var p = document.getElementById('floating-toc-panel');
+		if (!p) return;
+		if (p.classList.contains('hide') || !p.classList.contains('show')) {
+			p.classList.remove('hide'); p.classList.add('show');
+		} else {
+			p.classList.remove('show'); p.classList.add('hide');
+		}
+	}
+	function closeTOCPanel() {
+		var p = document.getElementById('floating-toc-panel');
+		if (p) { p.classList.remove('show'); p.classList.add('hide'); }
+	}
+	window.closeTOCPanel = closeTOCPanel;
+	if (btnTOC) btnTOC.addEventListener('click', function(e) { e.stopPropagation(); toggleTOCPanel(); collapse(); });
+
+	// Click outside
+	document.addEventListener('click', function(e) {
+		if (isExpanded && !container.contains(e.target)) collapse();
+	});
+
+	// Visibility
+	function show(el) { if (el) el.classList.remove('hide'); }
+	function hide(el) { if (el) el.classList.add('hide'); }
+
+	function refreshAll() {
+		// Notebook – always show
+		show(btnNotebook);
+		// Home – hide on homepage
+		var path = window.location.pathname.replace(/\/$/, '') || '/';
+		path === '/' ? hide(btnHome) : show(btnHome);
+		// Comment – only on post pages
+		path.indexOf('/posts/') === 0 ? show(btnComment) : hide(btnComment);
+		// TOC – show if panel exists
+		document.getElementById('floating-toc-panel') ? show(btnTOC) : hide(btnTOC);
+	}
+
+	refreshAll();
+
+	document.addEventListener('astro:page-load', function() {
+		collapse();
+		setTimeout(refreshAll, 50);
+	});
+	document.addEventListener('swup:contentReplaced', function() {
+		collapse();
+		setTimeout(refreshAll, 100);
+	});
+})();
+</script>
+
+<script>
+	import { TOCManager } from "@/utils/tocUtils";
+
+	const tocPanel = document.getElementById("floating-toc-panel");
+	if (tocPanel) {
+		async function initTOC() {
+			try {
+				const m = new TOCManager({ contentId: "floating-toc-content", maxLevel: 3, scrollOffset: 80 });
+				m.init();
+			} catch (e) { console.error("TOC init failed:", e); }
+		}
+		initTOC();
+		document.addEventListener("astro:page-load", () => setTimeout(initTOC, 100));
+		document.addEventListener("swup:contentReplaced", () => setTimeout(initTOC, 100));
+	}
+</script>

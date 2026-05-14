@@ -56,29 +56,40 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		],
 	});
 
-	// 生活 (原本的番组计划)
-	if (siteConfig.pages.bangumi) {
+	// 记录入口 - 书架、影视与游戏、音乐、规划、足迹
+	const recordChildren: (NavBarLink | LinkPreset)[] = [];
+	if (siteConfig.pages.books) {
+		recordChildren.push(LinkPreset.Books);
+	}
+	if (siteConfig.pages.moviesGames) {
+		recordChildren.push(LinkPreset.MoviesGames);
+	}
+	if (siteConfig.pages.musicPage) {
+		recordChildren.push(LinkPreset.MusicPage);
+	}
+	// 规划 & 足迹
+	recordChildren.push({
+		name: "规划",
+		url: "/life/routines/",
+		icon: "material-symbols:list-alt",
+	});
+	recordChildren.push({
+		name: "足迹",
+		url: "/life/places/",
+		icon: "material-symbols:location-on",
+	});
+
+	if (recordChildren.length > 0) {
+		const defaultUrl = siteConfig.pages.books ? "/books/"
+			: siteConfig.pages.moviesGames ? "/movies-games/"
+			: "/music/";
+
 		links.push({
 			name: "记录",
-			url: "/bangumi/",
+			url: defaultUrl,
 			icon: "material-symbols:camera-outdoor",
+			children: recordChildren,
 		});
-	}
-
-	// 新生活功能页 - 放在记录后面、我的网站前面
-	// 找到记录所在的索引，在其后插入生活
-	const lifeLink = {
-		name: "生活",
-		url: "/life/",
-		icon: "material-symbols:favorite",
-	};
-
-	// 找到记录(link)的索引，在其后插入生活
-	const recordIndex = links.findIndex((link) => typeof link !== 'number' && link.name === "记录");
-	if (recordIndex !== -1) {
-		links.splice(recordIndex + 1, 0, lifeLink);
-	} else {
-		links.push(lifeLink);
 	}
 
 	// 关于及其子菜单

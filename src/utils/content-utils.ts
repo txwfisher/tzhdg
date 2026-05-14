@@ -109,18 +109,31 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 		};
 	});
 
-	const bangumiItems: ArchiveItem[] = bangumi.map((b) => ({
-		id: b.id,
-		type: "bangumi",
-		data: {
-			title: b.data.title,
-			published: b.data.published || new Date(0),
-			tags: [],
-			category: null,
-			image: typeof b.data.image === "string" ? b.data.image : (b.data.image as any)?.src,
-			link: b.data.link,
-		},
-	}));
+	const bangumiItems: ArchiveItem[] = bangumi.map((b) => {
+		let link = b.data.link || "";
+		if (!link) {
+			const slug = b.id.replace(/\\/g, "/").replace(/\.(md|mdx|markdown)$/i, "");
+			if (b.data.category === "book") {
+				link = `/books/${slug}/`;
+			} else if (b.data.category === "music") {
+				link = "/music/";
+			} else {
+				link = "/movies-games/";
+			}
+		}
+		return {
+			id: b.id,
+			type: "bangumi",
+			data: {
+				title: b.data.title,
+				published: b.data.published || new Date(0),
+				tags: [],
+				category: null,
+				image: typeof b.data.image === "string" ? b.data.image : (b.data.image as any)?.src,
+				link,
+			},
+		};
+	});
 
 	// 生活动态归档
 	const lifeItems: ArchiveItem[] = [];

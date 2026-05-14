@@ -1,6 +1,6 @@
 ---
 title:
-category: anime、book、music、game
+category: anime、book、game、music
 status: 2
 image:
 score: 10
