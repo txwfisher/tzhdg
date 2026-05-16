@@ -67,6 +67,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	if (siteConfig.pages.musicPage) {
 		recordChildren.push(LinkPreset.MusicPage);
 	}
+	if (siteConfig.pages.changelog) {
+		recordChildren.push(LinkPreset.Changelog);
+	}
 	// 规划 & 足迹
 	recordChildren.push({
 		name: "规划",

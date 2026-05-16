@@ -586,22 +586,13 @@ const mobileQuality = Math.round(configQuality * 0.9);
           data-tablet-sidebar={sidebarLayoutConfig.tabletSidebar ?? "left"}
           data-show-both-sidebars-on-post={sidebarLayoutConfig.showBothSidebarsOnPostPage ? "true" : "false"}
         >
-            <!-- 网站浏览量 - Desktop -->
-            {hasBannerCredit && creditEnabledOnDesktop && isHomePageCheck && <div
-                id="banner-credit-desktop"
-                class="onload-animation transition-all absolute justify-center items-center rounded-full px-3 right-4 -top-13 bg-black/60 h-9 hidden md:flex"
+            <!-- 网站浏览量 -->
+            {hasBannerCredit && (creditEnabledOnDesktop || creditEnabledOnMobile) && isHomePageCheck && <div
+                id="banner-credit"
+                class="onload-animation transition-all absolute justify-center items-center rounded-full px-3 right-4 -top-13 bg-black/60 h-9 flex"
             >
                 <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:visibility-outline-rounded" ></Icon>
-                <span class="text-white/75 text-xs waline-pageview-count" data-path="/" id="view-count-desktop">--</span><span class="text-white/75 text-xs"> 次浏览</span>
-            </div>}
-
-            <!-- 网站浏览量 - Mobile -->
-            {hasBannerCredit && creditEnabledOnMobile && isHomePageCheck && <div
-                id="banner-credit-mobile"
-                class="onload-animation transition-all absolute justify-center items-center rounded-full px-3 right-4 -top-13 bg-black/60 h-9 flex md:hidden"
-            >
-                <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:visibility-outline-rounded" ></Icon>
-                <span class="text-white/75 text-xs waline-pageview-count" data-path="/" id="view-count-mobile">--</span><span class="text-white/75 text-xs"> 次浏览</span>
+                <span class="text-white/75 text-xs waline-pageview-count" data-path="/" id="view-count">--</span><span class="text-white/75 text-xs"> 次浏览</span>
             </div>}
 
 

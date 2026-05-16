@@ -73,7 +73,13 @@ const bangumiCollection = defineCollection({
 			score: z.number().min(0).max(10).optional(),
 			comment: z.string().optional(),
 			tags: z.array(z.string()).optional().default([]),
-			published: z.date().optional(),
+				published: z.date().optional(),
+				// Music-specific fields
+				artist: z.string().optional(),
+				audioUrl: z.string().optional(),
+				lrcUrl: z.string().optional(),
+				metingServer: z.string().optional(),
+				metingId: z.string().optional(),
 		}),
 });
 
@@ -234,6 +240,17 @@ const daohangCollection = defineCollection({
 	}),
 });
 
+const changelogCollection = defineCollection({
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/changelog" }),
+	schema: z.object({
+		version: z.string(),
+		date: z.date(),
+		time: z.string().optional(),
+		type: z.enum(["feature", "improvement", "fix", "removal"]),
+		description: z.string(),
+	}),
+});
+
 export const collections = {
 	posts: postsCollection,
 	spec: specCollection,
@@ -247,4 +264,5 @@ export const collections = {
 	daohang: daohangCollection,
 	ziyuan: ziyuanCollection,
 	friends: friendsCollection,
+	changelog: changelogCollection,
 };

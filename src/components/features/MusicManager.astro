@@ -168,6 +168,23 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Lyrics ───────────────────────────────────────────────
+        var lrcOffset = parseFloat(localStorage.getItem('music-lrc-offset') || '0') || 0;
+
+        function syncLrcIndex() {
+            if (state.lyrics.length === 0) return;
+            // offset: negative = lyrics delayed (more natural feel), positive = lyrics ahead
+            var ct = audio.currentTime + lrcOffset;
+            var idx = -1;
+            for (var i = 0; i < state.lyrics.length; i++) {
+                if (ct >= state.lyrics[i].time) idx = i;
+                else break;
+            }
+            if (idx !== state.currentLrcIndex) {
+                state.currentLrcIndex = idx;
+                emit('fm:lrc-index', { index: idx });
+            }
+        }
+
     function loadLyrics(track) {
         state.lyrics = [];
         state.currentLrcIndex = -1;
@@ -188,6 +205,7 @@ const managerConfigStr = JSON.stringify({
                 .then(function (text) {
                     state.lyrics = parseLRC(text);
                     emit('fm:lyrics', { lyrics: state.lyrics, status: 'loaded' });
+                    if (!audio.paused) syncLrcIndex();
                 })
                 .catch(function () {
                     state.lyrics = [];
@@ -196,6 +214,7 @@ const managerConfigStr = JSON.stringify({
         } else {
             state.lyrics = parseLRC(track.lrc);
             emit('fm:lyrics', { lyrics: state.lyrics, status: state.lyrics.length > 0 ? 'loaded' : 'none' });
+            if (!audio.paused && state.lyrics.length > 0) syncLrcIndex();
         }
     }
 
@@ -322,17 +341,7 @@ const managerConfigStr = JSON.stringify({
         });
 
         // Lyrics sync
-        if (state.lyrics.length > 0) {
-            var idx = -1;
-            for (var i = 0; i < state.lyrics.length; i++) {
-                if (ct >= state.lyrics[i].time) idx = i;
-                else break;
-            }
-            if (idx !== state.currentLrcIndex) {
-                state.currentLrcIndex = idx;
-                emit('fm:lrc-index', { index: idx });
-            }
-        }
+        syncLrcIndex();
     });
 
     audio.addEventListener('ended', function () {
@@ -401,6 +410,23 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Public API ───────────────────────────────────────────
+    function loadExternalPlaylist(playlist) {
+        if (!playlist || playlist.length === 0) return;
+        state.playlist = playlist;
+        state.currentIndex = 0;
+        if (!state.initialized) {
+            audio.volume = state.volume;
+            state.initialized = true;
+        }
+        emit('fm:init', {
+            playlist: state.playlist,
+            playMode: state.playMode,
+            volume: state.volume,
+            isMuted: state.isMuted
+        });
+        loadTrack(0, false);
+    }
+
     window.__fireflyMusic = {
         init: init,
         getState: function () {
@@ -425,6 +451,7 @@ const managerConfigStr = JSON.stringify({
                 config: config
             };
         },
+        loadExternalPlaylist: loadExternalPlaylist,
         togglePlay: togglePlay,
         playNext: function () { playNext(false); },
         playPrev: playPrev,

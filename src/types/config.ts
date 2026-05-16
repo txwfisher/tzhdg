@@ -86,6 +86,7 @@ export type SiteConfig = {
 		books: boolean; // 书架页面开关
 		moviesGames: boolean; // 影视与游戏页面开关
 		musicPage: boolean; // 音乐页面开关
+		changelog: boolean; // 更新日志页面开关
 	};
 
 	// 分类导航栏开关
@@ -184,6 +185,7 @@ export enum LinkPreset {
 	Books = 7,
 	MoviesGames = 8,
 	MusicPage = 9,
+	Changelog = 10,
 }
 
 export type NavBarLink = {

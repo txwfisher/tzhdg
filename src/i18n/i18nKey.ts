@@ -1,5 +1,15 @@
 enum I18nKey {
 	home = "home",
+	changelog = "changelog",
+	changelogTitle = "changelogTitle",
+	changelogSubtitle = "changelogSubtitle",
+	changelogAll = "changelogAll",
+	changelogFeature = "changelogFeature",
+	changelogImprovement = "changelogImprovement",
+	changelogFix = "changelogFix",
+	changelogRemoval = "changelogRemoval",
+	changelogNoData = "changelogNoData",
+
 	categories = "categories",
 	categoryList = "categoryList",
 	categoryPosts = "categoryPosts",

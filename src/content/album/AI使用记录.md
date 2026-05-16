@@ -7,6 +7,7 @@ tags:
   - AI
 photos:
   - https://ph.0824.uk/file/picgo/20260514232044757.png
+  - https://ph.0824.uk/file/picgo/20260517014711696.png
 ---
 
 AI使用的记录
