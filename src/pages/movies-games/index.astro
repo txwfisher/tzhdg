@@ -7,6 +7,7 @@ import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { formatDateI18nWithTime } from "@/utils/date-utils";
+import { removeFileExtension } from "@/utils/url-utils";
 import Comment from "@components/comment/index.astro";
 import { getCollection } from "astro:content";
 
@@ -15,39 +16,6 @@ if (!siteConfig.pages.moviesGames) {
 }
 
 const buildTime = formatDateI18nWithTime(new Date());
-const doubanUserId = siteConfig.douban?.userId || "";
-
-import { categoryLinks } from "@/config/categoryLinks";
-
-function getSubcategory(item: { subcategory?: string; tags?: string[]; subject_type?: number }): string {
-	if (item.subcategory) return item.subcategory;
-	if (item.subject_type === 4) return "game";
-	const tags = item.tags || [];
-	if (tags.some((t: string) => t.includes("纪录"))) return "documentary";
-	if (tags.some((t: string) => t.includes("动漫") || t.includes("动画"))) return "anime";
-	if (tags.some((t: string) => t.includes("电视剧") || t.includes("剧集"))) return "tv";
-	return "movie";
-}
-
-function resolveLink(data: { link?: string; category: string; subcategory?: string; tags?: string[]; subject_type?: number }): string {
-	if (data.link?.trim()) return data.link.trim();
-	const uid = doubanUserId;
-
-	// 确定子分类（显式或推断）
-	const sub = getSubcategory({ subcategory: data.subcategory, tags: data.tags, subject_type: data.subject_type });
-	const subKey = sub === "anime" ? "anime_sub" : sub === "game" ? "game_sub" : sub;
-	if (categoryLinks[subKey]) {
-		return categoryLinks[subKey].replace(/\{userId\}/g, uid).replace(/\{doubanUserId\}/g, uid);
-	}
-
-	// 按 category 回退
-	const catLink = categoryLinks[data.category];
-	if (catLink) {
-		return catLink.replace(/\{userId\}/g, uid).replace(/\{doubanUserId\}/g, uid);
-	}
-	if (uid) return "https://movie.douban.com/people/" + uid + "/collect";
-	return "https://movie.douban.com/";
-}
 
 const customBangumi = await getCollection("bangumi");
 
@@ -97,16 +65,10 @@ interface MgItem {
 const mgItems: MgItem[] = customBangumi
 	.filter((item) => ["anime", "game", "real"].includes(item.data.category))
 	.map((item) => {
-		const { data } = item;
+		const { data, id } = item;
 		const imageSrc = typeof data.image === "string" ? data.image : data.image.src;
 
-		let finalLink = resolveLink({
-				link: data.link,
-				category: data.category,
-				subcategory: (data as any).subcategory,
-				tags: data.tags || [],
-				subject_type: data.category === "game" ? 4 : 2,
-			});
+			const finalLink = "/bangumi/" + removeFileExtension(id) + "/";
 
 		const subjectTypeMap: Record<string, number> = {
 			anime: 2,
