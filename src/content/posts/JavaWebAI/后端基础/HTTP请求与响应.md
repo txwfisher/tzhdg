@@ -1,10 +1,14 @@
 ---
-title: "HTTP请求与响应"
-published: 2026-05-22
-tags: [前端, HTTP, Java]
+title: HTTP请求与响应
+published: 2026-05-17
+tags:
+  - 前端
+  - HTTP
+  - Java
 category: 编程学习
-description: "HTTP请求协议与响应协议的格式、获取/设置请求/响应数据的方法及常见状态码"
+description: HTTP请求协议与响应协议的格式、获取/设置请求/响应数据的方法及常见状态码
 descriptionSource: ai
+order: 3
 ---
 
 # HTTP请求与响应

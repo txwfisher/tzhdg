@@ -1,10 +1,14 @@
 ---
-title: "HTTP协议概述"
-published: 2026-05-22
-tags: [前端, HTTP, Java]
+title: HTTP协议概述
+published: 2026-05-17
+tags:
+  - 前端
+  - HTTP
+  - Java
 category: 编程学习
-description: "HTTP协议的基本概念、特点与BS/CS架构介绍"
+description: HTTP协议的基本概念、特点与BS/CS架构介绍
 descriptionSource: ai
+order: 2
 ---
 
 # HTTP协议概述

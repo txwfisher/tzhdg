@@ -1,6 +1,6 @@
 ---
 title: CSS核心
-published: 2026-05-22
+published: 2026-05-14
 tags:
   - HTML
   - CSS
@@ -8,6 +8,7 @@ tags:
   - 前端
 category: 编程学习
 description: CSS核心速查卡片，涵盖CSS引入方式、CSS选择器、CSS颜色表示、CSS文本样式、div与span标签
+order: 6
 ---
 
 ### CSS引入方式

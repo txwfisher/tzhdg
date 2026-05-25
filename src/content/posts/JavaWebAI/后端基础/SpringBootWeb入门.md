@@ -1,10 +1,14 @@
 ---
-title: "SpringBootWeb入门"
-published: 2026-05-22
-tags: [前端, SpringBoot, Java]
+title: SpringBootWeb入门
+published: 2026-05-17
+tags:
+  - 前端
+  - SpringBoot
+  - Java
 category: 编程学习
-description: "SpringBootWeb开发的基础概念、入门程序与解析"
+description: SpringBootWeb开发的基础概念、入门程序与解析
 descriptionSource: ai
+order: 1
 ---
 
 # SpringBootWeb入门

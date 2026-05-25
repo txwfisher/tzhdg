@@ -1,10 +1,14 @@
 ---
-title: "单元测试与JUnit"
+title: 单元测试与JUnit
 published: 2026-05-22
-tags: [Java, Maven, JUnit]
+tags:
+  - Java
+  - Maven
+  - JUnit
 category: 编程学习
-description: "软件测试阶段划分、测试方法分类、JUnit单元测试入门、断言、常用注解及依赖范围"
+description: 软件测试阶段划分、测试方法分类、JUnit单元测试入门、断言、常用注解及依赖范围
 descriptionSource: ai
+order: 5
 ---
 
 # JUnit单元测试

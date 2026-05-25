@@ -1,10 +1,15 @@
 ---
-title: "SpringBoot配置文件"
-published: 2026-05-22
-tags: [SpringBoot, YAML, 配置, Java]
+title: SpringBoot配置文件
+published: 2026-05-19
+tags:
+  - SpringBoot
+  - YAML
+  - 配置
+  - Java
 category: 编程学习
-description: "SpringBoot支持properties和yml两种配置文件格式，yml以数据为中心，层级结构更清晰。"
+description: SpringBoot支持properties和yml两种配置文件格式，yml以数据为中心，层级结构更清晰。
 descriptionSource: ai
+order: 5
 ---
 
 # SpringBoot配置文件

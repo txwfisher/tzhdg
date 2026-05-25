@@ -1,10 +1,15 @@
 ---
-title: "JDBC查询操作"
-published: 2026-05-22
-tags: [Java, JDBC, SQL, 数据库]
+title: JDBC查询操作
+published: 2026-05-19
+tags:
+  - Java
+  - JDBC
+  - SQL
+  - 数据库
 category: 编程学习
-description: "基于JDBC实现数据库查询操作，包括预编译SQL、ResultSet解析与SQL注入防护。"
+description: 基于JDBC实现数据库查询操作，包括预编译SQL、ResultSet解析与SQL注入防护。
 descriptionSource: ai
+order: 3
 ---
 
 # JDBC查询操作

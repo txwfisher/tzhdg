@@ -1,12 +1,13 @@
 ---
 title: Vue生命周期
-published: 2026-05-22
+published: 2026-05-15
 tags:
   - 前端
   - Vue
 category: 编程学习
-description: "Vue实例从创建到销毁的8个阶段及mounted等钩子函数的应用"
+description: Vue实例从创建到销毁的8个阶段及mounted等钩子函数的应用
 descriptionSource: ai
+order: 14
 ---
 # Vue生命周期
 

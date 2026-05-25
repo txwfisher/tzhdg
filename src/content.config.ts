@@ -20,6 +20,7 @@ const postsCollection = defineCollection({
 		licenseName: z.string().optional().default(""),
 		licenseUrl: z.string().optional().default(""),
 		comment: z.boolean().optional().default(true),
+		order: z.number().optional().default(0),
 
 		/* For internal use */
 		prevTitle: z.string().default(""),

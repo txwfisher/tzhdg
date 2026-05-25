@@ -1,10 +1,15 @@
 ---
-title: "JDBC增删改操作"
-published: 2026-05-22
-tags: [Java, JDBC, SQL, 数据库]
+title: JDBC增删改操作
+published: 2026-05-19
+tags:
+  - Java
+  - JDBC
+  - SQL
+  - 数据库
 category: 编程学习
-description: "基于JDBC执行INSERT/UPDATE/DELETE等DML语句，掌握executeUpdate方法的使用。"
+description: 基于JDBC执行INSERT/UPDATE/DELETE等DML语句，掌握executeUpdate方法的使用。
 descriptionSource: ai
+order: 2
 ---
 
 # JDBC增删改操作

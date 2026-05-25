@@ -1,10 +1,14 @@
 ---
-title: "MySQL数据模型"
-published: 2026-05-22
-tags: [前端, MySQL, 数据库]
+title: MySQL数据模型
+published: 2026-05-18
+tags:
+  - 前端
+  - MySQL
+  - 数据库
 category: 编程学习
-description: "关系型数据库的二维表模型与MySQL的数据存储层次结构"
+description: 关系型数据库的二维表模型与MySQL的数据存储层次结构
 descriptionSource: ai
+order: 1
 ---
 
 # MySQL数据模型

@@ -1,6 +1,6 @@
 ---
 title: HTML基础
-published: 2026-05-22
+published: 2026-05-14
 tags:
   - HTML
   - CSS
@@ -8,6 +8,7 @@ tags:
   - 前端
 category: 编程学习
 description: HTML基础速查卡片，涵盖HTML基础结构、文件路径表示、标题标签、段落与文本标签、字符实体
+order: 2
 ---
 
 ### HTML基础结构

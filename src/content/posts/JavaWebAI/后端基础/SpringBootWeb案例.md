@@ -1,10 +1,14 @@
 ---
-title: "SpringBootWeb案例"
-published: 2026-05-22
-tags: [前端, SpringBoot, Java]
+title: SpringBootWeb案例
+published: 2026-05-17
+tags:
+  - 前端
+  - SpringBoot
+  - Java
 category: 编程学习
-description: "基于SpringBoot开发Web程序完成用户列表渲染的完整案例"
+description: 基于SpringBoot开发Web程序完成用户列表渲染的完整案例
 descriptionSource: ai
+order: 4
 ---
 
 # SpringBootWeb案例

@@ -1,12 +1,13 @@
 ---
 title: Vue指令-v-on
-published: 2026-05-22
+published: 2026-05-15
 tags:
   - 前端
   - Vue
 category: 编程学习
-description: "使用v-on（简写@）为HTML标签绑定事件处理方法"
+description: 使用v-on（简写@）为HTML标签绑定事件处理方法
 descriptionSource: ai
+order: 11
 ---
 # Vue指令-v-on
 

@@ -1,12 +1,13 @@
 ---
 title: Ajax与异步编程
-published: 2026-05-22
+published: 2026-05-15
 tags:
   - 前端
   - Ajax
 category: 编程学习
-description: "使用Ajax实现页面无刷新数据交互，async/await简化异步编程"
+description: 使用Ajax实现页面无刷新数据交互，async/await简化异步编程
 descriptionSource: ai
+order: 13
 ---
 # Ajax与异步编程
 

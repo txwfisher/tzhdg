@@ -17,6 +17,10 @@ async function getRawSortedPosts() {
 		// 如果置顶状态相同，则按发布日期排序
 		const dateA = new Date(a.data.published);
 		const dateB = new Date(b.data.published);
+		// 日期相同，按 order 排序（越小越靠前）
+		if (dateA.getTime() === dateB.getTime()) {
+			return (a.data.order ?? 0) - (b.data.order ?? 0);
+		}
 		return dateA > dateB ? -1 : 1;
 	});
 	return sorted;
@@ -62,6 +66,7 @@ export type ArchiveItem = {
 		category?: string | null;
 		image?: string;
 		link?: string;
+		order?: number;
 	};
 };
 
@@ -87,6 +92,7 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 			published: post.data.published,
 			tags: post.data.tags,
 			category: post.data.category,
+			order: post.data.order,
 		},
 	}));
 
@@ -184,7 +190,12 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 	});
 
 	return [...postItems, ...momentItems, ...bangumiItems, ...lifeItems].sort((a, b) => {
-		return b.data.published.getTime() - a.data.published.getTime();
+		const timeA = a.data.published.getTime();
+		const timeB = b.data.published.getTime();
+		if (timeA === timeB) {
+			return (a.data.order ?? 0) - (b.data.order ?? 0);
+		}
+		return timeB - timeA;
 	});
 }
 export type Tag = {

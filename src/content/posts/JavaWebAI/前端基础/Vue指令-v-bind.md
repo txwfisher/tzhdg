@@ -1,12 +1,13 @@
 ---
 title: Vue指令-v-bind
-published: 2026-05-22
+published: 2026-05-15
 tags:
   - 前端
   - Vue
 category: 编程学习
-description: "使用v-bind（简写:）动态绑定HTML标签的属性和样式"
+description: 使用v-bind（简写:）动态绑定HTML标签的属性和样式
 descriptionSource: ai
+order: 8
 ---
 # Vue指令-v-bind
 

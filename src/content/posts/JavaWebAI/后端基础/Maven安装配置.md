@@ -1,10 +1,13 @@
 ---
-title: "Maven安装配置与常见问题"
-published: 2026-05-22
-tags: [Java, Maven]
+title: Maven安装配置与常见问题
+published: 2026-05-16
+tags:
+  - Java
+  - Maven
 category: 编程学习
-description: "Maven下载安装、本地仓库配置、阿里云私服配置、环境变量配置、JDK版本关联及常见依赖下载问题解决"
+description: Maven下载安装、本地仓库配置、阿里云私服配置、环境变量配置、JDK版本关联及常见依赖下载问题解决
 descriptionSource: ai
+order: 2
 ---
 
 # Maven安装配置

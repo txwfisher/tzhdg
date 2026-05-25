@@ -1,10 +1,14 @@
 ---
-title: "SQL-DQL语句"
-published: 2026-05-22
-tags: [前端, MySQL, 数据库]
+title: SQL-DQL语句
+published: 2026-05-18
+tags:
+  - 前端
+  - MySQL
+  - 数据库
 category: 编程学习
-description: "DQL数据查询语言：基本查询、条件查询、聚合函数、分组、排序、分页的完整用法"
+description: DQL数据查询语言：基本查询、条件查询、聚合函数、分组、排序、分页的完整用法
 descriptionSource: ai
+order: 5
 ---
 
 # SQL-DQL语句

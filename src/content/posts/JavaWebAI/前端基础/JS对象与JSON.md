@@ -1,12 +1,13 @@
 ---
 title: JS对象与JSON
-published: 2026-05-22
+published: 2026-05-15
 tags:
   - 前端
   - JavaScript
 category: 编程学习
-description: "JavaScript对象的键值对结构及JSON.stringify和JSON.parse的数据转换方法"
+description: JavaScript对象的键值对结构及JSON.stringify和JSON.parse的数据转换方法
 descriptionSource: ai
+order: 1
 ---
 # JS对象与JSON
 

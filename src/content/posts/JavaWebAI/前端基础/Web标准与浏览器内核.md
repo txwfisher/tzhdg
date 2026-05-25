@@ -1,6 +1,6 @@
 ---
 title: Web标准与浏览器内核
-published: 2026-05-22
+published: 2026-05-14
 tags:
   - HTML
   - CSS
@@ -8,6 +8,7 @@ tags:
   - 前端
 category: 编程学习
 description: Web标准与浏览器内核速查卡片，涵盖Web标准定义、浏览器内核对比及常见浏览器差异
+order: 1
 ---
 
 ## 定义

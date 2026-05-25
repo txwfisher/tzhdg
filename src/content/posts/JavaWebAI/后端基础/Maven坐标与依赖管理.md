@@ -1,10 +1,13 @@
 ---
-title: "Maven坐标与依赖管理"
-published: 2026-05-22
-tags: [Java, Maven]
+title: Maven坐标与依赖管理
+published: 2026-05-16
+tags:
+  - Java
+  - Maven
 category: 编程学习
-description: "Maven坐标体系、POM文件结构、依赖配置、依赖传递与排除依赖的完整说明"
+description: Maven坐标体系、POM文件结构、依赖配置、依赖传递与排除依赖的完整说明
 descriptionSource: ai
+order: 3
 ---
 
 # Maven坐标与依赖管理

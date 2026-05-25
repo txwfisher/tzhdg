@@ -1,10 +1,14 @@
 ---
-title: "SQL-DML语句"
-published: 2026-05-22
-tags: [前端, MySQL, 数据库]
+title: SQL-DML语句
+published: 2026-05-18
+tags:
+  - 前端
+  - MySQL
+  - 数据库
 category: 编程学习
-description: "DML数据操作语言：INSERT、UPDATE、DELETE 的语法与注意事项"
+description: DML数据操作语言：INSERT、UPDATE、DELETE 的语法与注意事项
 descriptionSource: ai
+order: 4
 ---
 
 # SQL-DML语句
