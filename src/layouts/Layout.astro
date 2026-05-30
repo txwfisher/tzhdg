@@ -405,6 +405,14 @@ const siteLang = lang.replace("_", "-");
           document.documentElement.setAttribute("data-banner-title-enabled", bannerTitleEnabled);
         }
       })();
+
+      // Initialize hide-covers state before first paint
+      (function applyHideCovers() {
+        const hideCovers = localStorage.getItem("hideCovers");
+        if (hideCovers === "true") {
+          document.documentElement.setAttribute("data-hide-covers", "true");
+        }
+      })();
     </script>
     <style
       define:vars={{

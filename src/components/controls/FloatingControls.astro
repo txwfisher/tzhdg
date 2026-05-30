@@ -4,44 +4,52 @@ import { Icon } from "astro-icon/components";
 import { sidebarLayoutConfig } from "@/config/sidebarConfig";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import { url } from "@/utils/url-utils";
+import { url, getTagUrl } from "@/utils/url-utils";
+import { getTagList } from "@/utils/content-utils";
 
 interface Props {
 	headings?: MarkdownHeading[];
 }
 
 const { headings } = Astro.props;
-const hasTOC = headings && headings.length > 0;
+
+const allTags = await getTagList();
+const sortedTags = allTags.sort((a, b) => b.count - a.count);
+
+function tagHue(name: string): number {
+	let hash = 0;
+	for (let i = 0; i < name.length; i++) {
+		hash = name.charCodeAt(i) + ((hash << 5) - hash);
+	}
+	return Math.abs(hash % 360);
+}
 ---
 
 <div class="fab-container" id="fab-container">
 	<div class="fab-menu" id="fab-menu">
-		<!-- 笔记本 -->
 		<button class="fab-item hide" id="fab-item-notebook" aria-label="笔记本" title="笔记本">
 			<Icon name="material-symbols:book-outline" />
 		</button>
 
-		<!-- 回到顶部 -->
 		<button class="fab-item" id="fab-item-top" aria-label="回到顶部" title="回到顶部">
 			<Icon name="material-symbols:keyboard-arrow-up-rounded" />
 		</button>
 
-		<!-- 跳转评论区 -->
-		<button class="fab-item hide" id="fab-item-comment" aria-label="跳转到评论区" title="跳转到评论区">
+		<button class="fab-item hide" id="fab-item-comment" aria-label="跳转评论区" title="跳转评论区">
 			<Icon name="material-symbols:chat-bubble-outline-rounded" />
 		</button>
 
-		<!-- 回到首页 -->
 		<button class="fab-item hide" id="fab-item-home" aria-label={i18n(I18nKey.home)} title={i18n(I18nKey.home)}>
 			<Icon name="material-symbols:home-outline-rounded" />
 		</button>
 
-		<!-- 目录 -->
-		{hasTOC && (
-			<button class="fab-item hide" id="fab-item-toc" aria-label="目录" title="目录">
-				<Icon name="material-symbols:format-list-bulleted" />
-			</button>
-		)}
+		<button class="fab-item hide" id="fab-item-toc" aria-label="目录" title="目录">
+			<Icon name="material-symbols:format-list-bulleted" />
+		</button>
+
+		<button class="fab-item hide" id="fab-item-tags" aria-label="标签" title="标签">
+			<Icon name="material-symbols:label-outline" />
+		</button>
 	</div>
 
 	<!-- 三点触发器 -->
@@ -50,23 +58,53 @@ const hasTOC = headings && headings.length > 0;
 	</button>
 
 	<!-- TOC 面板 -->
-	{hasTOC && (
-		<div id="floating-toc-panel" class="toc-panel hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
-			<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-				<div class="flex items-center justify-between">
-					<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
-						{i18n(I18nKey.tableOfContents)}
-					</h3>
-					<button onclick="window.closeTOCPanel()" aria-label="Close TOC" class="btn-plain rounded-lg h-8 w-8 active:scale-90">
-						<Icon name="material-symbols:close" class="text-lg" />
-					</button>
-				</div>
-			</div>
-			<div class="toc-scroll-container p-4">
-				<div class="toc-content" id="floating-toc-content"></div>
+	<div id="floating-toc-panel" class="float-panel-side hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
+		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+			<div class="flex items-center justify-between">
+				<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
+					{i18n(I18nKey.tableOfContents)}
+				</h3>
+				<button onclick="window.closeTOCPanel()" aria-label="Close TOC" class="btn-plain rounded-lg h-8 w-8 active:scale-90">
+					<Icon name="material-symbols:close" class="text-lg" />
+				</button>
 			</div>
 		</div>
-	)}
+		<div class="toc-scroll-container p-4">
+			<div class="toc-content" id="floating-toc-content"></div>
+		</div>
+	</div>
+
+	<!-- 标签面板 -->
+	<div id="floating-tags-panel" class="float-panel-side hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
+		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-black">
+			<div class="flex items-center justify-between">
+				<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
+					<Icon name="material-symbols:label-outline" class="text-xl" />
+					<span>所有标签</span>
+				</h3>
+				<button onclick="window.closeTagsPanel()" aria-label="Close" class="btn-plain rounded-lg h-8 w-8 active:scale-90">
+					<Icon name="material-symbols:close" class="text-lg" />
+				</button>
+			</div>
+		</div>
+		<div class="tags-scroll-container p-4">
+			<div class="flex flex-wrap gap-2" id="floating-tags-content">
+				{sortedTags.map((tag) => {
+					const hue = tagHue(tag.name);
+					return (
+						<a
+							href={getTagUrl(tag.name)}
+							class="floating-tag-chip"
+							style={`--tag-hue: ${hue}; --tag-light: oklch(0.92 0.04 ${hue}); --tag-dark: oklch(0.25 0.04 ${hue})`}
+						>
+							<span class="floating-tag-name">{tag.name}</span>
+							<span class="floating-tag-count">{tag.count}</span>
+						</a>
+					);
+				})}
+			</div>
+		</div>
+	</div>
 </div>
 
 <style>
@@ -128,6 +166,7 @@ const hasTOC = headings && headings.length > 0;
 	}
 
 	.fab-item.hide {
+		display: none !important;
 		width: 0 !important;
 		height: 0 !important;
 		margin: 0 !important;
@@ -189,8 +228,8 @@ const hasTOC = headings && headings.length > 0;
 		box-shadow: 0 4px 14px rgba(0,0,0,0.35);
 	}
 
-	/* TOC Panel */
-	.toc-panel {
+	/* Side panels (TOC + Tags share this base style) */
+	.float-panel-side {
 		position: absolute;
 		bottom: 0;
 		right: calc(100% + 0.75rem);
@@ -200,24 +239,73 @@ const hasTOC = headings && headings.length > 0;
 		pointer-events: none;
 		z-index: 1001;
 	}
-	.toc-panel.show {
+	.float-panel-side.show {
 		transform: translateX(0);
 		opacity: 1;
 		pointer-events: auto;
 	}
-	.toc-panel.hide {
+	.float-panel-side.hide {
 		transform: translateX(10px);
 		opacity: 0;
 		pointer-events: none;
 		visibility: hidden;
 	}
-	.toc-scroll-container {
+
+	.toc-scroll-container,
+	.tags-scroll-container {
 		max-height: calc(24rem - 5rem);
 		overflow-y: auto;
 	}
 
+	/* ---- Tags Panel Chips ---- */
+	.floating-tag-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.4rem 0.7rem;
+		border-radius: 0.6rem;
+		font-size: 0.85rem;
+		font-weight: 500;
+		text-decoration: none;
+		color: var(--deep-text);
+		background: var(--tag-light);
+		border: 1px solid transparent;
+		transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+		cursor: pointer;
+		line-height: 1.3;
+	}
+
+	.floating-tag-chip:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+		border-color: var(--primary);
+		color: var(--primary);
+	}
+
+	.floating-tag-chip:active {
+		transform: scale(0.95);
+	}
+
+	.floating-tag-count {
+		font-size: 0.7rem;
+		opacity: 0.55;
+		font-weight: 700;
+		background: rgba(0,0,0,0.06);
+		padding: 0.1rem 0.4rem;
+		border-radius: 999px;
+		min-width: 1.2rem;
+		text-align: center;
+	}
+
+	html.dark .floating-tag-chip {
+		background: var(--tag-dark);
+	}
+	html.dark .floating-tag-count {
+		background: rgba(255,255,255,0.1);
+	}
+
 	@media (max-width: 1024px) {
-		.toc-panel {
+		.float-panel-side {
 			width: calc(100vw - 2rem);
 			max-width: 20rem;
 			max-height: 20rem;
@@ -226,7 +314,7 @@ const hasTOC = headings && headings.length > 0;
 	@media (max-width: 768px) {
 		.fab-container { right: 0.75rem; bottom: 4rem; }
 		.fab-trigger, .fab-item { width: 2.75rem; height: 2.75rem; font-size: 1.35rem; border-radius: 0.875rem; }
-		.toc-panel { width: calc(100vw - 1.5rem); max-width: 20rem; max-height: 28rem; }
+		.float-panel-side { width: calc(100vw - 1.5rem); max-width: 20rem; max-height: 28rem; }
 	}
 	@media (max-width: 480px) {
 		.fab-container { right: 0.5rem; bottom: 4rem; }
@@ -243,6 +331,7 @@ const hasTOC = headings && headings.length > 0;
 	var btnTop      = document.getElementById('fab-item-top');
 	var btnHome     = document.getElementById('fab-item-home');
 	var btnTOC      = document.getElementById('fab-item-toc');
+	var btnTags     = document.getElementById('fab-item-tags');
 	var btnComment  = document.getElementById('fab-item-comment');
 	var btnNotebook = document.getElementById('fab-item-notebook');
 	var isExpanded  = false;
@@ -253,14 +342,12 @@ const hasTOC = headings && headings.length > 0;
 
 	trigger.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
 
-	// Back to Top
 	if (btnTop) btnTop.addEventListener('click', function(e) {
 		e.stopPropagation();
 		window.scroll({ top: 0, behavior: 'smooth' });
 		collapse();
 	});
 
-	// Back to Home
 	if (btnHome) btnHome.addEventListener('click', function(e) {
 		e.stopPropagation();
 		if (window.swup) window.swup.navigate('/');
@@ -268,7 +355,6 @@ const hasTOC = headings && headings.length > 0;
 		collapse();
 	});
 
-	// Comments
 	if (btnComment) btnComment.addEventListener('click', function(e) {
 		e.stopPropagation();
 		var el = document.getElementById('scissor-divider') || document.querySelector('[id*="comment"]');
@@ -277,14 +363,13 @@ const hasTOC = headings && headings.length > 0;
 		collapse();
 	});
 
-	// Notebooks
 	if (btnNotebook) btnNotebook.addEventListener('click', function(e) {
 		e.stopPropagation();
 		window.location.href = '/life/notebooks/';
 		collapse();
 	});
 
-	// TOC
+	// TOC panel
 	function toggleTOCPanel() {
 		var p = document.getElementById('floating-toc-panel');
 		if (!p) return;
@@ -301,6 +386,23 @@ const hasTOC = headings && headings.length > 0;
 	window.closeTOCPanel = closeTOCPanel;
 	if (btnTOC) btnTOC.addEventListener('click', function(e) { e.stopPropagation(); toggleTOCPanel(); collapse(); });
 
+	// Tags panel
+	function toggleTagsPanel() {
+		var p = document.getElementById('floating-tags-panel');
+		if (!p) return;
+		if (p.classList.contains('hide') || !p.classList.contains('show')) {
+			p.classList.remove('hide'); p.classList.add('show');
+		} else {
+			p.classList.remove('show'); p.classList.add('hide');
+		}
+	}
+	function closeTagsPanel() {
+		var p = document.getElementById('floating-tags-panel');
+		if (p) { p.classList.remove('show'); p.classList.add('hide'); }
+	}
+	window.closeTagsPanel = closeTagsPanel;
+	if (btnTags) btnTags.addEventListener('click', function(e) { e.stopPropagation(); toggleTagsPanel(); collapse(); });
+
 	// Click outside
 	document.addEventListener('click', function(e) {
 		if (isExpanded && !container.contains(e.target)) collapse();
@@ -311,15 +413,12 @@ const hasTOC = headings && headings.length > 0;
 	function hide(el) { if (el) el.classList.add('hide'); }
 
 	function refreshAll() {
-		// Notebook – always show
 		show(btnNotebook);
-		// Home – hide on homepage
+		show(btnTags);
 		var path = window.location.pathname.replace(/\/$/, '') || '/';
 		path === '/' ? hide(btnHome) : show(btnHome);
-		// Comment – only on post pages
 		path.indexOf('/posts/') === 0 ? show(btnComment) : hide(btnComment);
-		// TOC – show if panel exists
-		document.getElementById('floating-toc-panel') ? show(btnTOC) : hide(btnTOC);
+		path.indexOf('/posts/') === 0 ? show(btnTOC) : hide(btnTOC);
 	}
 
 	refreshAll();

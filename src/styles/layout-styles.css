@@ -16,6 +16,11 @@ html[data-banner-title-enabled="false"] .banner-home-text-overlay {
     display: none !important;
 }
 
+/* 用户关闭时隐藏文章卡片封面图 */
+html[data-hide-covers="true"] .post-card-image {
+    display: none !important;
+}
+
 /* 注意：不使用 data-banner-title-enabled="true" 强制显示，
    因为横幅标题只应在首页显示，由页面本身的 hidden 类控制 */
 
