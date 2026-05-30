@@ -375,9 +375,12 @@ const githubLink = profileConfig.links.find((item) => item.name === "GitHub")?.u
 
 	function handleKeydown(e) { if (e.key === "Escape" && isMenuOpen) closeMenu(); }
 
-	// 全局事件委托，只注册一次，不需要在每次页面切换时重新绑定
-	document.addEventListener("click", handleClick);
-	document.addEventListener("keydown", handleKeydown);
+	// 全局事件委托，用标志位防止脚本因 Swup 导航被重复执行时多次注册
+	if (!window.__navMenuListenersReady) {
+		window.__navMenuListenersReady = true;
+		document.addEventListener("click", handleClick);
+		document.addEventListener("keydown", handleKeydown);
+	}
 
 	function init() {
 		isMenuOpen = false;
