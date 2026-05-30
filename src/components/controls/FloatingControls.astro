@@ -113,7 +113,7 @@ function tagHue(name: string): number {
 	</div>
 
 	<!-- 标签面板 -->
-	<div id="floating-tags-panel" class="float-panel-side hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
+	<div id="floating-tags-panel" class="float-panel-bottom hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
 		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-black">
 			<div class="flex items-center justify-between">
 				<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
@@ -141,7 +141,7 @@ function tagHue(name: string): number {
 		</div>
 	</div>
 	<!-- 附近文章列表 -->
-	<div id="floating-navigate-panel" class="float-panel-side hide w-72 max-h-80 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-72 w-[calc(100vw-2rem)]">
+	<div id="floating-navigate-panel" class="float-panel-bottom hide w-72 max-h-72 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-72 w-[calc(100vw-2rem)]">
 		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-black">
 			<h3 class="text-base font-bold text-(--primary)">附近文章</h3>
 		</div>
@@ -174,13 +174,16 @@ function tagHue(name: string): number {
 		opacity: 0;
 		transform: translateY(12px);
 		pointer-events: none;
-		transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		visibility: hidden;
+		transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
 	}
 
 	.fab-container.expanded .fab-menu {
 		opacity: 1;
 		transform: translateY(0);
 		pointer-events: auto;
+		visibility: visible;
+		transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
 	}
 
 	/* ---- Horizontal nav row: prev/next slides out to the left ---- */
@@ -198,12 +201,15 @@ function tagHue(name: string): number {
 		opacity: 0;
 		transform: translateX(12px);
 		pointer-events: none;
-		transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		visibility: hidden;
+		transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
 	}
 	.fab-container.expanded .fab-nav-left {
 		opacity: 1;
 		transform: translateX(0);
 		pointer-events: auto;
+		visibility: visible;
+		transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
 	}
 
 	.fab-item {
@@ -282,6 +288,21 @@ function tagHue(name: string): number {
 	.float-panel-side.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
 	.float-panel-side.hide { transform: translateX(10px); opacity: 0; pointer-events: none; visibility: hidden; }
 
+	/* ---- Bottom-sliding panels (tags, navigate) ---- */
+	.float-panel-bottom {
+		position: fixed;
+		bottom: 5.5rem;
+		left: 50%;
+		transform: translateX(-50%) translateY(20px);
+		transition: all 0.3s ease;
+		opacity: 0;
+		pointer-events: none;
+		z-index: 1001;
+		max-width: calc(100vw - 2rem);
+	}
+	.float-panel-bottom.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+	.float-panel-bottom.hide { transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; visibility: hidden; }
+
 	.toc-scroll-container, .tags-scroll-container { max-height: calc(24rem - 5rem); overflow-y: auto; }
 	/* ---- Navigate Panel Links ---- */
 	.navigate-scroll-container { max-height: calc(24rem - 5rem); overflow-y: auto; }
@@ -318,12 +339,12 @@ function tagHue(name: string): number {
 	html.dark .floating-tag-count { background: rgba(255,255,255,0.1); }
 
 	@media (max-width: 1024px) {
-		.float-panel-side { width: calc(100vw - 2rem); max-width: 20rem; max-height: 20rem; }
+		.float-panel-side, .float-panel-bottom { width: calc(100vw - 2rem); max-width: 20rem; max-height: 20rem; }
 	}
 	@media (max-width: 768px) {
 		.fab-container { right: 0.75rem; bottom: 4rem; }
 		.fab-trigger, .fab-item { width: 2.75rem; height: 2.75rem; font-size: 1.35rem; border-radius: 0.875rem; }
-		.float-panel-side { width: calc(100vw - 1.5rem); max-width: 20rem; max-height: 28rem; }
+		.float-panel-side, .float-panel-bottom { width: calc(100vw - 1.5rem); max-width: 20rem; max-height: 28rem; }
 	}
 	@media (max-width: 480px) {
 		.fab-container { right: 0.5rem; bottom: 4rem; }
@@ -369,7 +390,15 @@ function tagHue(name: string): number {
 	function toggleNavigatePanel() { var p = document.getElementById('floating-navigate-panel'); if (!p) return; if (p.classList.contains('hide') || !p.classList.contains('show')) { p.classList.remove('hide'); p.classList.add('show'); } else { p.classList.remove('show'); p.classList.add('hide'); } }
 	function closeNavigatePanel() { var p = document.getElementById('floating-navigate-panel'); if (p) { p.classList.remove('show'); p.classList.add('hide'); } }
 	window.closeNavigatePanel = closeNavigatePanel;
-	document.addEventListener('click', function(e) { if (isExpanded && !container.contains(e.target)) collapse(); });
+	document.addEventListener('click', function(e) {
+		// Close bottom panels when clicking outside
+		var tagsP = document.getElementById('floating-tags-panel');
+		var navP = document.getElementById('floating-navigate-panel');
+		if (tagsP && tagsP.classList.contains('show') && !tagsP.contains(e.target)) { tagsP.classList.remove('show'); tagsP.classList.add('hide'); }
+		if (navP && navP.classList.contains('show') && !navP.contains(e.target)) { navP.classList.remove('show'); navP.classList.add('hide'); }
+		// Collapse FAB menu
+		if (isExpanded && !container.contains(e.target)) collapse();
+	});
 	function show(el) { if (el) el.classList.remove('hide'); }
 	function hide(el) { if (el) el.classList.add('hide'); }
 	function syncNavUrls() {
