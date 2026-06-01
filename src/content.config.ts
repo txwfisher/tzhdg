@@ -137,6 +137,8 @@ const notebooksCollection = defineCollection({
 		name: z.string().optional().default("未命名日记本"),
 		cover: z.string().optional().default(""),
 		summary: z.string().optional().default(""),
+		image: z.union([z.string(), z.array(z.string())]).optional().default(""),
+		tags: z.array(z.string()).optional().default([]),
 		date: z.coerce.date().optional(),
 	}),
 });
@@ -171,14 +173,6 @@ const albumCollection = defineCollection({
 		}),
 });
 
-const danmuCollection = defineCollection({
-	loader: glob({ pattern: "**/*.md", base: "./src/content/danmu" }),
-	schema: z.object({
-		nickname: z.string(),
-		avatar: z.string().optional().default(""),
-		time: z.string().optional().default(""),
-	}),
-});
 
 const ziyuanCollection = defineCollection({
 	loader: glob({ pattern: "**/*.md", base: "./src/content/ziyuan" }),
@@ -261,7 +255,6 @@ export const collections = {
 	notebooks: notebooksCollection,
 	routines: routinesCollection,
 	album: albumCollection,
-	danmu: danmuCollection,
 	daohang: daohangCollection,
 	ziyuan: ziyuanCollection,
 	friends: friendsCollection,

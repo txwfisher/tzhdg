@@ -15,6 +15,15 @@ const bangumi = await getCollection("bangumi");
 const notebooksEntries = await getCollection("notebooks");
 const routinesEntries = await getCollection("routines");
 
+// 提取日记本名称映射：文件夹名 → 日记本名称
+const notebookNames: Record<string, string> = {};
+for (const n of notebooksEntries) {
+	if (n.id.includes("_index")) {
+		const folder = n.id.replace(/\\/g, "/").replace(/\/_index(\.md|\.json)?$/, "");
+		notebookNames[folder] = n.data.name || folder;
+	}
+}
+
 // 转换所有项为统一格式
 const allItems = [
 	...posts.map((p) => ({
@@ -81,17 +90,23 @@ const allItems = [
 		.sort((a, b) => {
 			const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
 			const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-			return dateB - dateA; // 按日期降序排序
+			return dateB - dateA;
 		})
 		.slice(0, 2)
-		.map((n) => ({
-			type: "life-notebook",
-			title: `日记: ${n.data.name || "未命名"}`,
-			date: n.data.date || new Date(),
-			url: "/life/notebooks/",
-			image: "https://re.tsh520.cn/zl/life-notebook.webp",
-			id: n.id,
-		})),
+		.map((n) => {
+			const normalizedId = n.id.replace(/\\/g, "/");
+			const folder = normalizedId.split("/")[0];
+			const bookName = notebookNames[folder] || folder;
+			const entrySlug = normalizedId.split("/").pop()?.replace(/\.md$/, "") || "";
+			return {
+				type: "life-notebook",
+				title: `${bookName} · ${n.data.name || "未命名"}`,
+				date: n.data.date || new Date(),
+				url: `/life/notebooks/${folder}/${entrySlug}/`,
+				image: "https://re.tsh520.cn/zl/life-notebook.webp",
+				id: n.id,
+			};
+		}),
 	// 生活动态 - 规划（按更新日期排序取前2个）
 	...routinesEntries
 		.sort((a, b) => {

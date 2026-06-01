@@ -53,6 +53,11 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 				url: "/guestbook/",
 				icon: "material-symbols:edit-outline",
 			},
+			{
+				name: "笔记本",
+				url: "/life/notebooks/",
+				icon: "material-symbols:menu-book-outline",
+			},
 		],
 	});
 
