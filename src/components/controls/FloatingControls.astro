@@ -1,155 +1,195 @@
 ---
-import type { MarkdownHeading } from "astro";
 import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
-import { getTagUrl, getPostUrlBySlug, removeFileExtension } from "@/utils/url-utils";
-import { getTagList, getSortedPostsList } from "@/utils/content-utils";
+import PostDirectoryList from "@/components/widget/PostDirectoryList.astro";
+import { getTagList } from "@/utils/content-utils";
+import { getTagUrl, url } from "@/utils/url-utils";
 
 interface Props {
-	headings?: MarkdownHeading[];
-	prevSlug?: string;
-	prevTitle?: string;
-	nextSlug?: string;
-	nextTitle?: string;
 	currentSlug?: string;
 }
 
-const { prevSlug, prevTitle, nextSlug, nextTitle, currentSlug } = Astro.props;
-// ← btn-prev → newer article (nextSlug), → btn-next → older article (prevSlug)
-const prevUrl = nextSlug ? getPostUrlBySlug(nextSlug) : "";
-const nextUrl = prevSlug ? getPostUrlBySlug(prevSlug) : "";
-
-// Compute nearby articles (±5 around current)
-const allPosts = await getSortedPostsList();
-const currentIdx = currentSlug
-	? allPosts.findIndex((p) => removeFileExtension(p.id) === currentSlug || p.id === currentSlug)
-	: -1;
-const NEARBY_HALF = 5;
-let startIdx = Math.max(0, currentIdx - NEARBY_HALF);
-let endIdx = Math.min(allPosts.length, currentIdx + NEARBY_HALF + 1);
-// If one side is short, extend the other side
-const leftShort = currentIdx - startIdx;
-if (leftShort < NEARBY_HALF) {
-	endIdx = Math.min(allPosts.length, endIdx + (NEARBY_HALF - leftShort));
-}
-const rightShort = endIdx - currentIdx - 1;
-if (rightShort < NEARBY_HALF && startIdx > 0) {
-	startIdx = Math.max(0, startIdx - (NEARBY_HALF - rightShort));
-}
-const nearbyPosts = currentIdx >= 0 ? allPosts.slice(startIdx, endIdx) : [];
-
-const allTags = await getTagList();
-const sortedTags = allTags.sort((a, b) => b.count - a.count);
+const { currentSlug = "" } = Astro.props;
+const isPostPage = Boolean(currentSlug);
+const sortedTags = (await getTagList()).sort((a, b) => b.count - a.count);
 
 function tagHue(name: string): number {
 	let hash = 0;
-	for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+	for (let i = 0; i < name.length; i++) {
+		hash = name.charCodeAt(i) + ((hash << 5) - hash);
+	}
 	return Math.abs(hash % 360);
 }
 ---
 
-<div class="fab-container" id="fab-container"
-	data-prev-url={prevUrl}
-	data-prev-title={prevTitle || ""}
-	data-next-url={nextUrl}
-	data-next-title={nextTitle || ""}
+<div
+	class="fab-container"
+	id="fab-container"
+	data-home-url={url("/")}
+	data-notebook-url={url("/life/notebooks/")}
 >
-	<!-- 竖向展开菜单 -->
 	<div class="fab-menu" id="fab-menu">
-		<button class="fab-item hide" id="fab-item-notebook" aria-label="笔记本" title="笔记本">
-			<Icon name="material-symbols:book-outline" />
+		<button
+			class="fab-item"
+			type="button"
+			data-fab-action="posts"
+			aria-label="全部文章"
+			title="全部文章"
+		>
+			<Icon name="material-symbols:account-tree-outline-rounded" />
 		</button>
-		<button class="fab-item" id="fab-item-top" aria-label="回到顶部" title="回到顶部">
-			<Icon name="material-symbols:keyboard-arrow-up-rounded" />
+		<button
+			class:list={["fab-item", { hide: !isPostPage }]}
+			type="button"
+			data-fab-action="toc"
+			aria-label={i18n(I18nKey.tableOfContents)}
+			title={i18n(I18nKey.tableOfContents)}
+		>
+			<Icon name="material-symbols:format-list-bulleted-rounded" />
 		</button>
-		<button class="fab-item hide" id="fab-item-comment" aria-label="跳转评论区" title="跳转评论区">
+		<button
+			class="fab-item"
+			type="button"
+			data-fab-action="tags"
+			aria-label={i18n(I18nKey.tags)}
+			title={i18n(I18nKey.tags)}
+		>
+			<Icon name="material-symbols:label-outline-rounded" />
+		</button>
+		<button
+			class:list={["fab-item", { hide: !isPostPage }]}
+			type="button"
+			data-fab-action="comment"
+			aria-label="评论区"
+			title="评论区"
+		>
 			<Icon name="material-symbols:chat-bubble-outline-rounded" />
 		</button>
-		<button class="fab-item hide" id="fab-item-home" aria-label={i18n(I18nKey.home)} title={i18n(I18nKey.home)}>
+		<button
+			class="fab-item"
+			type="button"
+			data-fab-action="notebook"
+			aria-label="笔记本"
+			title="笔记本"
+		>
+			<Icon name="material-symbols:book-outline-rounded" />
+		</button>
+		<button
+			class="fab-item"
+			type="button"
+			data-fab-action="home"
+			aria-label={i18n(I18nKey.home)}
+			title={i18n(I18nKey.home)}
+		>
 			<Icon name="material-symbols:home-outline-rounded" />
 		</button>
-		<button class="fab-item hide" id="fab-item-toc" aria-label="目录" title="目录">
-			<Icon name="material-symbols:format-list-bulleted" />
-		</button>
-		<button class="fab-item hide" id="fab-item-tags" aria-label="标签" title="标签">
-			<Icon name="material-symbols:label-outline" />
-		</button>
-	</div>
-
-	<!-- 横向展开：上一篇/下一篇 ← 三点触发器 -->
-	<div class="fab-nav-row">
-		<div class="fab-nav-left" id="fab-nav-left">
-			<button class="fab-item hide" id="fab-item-prev" aria-label="上一篇" title={prevTitle || "上一篇"}>
-				<Icon name="material-symbols:arrow-left-rounded" />
-			</button>
-			<button class="fab-item hide" id="fab-item-navigate" aria-label="选择文章" title="选择文章">
-				<Icon name="material-symbols:list-alt-rounded" />
-			</button>
-			<button class="fab-item hide" id="fab-item-next" aria-label="下一篇" title={nextTitle || "下一篇"}>
-				<Icon name="material-symbols:arrow-right-rounded" />
-			</button>
-		</div>
-		<button class="fab-trigger" id="fab-trigger" aria-label="更多操作" title="更多操作">
-			<Icon name="material-symbols:more-horiz" />
+		<button
+			class="fab-item"
+			type="button"
+			data-fab-action="top"
+			aria-label="回到顶部"
+			title="回到顶部"
+		>
+			<Icon name="material-symbols:keyboard-arrow-up-rounded" />
 		</button>
 	</div>
 
-	<!-- TOC 面板 -->
-	<div id="floating-toc-panel" class="float-panel-side hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
-		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-			<div class="flex items-center justify-between">
-				<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
-					{i18n(I18nKey.tableOfContents)}
-				</h3>
-				<button onclick="window.closeTOCPanel()" aria-label="Close TOC" class="btn-plain rounded-lg h-8 w-8 active:scale-90">
-					<Icon name="material-symbols:close" class="text-lg" />
-				</button>
-			</div>
+	<button
+		class="fab-trigger"
+		id="fab-trigger"
+		type="button"
+		data-fab-action="toggle"
+		aria-label="快捷操作"
+		title="快捷操作"
+		aria-expanded="false"
+	>
+		<Icon name="material-symbols:apps" />
+	</button>
+
+	<div
+		id="floating-posts-panel"
+		class="fab-panel fab-panel-side hide"
+		aria-label="全部文章"
+	>
+		<div class="fab-panel-header">
+			<h3>
+				<Icon name="material-symbols:account-tree-outline-rounded" />
+				<span>全部文章</span>
+			</h3>
+			<button
+				type="button"
+				data-fab-action="close-posts"
+				aria-label="关闭全部文章"
+				class="btn-plain rounded-lg h-8 w-8 active:scale-90"
+			>
+				<Icon name="material-symbols:close" />
+			</button>
 		</div>
-		<div class="toc-scroll-container p-4">
+		<div class="fab-panel-body">
+			<PostDirectoryList currentSlug={currentSlug} />
+		</div>
+	</div>
+
+	<div
+		id="floating-toc-panel"
+		class="fab-panel fab-panel-side hide"
+		aria-label={i18n(I18nKey.tableOfContents)}
+	>
+		<div class="fab-panel-header">
+			<h3>
+				<Icon name="material-symbols:format-list-bulleted-rounded" />
+				<span>{i18n(I18nKey.tableOfContents)}</span>
+			</h3>
+			<button
+				type="button"
+				data-fab-action="close-toc"
+				aria-label="关闭目录"
+				class="btn-plain rounded-lg h-8 w-8 active:scale-90"
+			>
+				<Icon name="material-symbols:close" />
+			</button>
+		</div>
+		<div class="toc-scroll-container fab-panel-body">
 			<div class="toc-content" id="floating-toc-content"></div>
 		</div>
 	</div>
 
-	<!-- 标签面板 -->
-	<div id="floating-tags-panel" class="float-panel-bottom hide w-80 max-h-96 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-80 w-[calc(100vw-2rem)]">
-		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-black">
-			<div class="flex items-center justify-between">
-				<h3 class="text-lg font-bold text-(--primary) flex items-center gap-2">
-					<Icon name="material-symbols:label-outline" class="text-xl" />
-					<span>所有标签</span>
-				</h3>
-				<button onclick="window.closeTagsPanel()" aria-label="Close" class="btn-plain rounded-lg h-8 w-8 active:scale-90">
-					<Icon name="material-symbols:close" class="text-lg" />
-				</button>
-			</div>
+	<div
+		id="floating-tags-panel"
+		class="fab-panel fab-panel-bottom hide"
+		aria-label={i18n(I18nKey.tags)}
+	>
+		<div class="fab-panel-header">
+			<h3>
+				<Icon name="material-symbols:label-outline-rounded" />
+				<span>所有标签</span>
+			</h3>
+			<button
+				type="button"
+				data-fab-action="close-tags"
+				aria-label="关闭标签"
+				class="btn-plain rounded-lg h-8 w-8 active:scale-90"
+			>
+				<Icon name="material-symbols:close" />
+			</button>
 		</div>
-		<div class="tags-scroll-container p-4">
-			<div class="flex flex-wrap gap-2" id="floating-tags-content">
+		<div class="tags-scroll-container fab-panel-body">
+			<div class="floating-tags-content">
 				{sortedTags.map((tag) => {
 					const hue = tagHue(tag.name);
 					return (
-						<a href={getTagUrl(tag.name)} class="floating-tag-chip"
-							style={`--tag-hue: ${hue}; --tag-light: oklch(0.92 0.04 ${hue}); --tag-dark: oklch(0.25 0.04 ${hue})`}>
+						<a
+							href={getTagUrl(tag.name)}
+							class="floating-tag-chip"
+							style={`--tag-hue: ${hue}; --tag-light: oklch(0.92 0.04 ${hue}); --tag-dark: oklch(0.25 0.04 ${hue})`}
+						>
 							<span class="floating-tag-name">{tag.name}</span>
 							<span class="floating-tag-count">{tag.count}</span>
 						</a>
 					);
 				})}
 			</div>
-		</div>
-	</div>
-	<!-- 附近文章列表 -->
-	<div id="floating-navigate-panel" class="float-panel-bottom hide w-72 max-h-72 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-white dark:bg-black dark:border-white/10 md:w-72 w-[calc(100vw-2rem)]">
-		<div class="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-black">
-			<h3 class="text-base font-bold text-(--primary)">附近文章</h3>
-		</div>
-		<div class="navigate-scroll-container p-3">
-			<div class="flex flex-col gap-1" id="floating-navigate-content">{nearbyPosts.map((p) => {
-				const isCurrent = currentIdx >= 0 && removeFileExtension(p.id) === removeFileExtension(allPosts[currentIdx].id);
-				return (<a href={getPostUrlBySlug(p.id)} class={`navigate-link${isCurrent ? " current" : ""}`}>{p.data.title}<span class="navigate-date ml-auto text-xs opacity-40 shrink-0">{new Date(p.data.published).toISOString().slice(0, 10)}</span></a>);
-			})}</div>
 		</div>
 	</div>
 </div>
@@ -163,7 +203,7 @@ function tagHue(name: string): number {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 0.5rem;
+		gap: 0.55rem;
 	}
 
 	.fab-menu {
@@ -172,146 +212,211 @@ function tagHue(name: string): number {
 		align-items: flex-end;
 		gap: 0.5rem;
 		opacity: 0;
-		transform: translateY(12px);
+		transform: translateY(10px) scale(0.98);
 		pointer-events: none;
 		visibility: hidden;
-		transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
+		transition:
+			opacity 0.2s ease,
+			transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+			visibility 0s 0.25s;
 	}
 
 	.fab-container.expanded .fab-menu {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateY(0) scale(1);
 		pointer-events: auto;
 		visibility: visible;
-		transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
+		transition:
+			opacity 0.2s ease,
+			transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+			visibility 0s 0s;
 	}
 
-	/* ---- Horizontal nav row: prev/next slides out to the left ---- */
-	.fab-nav-row {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		flex-direction: row;
-	}
-	.fab-nav-left {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		flex-direction: row;
-		opacity: 0;
-		transform: translateX(12px);
-		pointer-events: none;
-		visibility: hidden;
-		transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
-	}
-	.fab-container.expanded .fab-nav-left {
-		opacity: 1;
-		transform: translateX(0);
-		pointer-events: auto;
-		visibility: visible;
-		transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
-	}
-
-	.fab-item {
+	.fab-item,
+	.fab-trigger {
 		width: 3rem;
 		height: 3rem;
 		border-radius: 1rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--primary);
-		font-size: 1.5rem;
-		cursor: pointer;
-		pointer-events: auto;
 		flex-shrink: 0;
-		border: 1px solid rgba(0,0,0,0.1);
+		border: 1px solid rgba(0, 0, 0, 0.1);
 		background: var(--card-bg);
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
-		transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		cursor: pointer;
+		pointer-events: auto;
+		transition:
+			transform 0.2s ease,
+			box-shadow 0.2s ease,
+			color 0.2s ease,
+			background-color 0.2s ease;
 	}
 
-	.fab-item:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
-	.fab-item:active { transform: scale(0.9); }
+	.fab-item {
+		color: var(--primary);
+		font-size: 1.45rem;
+	}
+
+	.fab-trigger {
+		color: var(--deep-text);
+		font-size: 1.55rem;
+	}
+
+	.fab-item:hover,
+	.fab-trigger:hover {
+		color: var(--primary);
+		transform: translateY(-1px) scale(1.04);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+	}
+
+	.fab-item:active,
+	.fab-trigger:active {
+		transform: scale(0.92);
+	}
+
+	.fab-container.expanded .fab-trigger {
+		color: var(--primary);
+		transform: rotate(45deg);
+	}
 
 	.fab-item.hide {
 		display: none !important;
-		width: 0 !important; height: 0 !important;
-		margin: 0 !important; padding: 0 !important;
-		border-width: 0 !important;
-		opacity: 0;
-		pointer-events: none;
+	}
+
+	html.dark .fab-item,
+	html.dark .fab-trigger {
+		border-color: rgba(255, 255, 255, 0.15);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	}
+
+	html.dark .fab-item:hover,
+	html.dark .fab-trigger:hover {
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+	}
+
+	.fab-panel {
+		width: 22rem;
+		max-width: calc(100vw - 2rem);
+		max-height: min(34rem, calc(100vh - 8rem));
 		overflow: hidden;
-	}
-
-	html.dark .fab-item { border-color: rgba(255,255,255,0.15); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-	html.dark .fab-item:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
-
-	.fab-trigger {
-		width: 3rem; height: 3rem;
 		border-radius: 1rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: var(--deep-text);
-		font-size: 1.5rem;
-		cursor: pointer;
-		pointer-events: auto;
-		flex-shrink: 0;
-		border: 1px solid rgba(0,0,0,0.1);
+		border: 1px solid rgba(0, 0, 0, 0.08);
 		background: var(--card-bg);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+		box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.18);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		z-index: 1001;
 	}
 
-	.fab-trigger:hover { color: var(--primary); transform: scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
-	.fab-trigger:active { transform: scale(0.9); }
-	.fab-container.expanded .fab-trigger { color: var(--primary); transform: rotate(90deg); }
+	html.dark .fab-panel {
+		border-color: rgba(255, 255, 255, 0.12);
+		box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
+	}
 
-	html.dark .fab-trigger { border-color: rgba(255,255,255,0.15); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-	html.dark .fab-trigger:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
-
-	/* Side panels */
-	.float-panel-side {
+	.fab-panel-side {
 		position: absolute;
-		bottom: 0;
 		right: calc(100% + 0.75rem);
-		transition: all 0.3s ease;
+		bottom: 0;
 		transform: translateX(10px);
 		opacity: 0;
 		pointer-events: none;
-		z-index: 1001;
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease,
+			visibility 0s 0.25s;
 	}
-	.float-panel-side.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
-	.float-panel-side.hide { transform: translateX(10px); opacity: 0; pointer-events: none; visibility: hidden; }
 
-	/* ---- Bottom-sliding panels (tags, navigate) ---- */
-	.float-panel-bottom {
+	.fab-panel-bottom {
 		position: fixed;
-		bottom: 5.5rem;
 		left: 50%;
-		transform: translateX(-50%) translateY(20px);
-		transition: all 0.3s ease;
+		bottom: 5.5rem;
+		transform: translateX(-50%) translateY(16px);
 		opacity: 0;
 		pointer-events: none;
-		z-index: 1001;
-		max-width: calc(100vw - 2rem);
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease,
+			visibility 0s 0.25s;
 	}
-	.float-panel-bottom.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
-	.float-panel-bottom.hide { transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; visibility: hidden; }
 
-	.toc-scroll-container, .tags-scroll-container { max-height: calc(24rem - 5rem); overflow-y: auto; }
-	/* ---- Navigate Panel Links ---- */
-	.navigate-scroll-container { max-height: calc(24rem - 5rem); overflow-y: auto; }
-	.navigate-link { display: flex; align-items: center; padding: 0.45rem 0.6rem; border-radius: 0.5rem; font-size: 0.8rem; text-decoration: none; color: var(--deep-text); transition: background 0.15s; }
-	.navigate-link:hover { background: var(--btn-regular-bg); color: var(--primary); }
-	.navigate-link.current { background: var(--primary); color: white; font-weight: 600; }
-	.navigate-link.current .navigate-date { opacity: 0.7 !important; }
+	.fab-panel-side.show {
+		transform: translateX(0);
+		opacity: 1;
+		pointer-events: auto;
+		visibility: visible;
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease,
+			visibility 0s 0s;
+	}
 
-	/* Tags chips */
+	.fab-panel-bottom.show {
+		transform: translateX(-50%) translateY(0);
+		opacity: 1;
+		pointer-events: auto;
+		visibility: visible;
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease,
+			visibility 0s 0s;
+	}
+
+	.fab-panel.hide {
+		opacity: 0;
+		pointer-events: none;
+		visibility: hidden;
+	}
+
+	.fab-panel-header {
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: 0.85rem 1rem;
+		border-bottom: 1px solid var(--line-divider);
+		background: var(--card-bg);
+	}
+
+	.fab-panel-header h3 {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		margin: 0;
+		min-width: 0;
+		color: var(--primary);
+		font-size: 1rem;
+		font-weight: 800;
+		line-height: 1.2;
+	}
+
+	.fab-panel-header svg {
+		font-size: 1.25rem;
+		flex: 0 0 auto;
+	}
+
+	.fab-panel-body {
+		max-height: calc(min(34rem, 100vh - 8rem) - 3.75rem);
+		overflow-y: auto;
+		padding: 0.75rem;
+	}
+
+	.toc-scroll-container,
+	.tags-scroll-container {
+		max-height: calc(min(34rem, 100vh - 8rem) - 3.75rem);
+	}
+
+	.floating-tags-content {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
 	.floating-tag-chip {
 		display: inline-flex;
 		align-items: center;
@@ -320,124 +425,339 @@ function tagHue(name: string): number {
 		border-radius: 0.6rem;
 		font-size: 0.85rem;
 		font-weight: 500;
+		line-height: 1.3;
 		text-decoration: none;
 		color: var(--deep-text);
 		background: var(--tag-light);
 		border: 1px solid transparent;
-		transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-		cursor: pointer;
-		line-height: 1.3;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			border-color 0.15s ease,
+			color 0.15s ease;
 	}
-	.floating-tag-chip:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-color: var(--primary); color: var(--primary); }
-	.floating-tag-chip:active { transform: scale(0.95); }
-	.floating-tag-count {
-		font-size: 0.7rem; opacity: 0.55; font-weight: 700;
-		background: rgba(0,0,0,0.06); padding: 0.1rem 0.4rem;
-		border-radius: 999px; min-width: 1.2rem; text-align: center;
-	}
-	html.dark .floating-tag-chip { background: var(--tag-dark); }
-	html.dark .floating-tag-count { background: rgba(255,255,255,0.1); }
 
-	@media (max-width: 1024px) {
-		.float-panel-side, .float-panel-bottom { width: calc(100vw - 2rem); max-width: 20rem; max-height: 20rem; }
+	.floating-tag-chip:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		border-color: var(--primary);
+		color: var(--primary);
 	}
+
+	.floating-tag-chip:active {
+		transform: scale(0.96);
+	}
+
+	.floating-tag-count {
+		min-width: 1.2rem;
+		padding: 0.1rem 0.4rem;
+		border-radius: 999px;
+		background: rgba(0, 0, 0, 0.06);
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-align: center;
+		opacity: 0.6;
+	}
+
+	html.dark .floating-tag-chip {
+		background: var(--tag-dark);
+	}
+
+	html.dark .floating-tag-count {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
 	@media (max-width: 768px) {
-		.fab-container { right: 0.75rem; bottom: 4rem; }
-		.fab-trigger, .fab-item { width: 2.75rem; height: 2.75rem; font-size: 1.35rem; border-radius: 0.875rem; }
-		.float-panel-side, .float-panel-bottom { width: calc(100vw - 1.5rem); max-width: 20rem; max-height: 28rem; }
+		.fab-container {
+			right: 0.75rem;
+			bottom: 4rem;
+		}
+
+		.fab-trigger,
+		.fab-item {
+			width: 2.75rem;
+			height: 2.75rem;
+			border-radius: 0.875rem;
+			font-size: 1.35rem;
+		}
+
+		.fab-panel-side,
+		.fab-panel-bottom {
+			position: fixed;
+			left: 50%;
+			right: auto;
+			bottom: 5.25rem;
+			width: calc(100vw - 1.25rem);
+			max-height: min(34rem, calc(100vh - 7rem));
+			transform: translateX(-50%) translateY(16px);
+		}
+
+		.fab-panel-side.show,
+		.fab-panel-bottom.show {
+			transform: translateX(-50%) translateY(0);
+		}
 	}
+
 	@media (max-width: 480px) {
-		.fab-container { right: 0.5rem; bottom: 4rem; }
-		.fab-trigger, .fab-item { width: 2.5rem; height: 2.5rem; font-size: 1.25rem; border-radius: 0.75rem; }
+		.fab-container {
+			right: 0.5rem;
+			bottom: 4rem;
+		}
+
+		.fab-trigger,
+		.fab-item {
+			width: 2.5rem;
+			height: 2.5rem;
+			border-radius: 0.75rem;
+			font-size: 1.22rem;
+		}
+
+		.fab-panel-header {
+			padding: 0.75rem 0.85rem;
+		}
+
+		.fab-panel-body {
+			padding: 0.65rem;
+		}
 	}
 </style>
 
 <script is:inline>
-(function() {
-	var container = document.getElementById('fab-container');
-	var trigger = document.getElementById('fab-trigger');
-	if (!container || !trigger) return;
-	var btnPrev = document.getElementById('fab-item-prev');
-	var btnNext = document.getElementById('fab-item-next');
-	var btnNavigate = document.getElementById('fab-item-navigate');
-	var btnTop = document.getElementById('fab-item-top');
-	var btnHome = document.getElementById('fab-item-home');
-	var btnTOC = document.getElementById('fab-item-toc');
-	var btnTags = document.getElementById('fab-item-tags');
-	var btnComment = document.getElementById('fab-item-comment');
-	var btnNotebook = document.getElementById('fab-item-notebook');
-	var isExpanded = false;
-	function expand() { container.classList.add('expanded'); isExpanded = true; }
-	function collapse() { container.classList.remove('expanded'); isExpanded = false; }
-	function toggle() { isExpanded ? collapse() : expand(); }
-	trigger.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
-	function navigateTo(url) { if (!url) return; if (window.swup) window.swup.navigate(url); else window.location.href = url; collapse(); }
-	if (btnPrev) btnPrev.addEventListener('click', function(e) { e.stopPropagation(); navigateTo(container.dataset.prevUrl); });
-	if (btnNext) btnNext.addEventListener('click', function(e) { e.stopPropagation(); navigateTo(container.dataset.nextUrl); });
-	if (btnNavigate) btnNavigate.addEventListener('click', function(e) { e.stopPropagation(); toggleNavigatePanel(); collapse(); });
-	if (btnTop) btnTop.addEventListener('click', function(e) { e.stopPropagation(); window.scroll({ top: 0, behavior: 'smooth' }); collapse(); });
-	if (btnHome) btnHome.addEventListener('click', function(e) { e.stopPropagation(); (window.swup ? window.swup.navigate('/') : window.location.href = '/'); collapse(); });
-	if (btnComment) btnComment.addEventListener('click', function(e) { e.stopPropagation(); var el = document.getElementById('scissor-divider') || document.querySelector('[id*="comment"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else window.scrollTo({ top: document.body.scrollHeight * 0.85, behavior: 'smooth' }); collapse(); });
-	if (btnNotebook) btnNotebook.addEventListener('click', function(e) { e.stopPropagation(); window.location.href = '/life/notebooks/'; collapse(); });
-	function toggleTOCPanel() { var p = document.getElementById('floating-toc-panel'); if (!p) return; if (p.classList.contains('hide') || !p.classList.contains('show')) { p.classList.remove('hide'); p.classList.add('show'); } else { p.classList.remove('show'); p.classList.add('hide'); } }
-	function closeTOCPanel() { var p = document.getElementById('floating-toc-panel'); if (p) { p.classList.remove('show'); p.classList.add('hide'); } }
-	window.closeTOCPanel = closeTOCPanel;
-	if (btnTOC) btnTOC.addEventListener('click', function(e) { e.stopPropagation(); toggleTOCPanel(); collapse(); });
-	function toggleTagsPanel() { var p = document.getElementById('floating-tags-panel'); if (!p) return; if (p.classList.contains('hide') || !p.classList.contains('show')) { p.classList.remove('hide'); p.classList.add('show'); } else { p.classList.remove('show'); p.classList.add('hide'); } }
-	function closeTagsPanel() { var p = document.getElementById('floating-tags-panel'); if (p) { p.classList.remove('show'); p.classList.add('hide'); } }
-	window.closeTagsPanel = closeTagsPanel;
-	if (btnTags) btnTags.addEventListener('click', function(e) { e.stopPropagation(); toggleTagsPanel(); collapse(); });
-	function toggleNavigatePanel() { var p = document.getElementById('floating-navigate-panel'); if (!p) return; if (p.classList.contains('hide') || !p.classList.contains('show')) { p.classList.remove('hide'); p.classList.add('show'); } else { p.classList.remove('show'); p.classList.add('hide'); } }
-	function closeNavigatePanel() { var p = document.getElementById('floating-navigate-panel'); if (p) { p.classList.remove('show'); p.classList.add('hide'); } }
-	window.closeNavigatePanel = closeNavigatePanel;
-	document.addEventListener('click', function(e) {
-		// Close bottom panels when clicking outside
-		var tagsP = document.getElementById('floating-tags-panel');
-		var navP = document.getElementById('floating-navigate-panel');
-		if (tagsP && tagsP.classList.contains('show') && !tagsP.contains(e.target)) { tagsP.classList.remove('show'); tagsP.classList.add('hide'); }
-		if (navP && navP.classList.contains('show') && !navP.contains(e.target)) { navP.classList.remove('show'); navP.classList.add('hide'); }
-		// Collapse FAB menu
-		if (isExpanded && !container.contains(e.target)) collapse();
-	});
-	function show(el) { if (el) el.classList.remove('hide'); }
-	function hide(el) { if (el) el.classList.add('hide'); }
-	function syncNavUrls() {
-		var navContainer = document.querySelector('.flex.flex-col.md\:flex-row.justify-between.mb-4');
-		if (!navContainer) return;
-		var links = navContainer.querySelectorAll('a');
-		if (links.length >= 1 && links[0].getAttribute('href') !== '#') { container.dataset.prevUrl = links[0].getAttribute('href') || ''; }
-		else { container.dataset.prevUrl = ''; }
-		if (links.length >= 2 && links[1].getAttribute('href') !== '#') { container.dataset.nextUrl = links[1].getAttribute('href') || ''; }
-		else { container.dataset.nextUrl = ''; }
-	}
-	function refreshAll() {
-		show(btnNotebook); show(btnTags);
-		var path = window.location.pathname.replace(/\/$/, '') || '/';
-		var isPost = path.indexOf('/posts/') === 0;
-		path === '/' ? hide(btnHome) : show(btnHome);
-		isPost ? show(btnComment) : hide(btnComment);
-		isPost ? show(btnTOC) : hide(btnTOC);
-		isPost ? show(btnNavigate) : hide(btnNavigate);
-		if (isPost) { container.dataset.prevUrl ? show(btnPrev) : hide(btnPrev); container.dataset.nextUrl ? show(btnNext) : hide(btnNext); }
-		else { hide(btnPrev); hide(btnNext); }
-	}
-	refreshAll();
-	document.addEventListener('astro:page-load', function() { collapse(); setTimeout(refreshAll, 50); });
-	document.addEventListener('swup:contentReplaced', function() { collapse(); syncNavUrls(); setTimeout(refreshAll, 100); });
-})();
-</script>
+	(function () {
+		var script = document.currentScript;
+		var localRoot = script && script.parentElement;
+		var initialContainer = localRoot
+			? localRoot.querySelector(".fab-container")
+			: document.querySelector(".fab-container");
 
+		if (initialContainer) {
+			document.querySelectorAll(".fab-container").forEach(function (item) {
+				if (item !== initialContainer) item.remove();
+			});
+			if (initialContainer.parentElement !== document.body) {
+				document.body.appendChild(initialContainer);
+			}
+			window.__fireflyFabContainer = initialContainer;
+		}
+
+		function getContainer() {
+			return window.__fireflyFabContainer || document.querySelector(".fab-container");
+		}
+
+		function isPostPage() {
+			return window.location.pathname.replace(/\/$/, "").indexOf("/posts/") === 0;
+		}
+
+		function setExpanded(container, expanded) {
+			if (!container) return;
+			container.classList.toggle("expanded", expanded);
+			var trigger = container.querySelector("[data-fab-action='toggle']");
+			if (trigger) trigger.setAttribute("aria-expanded", expanded ? "true" : "false");
+		}
+
+		function closePanel(id) {
+			var panel = document.getElementById(id);
+			if (!panel) return;
+			panel.classList.remove("show");
+			panel.classList.add("hide");
+		}
+
+		function closePanels(exceptId) {
+			["floating-posts-panel", "floating-toc-panel", "floating-tags-panel"].forEach(function (id) {
+				if (id !== exceptId) closePanel(id);
+			});
+		}
+
+		function togglePanel(id) {
+			var panel = document.getElementById(id);
+			if (!panel) return;
+			var shouldShow = panel.classList.contains("hide") || !panel.classList.contains("show");
+			closePanels(shouldShow ? id : "");
+			panel.classList.toggle("hide", !shouldShow);
+			panel.classList.toggle("show", shouldShow);
+		}
+
+		function navigateTo(url) {
+			if (!url) return;
+			if (window.swup) {
+				window.swup.navigate(url);
+			} else {
+				window.location.href = url;
+			}
+		}
+
+		function refreshFloatingControls() {
+			var container = getContainer();
+			if (!container) return;
+
+			var onPost = isPostPage();
+			var onHome = window.location.pathname === "/" || window.location.pathname === "";
+			var toc = container.querySelector("[data-fab-action='toc']");
+			var comment = container.querySelector("[data-fab-action='comment']");
+			var home = container.querySelector("[data-fab-action='home']");
+
+			if (toc) toc.classList.toggle("hide", !onPost);
+			if (comment) comment.classList.toggle("hide", !onPost);
+			if (home) home.classList.toggle("hide", onHome);
+			if (!onPost) closePanel("floating-toc-panel");
+			setExpanded(container, false);
+		}
+
+		window.fireflyRefreshFloatingControls = refreshFloatingControls;
+
+		if (!window.__fireflyFloatingControlsBound) {
+			window.__fireflyFloatingControlsBound = true;
+
+			document.addEventListener("click", function (event) {
+				var target = event.target instanceof Element ? event.target : null;
+				if (!target) return;
+
+				var actionButton = target.closest("[data-fab-action]");
+				var container = getContainer();
+
+				if (actionButton) {
+					var action = actionButton.getAttribute("data-fab-action");
+					container = actionButton.closest(".fab-container") || container;
+
+					if (!container || !action) return;
+					event.stopPropagation();
+
+					if (action === "toggle") {
+						setExpanded(container, !container.classList.contains("expanded"));
+						return;
+					}
+
+					setExpanded(container, false);
+
+					if (action === "top") {
+						window.scroll({ top: 0, behavior: "smooth" });
+						return;
+					}
+
+					if (action === "home") {
+						navigateTo(container.dataset.homeUrl || "/");
+						return;
+					}
+
+					if (action === "notebook") {
+						navigateTo(container.dataset.notebookUrl || "/life/notebooks/");
+						return;
+					}
+
+					if (action === "comment") {
+						var commentTarget =
+							document.getElementById("scissor-divider") ||
+							document.querySelector("[id*='comment']");
+						if (commentTarget) {
+							commentTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+						} else {
+							window.scrollTo({ top: document.body.scrollHeight * 0.85, behavior: "smooth" });
+						}
+						return;
+					}
+
+					if (action === "posts") {
+						togglePanel("floating-posts-panel");
+						if (window.fireflyUpdatePostDirectories) {
+							setTimeout(window.fireflyUpdatePostDirectories, 30);
+						}
+						return;
+					}
+
+					if (action === "toc") {
+						togglePanel("floating-toc-panel");
+						return;
+					}
+
+					if (action === "tags") {
+						togglePanel("floating-tags-panel");
+						return;
+					}
+
+					if (action === "close-posts") {
+						closePanel("floating-posts-panel");
+						return;
+					}
+
+					if (action === "close-toc") {
+						closePanel("floating-toc-panel");
+						return;
+					}
+
+					if (action === "close-tags") {
+						closePanel("floating-tags-panel");
+					}
+					return;
+				}
+
+				if (!container) return;
+
+				var clickedPanel = target.closest(".fab-panel");
+				if (!container.contains(target)) {
+					setExpanded(container, false);
+				}
+				if (!clickedPanel && !target.closest(".fab-container")) {
+					closePanels("");
+				}
+			});
+
+			document.addEventListener("astro:page-load", function () {
+				setTimeout(refreshFloatingControls, 60);
+			});
+			document.addEventListener("swup:contentReplaced", function () {
+				setTimeout(refreshFloatingControls, 60);
+			});
+			window.addEventListener("popstate", function () {
+				setTimeout(refreshFloatingControls, 60);
+			});
+		}
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", refreshFloatingControls, { once: true });
+		} else {
+			setTimeout(refreshFloatingControls, 0);
+		}
+	})();
+</script>
 
 <script>
 	import { TOCManager } from "@/utils/tocUtils";
-	const tocPanel = document.getElementById("floating-toc-panel");
-	if (tocPanel) {
-		async function initTOC() {
-			try { const m = new TOCManager({ contentId: "floating-toc-content", maxLevel: 3, scrollOffset: 80, indicatorId: "" }); m.init(); }
-			catch (e) { console.error("TOC init failed:", e); }
+
+	const floatingTOCState = ((window as any).__fireflyFloatingTOC ??= {
+		manager: null,
+	});
+
+	function initFloatingTOC() {
+		const tocContent = document.getElementById("floating-toc-content");
+		if (!tocContent) return;
+
+		try {
+			if (floatingTOCState.manager) {
+				floatingTOCState.manager.cleanup();
+			}
+
+			floatingTOCState.manager = new TOCManager({
+				contentId: "floating-toc-content",
+				indicatorId: "floating-active-indicator",
+				maxLevel: 3,
+				scrollOffset: 80,
+			});
+			floatingTOCState.manager.init();
+		} catch (error) {
+			console.error("Floating TOC init failed:", error);
 		}
-		initTOC();
-		document.addEventListener("astro:page-load", () => setTimeout(initTOC, 100));
-		document.addEventListener("swup:contentReplaced", () => setTimeout(initTOC, 100));
 	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initFloatingTOC);
+	} else {
+		initFloatingTOC();
+	}
+
+	document.addEventListener("astro:page-load", () => {
+		setTimeout(initFloatingTOC, 100);
+	});
+	document.addEventListener("swup:contentReplaced", () => {
+		setTimeout(initFloatingTOC, 100);
+	});
 </script>

@@ -1,0 +1,288 @@
+---
+import { getSortedPostsList } from "@/utils/content-utils";
+import { getPostUrlBySlug, removeFileExtension } from "@/utils/url-utils";
+
+interface Props {
+	currentSlug?: string;
+	class?: string;
+}
+
+type DirectoryArticle = {
+	type: "article";
+	depth: number;
+	slug: string;
+	title: string;
+	url: string;
+	date: string;
+};
+
+type DirectoryFolder = {
+	type: "folder";
+	depth: number;
+	name: string;
+};
+
+type DirectoryRow = DirectoryArticle | DirectoryFolder;
+
+type DirectoryNode = {
+	folders: Map<string, DirectoryNode>;
+	articles: DirectoryArticle[];
+};
+
+const { currentSlug = "", class: className = "" } = Astro.props;
+const normalizedCurrentSlug = removeFileExtension(currentSlug);
+const posts = await getSortedPostsList();
+
+function createNode(): DirectoryNode {
+	return {
+		folders: new Map(),
+		articles: [],
+	};
+}
+
+function toDateString(date: Date): string {
+	return new Date(date).toISOString().slice(0, 10);
+}
+
+const root = createNode();
+
+for (const post of posts) {
+	const slug = removeFileExtension(post.id).replace(/\\/g, "/");
+	const parts = slug.split("/").filter(Boolean);
+	const fileName = parts.pop() || post.data.title;
+	let node = root;
+
+	for (const part of parts) {
+		if (!node.folders.has(part)) {
+			node.folders.set(part, createNode());
+		}
+		node = node.folders.get(part)!;
+	}
+
+	node.articles.push({
+		type: "article",
+		depth: parts.length,
+		slug,
+		title: post.data.title || fileName,
+		url: getPostUrlBySlug(post.id),
+		date: toDateString(post.data.published),
+	});
+}
+
+function walk(node: DirectoryNode, depth = 0): DirectoryRow[] {
+	const rows: DirectoryRow[] = [];
+
+	const folders = [...node.folders.entries()].sort(([a], [b]) =>
+		a.localeCompare(b, "zh-CN", { numeric: true }),
+	);
+
+	for (const [name, child] of folders) {
+		rows.push({ type: "folder", depth, name });
+		rows.push(...walk(child, depth + 1));
+	}
+
+	const articles = [...node.articles].sort((a, b) =>
+		a.title.localeCompare(b.title, "zh-CN", { numeric: true }),
+	);
+	rows.push(...articles);
+
+	return rows;
+}
+
+const rows = walk(root);
+---
+
+<div
+	class:list={["post-directory-list", className]}
+	data-current-slug={normalizedCurrentSlug}
+>
+	<div class="post-directory-scroll custom-scrollbar">
+		<ul class="post-directory-tree">
+			{rows.map((row) =>
+				row.type === "folder" ? (
+					<li
+						class="post-directory-row post-directory-folder"
+						style={`--depth: ${row.depth}`}
+					>
+						<span class="post-directory-icon" aria-hidden="true">▸</span>
+						<span class="post-directory-name">{row.name}</span>
+					</li>
+				) : (
+					<li class="post-directory-item">
+						<a
+							href={row.url}
+							class:list={[
+								"post-directory-row post-directory-link",
+								{ current: row.slug === normalizedCurrentSlug },
+							]}
+							style={`--depth: ${row.depth}`}
+							data-post-slug={row.slug}
+							title={`${row.title} · ${row.date}`}
+						>
+							<span class="post-directory-icon" aria-hidden="true">•</span>
+							<span class="post-directory-title">{row.title}</span>
+							<span class="post-directory-date">{row.date}</span>
+						</a>
+					</li>
+				)
+			)}
+		</ul>
+	</div>
+</div>
+
+<style>
+	.post-directory-list {
+		min-width: 0;
+	}
+
+	.post-directory-scroll {
+		max-height: calc(100vh - 18rem);
+		overflow-y: auto;
+		padding-right: 0.125rem;
+	}
+
+	.post-directory-tree {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.post-directory-row {
+		--depth: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-height: 2rem;
+		padding: 0.35rem 0.5rem 0.35rem calc(0.5rem + var(--depth) * 0.85rem);
+		border-radius: 0.65rem;
+		line-height: 1.3;
+	}
+
+	.post-directory-folder {
+		color: var(--primary);
+		font-size: 0.78rem;
+		font-weight: 700;
+		opacity: 0.78;
+	}
+
+	.post-directory-link {
+		color: var(--deep-text);
+		text-decoration: none;
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease,
+			transform 0.15s ease;
+	}
+
+	.post-directory-link:hover {
+		background: var(--toc-btn-hover);
+		color: var(--primary);
+	}
+
+	.post-directory-link:active {
+		transform: scale(0.98);
+	}
+
+	.post-directory-link.current {
+		background: var(--toc-btn-active);
+		color: var(--primary);
+		font-weight: 700;
+	}
+
+	.post-directory-icon {
+		width: 0.9rem;
+		flex: 0 0 auto;
+		text-align: center;
+		opacity: 0.65;
+		font-size: 0.75rem;
+	}
+
+	.post-directory-title,
+	.post-directory-name {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.post-directory-title {
+		flex: 1 1 auto;
+		font-size: 0.82rem;
+	}
+
+	.post-directory-date {
+		flex: 0 0 auto;
+		font-size: 0.68rem;
+		color: currentColor;
+		opacity: 0.45;
+	}
+
+	@media (max-width: 768px) {
+		.post-directory-scroll {
+			max-height: calc(70vh - 5rem);
+		}
+	}
+</style>
+
+<script is:inline>
+	(function () {
+		function currentPostSlug() {
+			var path = window.location.pathname.replace(/\/+$/, "");
+			var index = path.indexOf("/posts/");
+			if (index < 0) return "";
+			var slug = path.slice(index + 7).replace(/^\/+|\/+$/g, "");
+			try {
+				return decodeURIComponent(slug);
+			} catch (_) {
+				return slug;
+			}
+		}
+
+		function updatePostDirectories() {
+			var slug = currentPostSlug();
+			document.querySelectorAll(".post-directory-list").forEach(function (root) {
+				root.querySelectorAll(".post-directory-link.current").forEach(function (link) {
+					link.classList.remove("current");
+				});
+
+				if (!slug) return;
+
+				var current = root.querySelector(
+					'.post-directory-link[data-post-slug="' + CSS.escape(slug) + '"]',
+				);
+				if (!current) return;
+
+				current.classList.add("current");
+				var scroll = root.querySelector(".post-directory-scroll");
+				if (scroll) {
+					var top = current.offsetTop - scroll.clientHeight / 2 + current.clientHeight / 2;
+					scroll.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+				}
+			});
+		}
+
+		window.fireflyUpdatePostDirectories = updatePostDirectories;
+
+		if (!window.__fireflyPostDirectoryBound) {
+			window.__fireflyPostDirectoryBound = true;
+			document.addEventListener("astro:page-load", function () {
+				setTimeout(updatePostDirectories, 60);
+			});
+			document.addEventListener("swup:contentReplaced", function () {
+				setTimeout(updatePostDirectories, 60);
+			});
+			window.addEventListener("popstate", function () {
+				setTimeout(updatePostDirectories, 60);
+			});
+		}
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", updatePostDirectories, { once: true });
+		} else {
+			setTimeout(updatePostDirectories, 0);
+		}
+	})();
+</script>

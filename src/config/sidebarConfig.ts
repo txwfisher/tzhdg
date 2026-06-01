@@ -65,6 +65,14 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			showOnPostPage: true,
 		},
 		{
+			// 组件类型：全站文章目录（只在文章详情页显示）
+			type: "postDirectory",
+			enable: true,
+			position: "sticky",
+			showOnPostPage: true,
+			showOnNonPostPage: false,
+		},
+		{
 			// 组件类型：分类组件
 			type: "categories",
 			// 是否启用该组件

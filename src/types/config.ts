@@ -388,6 +388,7 @@ export type WidgetComponentType =
 	| "announcement"
 	| "categories"
 	| "tags"
+	| "postDirectory"
 	| "sidebarToc"
 	| "advertisement"
 	| "stats"
