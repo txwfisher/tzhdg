@@ -75,6 +75,16 @@ function tagHue(name: string): number {
 		>
 			<Icon name="material-symbols:book-outline-rounded" />
 		</button>
+			<button
+				class="fab-item"
+				type="button"
+				id="fab-sakura-toggle"
+				data-fab-action="sakura"
+				aria-label="特效开关"
+				title="特效开关"
+			>
+				<Icon name="material-symbols:magic-button" />
+			</button>
 		<button
 			class="fab-item"
 			type="button"
@@ -277,14 +287,13 @@ function tagHue(name: string): number {
 		transform: scale(0.92);
 	}
 
+    .fab-item.hide { display: none !important; }
+		.fab-item.sakura-off { opacity: 0.45; }
 	.fab-container.expanded .fab-trigger {
 		color: var(--primary);
 		transform: rotate(45deg);
 	}
 
-	.fab-item.hide {
-		display: none !important;
-	}
 
 	html.dark .fab-item,
 	html.dark .fab-trigger {
@@ -595,6 +604,10 @@ function tagHue(name: string): number {
 			var toc = container.querySelector("[data-fab-action='toc']");
 			var comment = container.querySelector("[data-fab-action='comment']");
 			var home = container.querySelector("[data-fab-action='home']");
+				var sakura = container.querySelector("[data-fab-action='sakura']");
+				if (sakura && window.getSakuraEnabled) {
+					sakura.classList.toggle("sakura-off", !window.getSakuraEnabled());
+				}
 
 			if (toc) toc.classList.toggle("hide", !onPost);
 			if (comment) comment.classList.toggle("hide", !onPost);
@@ -641,6 +654,15 @@ function tagHue(name: string): number {
 
 					if (action === "notebook") {
 						navigateTo(container.dataset.notebookUrl || "/life/notebooks/");
+						return;
+					}
+
+					if (action === "sakura") {
+						var toggled = window.toggleSakura ? window.toggleSakura() : true;
+						var btn = document.getElementById('fab-sakura-toggle');
+						if (btn) {
+							btn.classList.toggle('sakura-off', !toggled);
+						}
 						return;
 					}
 
