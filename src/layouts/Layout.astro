@@ -784,6 +784,14 @@ function disableAnimation() {
 
     });
     window.swup.hooks.on("visit:start", (visit: { to: { url: string } }) => {
+      // Destroy any leftover lightbox DOM to prevent cross-page image bleed
+      var allLbs = document.querySelectorAll('#photo-lightbox');
+      allLbs.forEach(function(lb) {
+        var img = lb.querySelector('#lightbox-image, .lightbox-img');
+        if (img) { img.removeAttribute('src'); img.src = ''; }
+        if (lb.parentNode) lb.parentNode.removeChild(lb);
+      });
+      document.body.style.overflow = '';
       // Start progress bar
       const progressBar = document.getElementById("progress-bar");
       if (progressBar) {
@@ -1042,12 +1050,21 @@ function disableAnimation() {
           navbar.classList.remove("navbar-hidden");
           navbar.classList.add("navbar-visible");
           (window as any)._navbarHidden = false;
+          const _navEl2 = document.getElementById("navbar"); if (_navEl2) _navEl2.classList.remove("scrolled");
           (window as any)._lastScrollY = currentScrollY;
           return;
         }
         
         const lastScrollY = (window as any)._lastScrollY || 0;
         const isHidden = (window as any)._navbarHidden || false;
+
+          // 滚动超过 20px 启用导航栏药丸形收缩
+          const _navEl = document.getElementById("navbar");
+          if (_navEl) {
+            if (currentScrollY > 20) {
+              _navEl.classList.add("scrolled");
+            }
+          }
         const scrollDelta = currentScrollY - lastScrollY;
         
         // 向上滚动 - 显示导航栏

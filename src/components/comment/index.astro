@@ -146,6 +146,15 @@ let commentService: string = commentConfig?.type || "none";
     );
     transform: translateY(-50%);
   }
+  :root.dark .scissor-line {
+    background: repeating-linear-gradient(
+      to right,
+      #52525b,
+      #52525b 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
 
   .scissor-icon {
     position: absolute;
@@ -155,12 +164,15 @@ let commentService: string = commentConfig?.type || "none";
     transition: left 0.1s ease-out;
     pointer-events: none;
   }
+  :root.dark .scissor-icon { color: #71717a; }
 
   .scissor-icon:hover {
     color: #6b7280;
   }
+  :root.dark .scissor-icon:hover { color: #a1a1aa; }
 
   .scissor-divider:hover .scissor-icon {
     color: #6b7280;
   }
+  :root.dark .scissor-divider:hover .scissor-icon { color: #a1a1aa; }
 </style>

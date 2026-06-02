@@ -39,6 +39,7 @@ export type SiteConfig = {
 
 	// 可选：站点时区，使用 IANA 时区标识，例如 "Asia/Shanghai"、"UTC"
 	timezone?: string;
+workHours?: { start: number; end: number; workDays: number[]; };
 
 	// 提醒框配置
 	rehypeCallouts: {
@@ -211,6 +212,9 @@ export type NavBarConfig = {
 export type ProfileConfig = {
 	avatar?: string;
 	name: string;
+	displayName?: string;
+		occupation?: string;
+		avatarOffWork?: string;
 	bio?: string;
 	links: {
 		name: string;

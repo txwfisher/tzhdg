@@ -49,23 +49,8 @@ html {
     scroll-behavior: smooth;
 }
 
-/* 页面顶部渐变高光效果 */
-.top-gradient-highlight {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 180px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.15) 60%, rgba(255, 255, 255, 0.05) 80%, transparent 100%);
-    pointer-events: none;
-    z-index: 20;
-    transition: all var(--duration-medium) var(--ease-standard);
-}
-
-/* 暗色主题下的渐变高光效果 */
-:root.dark .top-gradient-highlight {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.15) 60%, rgba(0, 0, 0, 0.05) 80%, transparent 100%);
-}
+/* 极简模式：顶部高光禁用 */
+.top-gradient-highlight { display: none; }
 
 @layer components {
     /* View Transitions API 主题切换动画 */
@@ -221,25 +206,35 @@ html {
         transform: translateZ(0);
     }
     
-    .card-base {
-        @apply rounded-(--radius-large) overflow-hidden bg-(--card-bg) transition-colors duration-150;
-    }
+    /* 极简风格：card-base 退化为透明无边框 */
+    .card-base,
     .card-base-transparent {
-        @apply rounded-(--radius-large) overflow-hidden bg-(--card-bg-transparent) transition-colors duration-150;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        border-radius: 0 !important;
+        overflow: visible;
     }
 
-    /* 开启边框和阴影效果时的样式 */
-    .enable-card-border .card-base {
-        @apply transition-all duration-300 border border-(--line-divider) shadow-xs;
-    }
+    .enable-card-border .card-base,
     .enable-card-border .card-base-transparent {
-        @apply transition-all duration-300 border border-(--line-divider) shadow-xs;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
     }
 
-    /* 导航栏样式适配 */
     .enable-card-border #navbar > div:not(.absolute) {
-        @apply transition-all duration-300 border shadow-xs;
-        border-color: var(--line-divider) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* 极简区块容器：仅细线分隔 */
+    .section {
+        @apply w-full;
+    }
+    .section + .section {
+        @apply mt-12 pt-12 border-t border-(--line-divider);
     }
     
     /* 全屏壁纸模式下的半透明效果 */
@@ -294,7 +289,7 @@ html {
         @apply transition-colors duration-150 rounded-md p-1.5 -m-1.5 expand-animation;
     }
     .float-panel {
-        @apply top-21 rounded-(--radius-large) overflow-hidden bg-(--card-bg) transition-colors duration-150 shadow-xl border border-black/5 dark:border-white/10
+        @apply top-21 overflow-hidden bg-(--float-panel-bg) transition-colors duration-150 border border-(--line-divider)
     }
     .float-panel-closed {
         @apply -translate-y-1 opacity-0 pointer-events-none
@@ -328,7 +323,15 @@ html {
     }
     .btn-regular {
         @apply transition-colors duration-150 flex items-center justify-center bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active)
-        text-(--btn-content) dark:text-white/75
+        text-(--btn-content) dark:text-white/75 border border-(--line-divider)
+    }
+
+    .btn-line {
+        @apply transition-all duration-200 flex items-center justify-center bg-transparent border-2 border-(--line-divider) rounded-none
+        text-black/75 hover:text-(--primary) dark:text-white/75 dark:hover:text-(--primary);
+        &:hover {
+            border-color: var(--primary);
+        }
     }
 
     .link-underline {
@@ -388,20 +391,30 @@ html {
         @apply rotate-180;
     }
 
-    .dropdown-content {
-        @apply bg-(--card-bg) rounded-(--radius-large) shadow-xl border border-black/5 dark:border-white/10 py-2 min-w-48;
+    .dropdown-content,
+    .dropdown-content-wrapper {
+        @apply border border-(--line-divider) py-2 min-w-48;
+        background: color-mix(in oklch, var(--float-panel-bg) 85%, transparent);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+    }
+
+    .dropdown-item {
+        @apply flex items-center justify-between px-4 py-2.5 text-black/75 dark:text-white/75 hover:text-(--primary) transition-colors duration-150 font-medium;
+        border: 1.5px solid transparent;
+        background-color: transparent !important;
+    }
+
+    .dropdown-item:hover {
+        border-color: oklch(0.2 0 0);
+        background-color: transparent !important;
+    }
+    :root.dark .dropdown-item:hover {
+        border-color: oklch(0.75 0 0);
     }
 
     .dropdown-item {
         @apply flex items-center justify-between px-4 py-2.5 text-black/75 dark:text-white/75 hover:text-(--primary) hover:bg-(--btn-plain-bg-hover) transition-colors duration-150 font-medium;
-    }
-
-    .dropdown-item:first-child {
-        @apply rounded-t-[calc(var(--radius-large)-0.5rem)];
-    }
-
-    .dropdown-item:last-child {
-        @apply rounded-b-[calc(var(--radius-large)-0.5rem)];
     }
 
     /* 移动端菜单样式 */
@@ -448,11 +461,11 @@ html {
 
     .btn-regular-dark {
         @apply flex items-center justify-center
-        bg-[oklch(0.45_0.01_var(--hue))] hover:bg-[oklch(0.50_0.01_var(--hue))] active:bg-[oklch(0.55_0.01_var(--hue))]
-        dark:bg-[oklch(0.30_0.02_var(--hue))] dark:hover:bg-[oklch(0.35_0.03_var(--hue))] dark:active:bg-[oklch(0.40_0.03_var(--hue))]
+        bg-[oklch(0.45_0_0)] hover:bg-[oklch(0.50_0_0)] active:bg-[oklch(0.55_0_0)]
+        dark:bg-[oklch(0.30_0_0)] dark:hover:bg-[oklch(0.35_0_0)] dark:active:bg-[oklch(0.40_0_0)]
     }
     .btn-regular-dark.success {
-        @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))]
+        @apply bg-[oklch(0.75_0_0)] dark:bg-[oklch(0.75_0_0)]
     }
 }
 
@@ -640,3 +653,286 @@ article table td {
   white-space: nowrap;
   min-width: max-content;
 }
+/* ============================================
+   首页文章卡片边框 - 2px 黑白粗边框
+   ============================================ */
+.post-card-wrapper {
+  border: 2px solid #000 !important;
+}
+:root.dark .post-card-wrapper {
+  border-color: #fff !important;
+}
+
+/* ============================================
+   分页控件 - 黑白粗边框
+   ============================================ */
+.pagination-btn,
+.pagination-page {
+  border: 2px solid #000 !important;
+  font-weight: 700 !important;
+  background: #fff !important;
+  color: #000 !important;
+}
+.pagination-btn:hover,
+.pagination-page:hover {
+  background: #000 !important;
+  color: #fff !important;
+}
+.pagination-current {
+  border: 2px solid #000 !important;
+  font-weight: 700 !important;
+  background: #000 !important;
+  color: #fff !important;
+}
+.pagination-btn.disabled,
+.pagination-btn[disabled] {
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+}
+:root.dark .pagination-btn,
+:root.dark .pagination-page {
+  border-color: #fff !important;
+  background: #000 !important;
+  color: #fff !important;
+}
+:root.dark .pagination-btn:hover,
+:root.dark .pagination-page:hover {
+  background: #fff !important;
+  color: #000 !important;
+}
+:root.dark .pagination-current {
+  border-color: #fff !important;
+  background: #fff !important;
+  color: #000 !important;
+}
+
+/* ============================================
+   CategoryBar 分类标签栏 - 黑白边框
+   ============================================ */
+
+/* 描边按钮（轮廓按钮） */
+.btn-line {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.375rem 1rem !important;
+  border-radius: 9999px !important;
+  border: 1.5px solid var(--line-divider) !important;
+  color: var(--deep-text) !important;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease !important;
+}
+.btn-line:hover {
+  border-color: var(--deep-text) !important;
+  background: var(--deep-text) !important;
+  color: var(--page-bg) !important;
+}
+:root.dark .btn-line {
+  color: rgba(255,255,255,0.85) !important;
+}
+:root.dark .btn-line:hover {
+  background: white !important;
+  color: black !important;
+  border-color: white !important;
+}
+
+/* ============================================
+   右下浮动坞 (Floating Dock)
+   ============================================ */
+.floating-dock {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+.floating-dock > * { pointer-events: auto; }
+.dock-btn {
+    width: 3.125rem;
+    height: 3.125rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 2px solid #000;
+    background: #fff;
+    color: #000;
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dock-btn:hover {
+    background: #000;
+    color: #fff;
+    border-color: #fff;
+}
+:root.dark .dock-btn {
+    border-color: #fff;
+    background: #000;
+    color: #fff;
+}
+:root.dark .dock-btn:hover {
+    background: #fff;
+    color: #000;
+    border-color: #000;
+}
+.dock-btn.hide {
+    display: none !important;
+}
+.dock-btn .dock-btn-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 200ms ease-out, opacity 200ms ease-out;
+}
+.dock-btn .dock-btn-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    text-align: center;
+    padding: 0.125rem;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: transform 200ms ease-out 30ms, opacity 200ms ease-out 30ms;
+    pointer-events: none;
+}
+.dock-btn:hover .dock-btn-icon,
+.dock-btn:focus-visible .dock-btn-icon {
+    transform: translateY(-6px);
+    opacity: 0;
+}
+.dock-btn:hover .dock-btn-label,
+.dock-btn:focus-visible .dock-btn-label {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* 展开堆叠 */
+.dock-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+.dock-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 0;
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.5rem);
+    transition: max-height 0.25s ease, opacity 0.2s ease, transform 0.25s ease, clip-path 0.25s ease;
+}
+.dock-stack[data-expanded="true"] .dock-buttons {
+    max-height: 50rem;
+    clip-path: inset(0);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+/* 抽屉 */
+.dock-drawer {
+    position: fixed;
+    right: 5rem;
+    bottom: 1.25rem;
+    width: 22rem;
+    max-height: 70vh;
+    overflow: auto;
+    background: var(--page-bg);
+    border: 2px solid #000;
+    padding: 1.25rem;
+    z-index: 70;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+:root.dark .dock-drawer {
+    border-color: #fff;
+}
+.dock-drawer.dock-drawer-closed {
+    opacity: 0;
+    transform: translateX(0.5rem);
+    pointer-events: none;
+}
+.dock-drawer-title {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--content-meta);
+    margin-bottom: 1rem;
+}
+
+/* 标签列表 */
+.dock-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.dock-tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border: 2px solid #000;
+    color: #000;
+    background: #fff;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    transition: color 150ms, background-color 150ms;
+}
+.dock-tag-item:hover {
+    background-color: #000;
+    color: #fff;
+}
+:root.dark .dock-tag-item {
+    border-color: #fff;
+    color: #fff;
+    background: #000;
+}
+:root.dark .dock-tag-item:hover {
+    background-color: #fff;
+    color: #000;
+}
+.dock-tag-count {
+    font-size: 0.6875rem;
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .dock-drawer {
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: auto;
+        max-height: 80vh;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+    }
+    .dock-tags-list {
+        gap: 0.25rem;
+        max-height: 45vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .dock-tag-item {
+        padding: 0.1875rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* 导航栏内搜索输入框和移动端搜索按钮由浮动坞代替，仅保留 DOM 供 JS 调用 */

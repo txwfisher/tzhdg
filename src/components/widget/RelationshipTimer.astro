@@ -5,8 +5,8 @@ import { relationshipConfig } from "@/config/relationshipConfig";
 const config = relationshipConfig;
 
 interface Props {
-	class?: string;
-	style?: string;
+  class?: string;
+  style?: string;
 }
 const className = Astro.props.class;
 const style = Astro.props.style;
@@ -20,50 +20,61 @@ const style = Astro.props.style;
 >
   <div class="flex flex-col items-center p-2">
     <!-- 顶部名称栏 -->
-    <div class="flex items-center justify-center gap-2 mb-4 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+    <div class="flex items-center justify-center gap-2 mb-4 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
       <span>{config.name1}</span>
-      <span class="text-red-500 animate-pulse">❤️</span>
+      <span class="text-red-500 animate-pulse text-base">♥</span>
       <span>{config.name2}</span>
     </div>
 
     <!-- 头像和爱心 -->
-    <div class="flex items-center justify-center gap-4 mb-6">
-      <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white dark:border-neutral-800 shadow-md transition-transform hover:scale-110">
+    <div class="flex items-center justify-center gap-4 mb-5">
+      <div class="w-14 h-14 rounded-full overflow-hidden border-[3px] border-neutral-900 dark:border-white shadow-md transition-transform hover:scale-110">
         <img src={config.avatar1} alt={config.name1} class="w-full h-full object-cover" />
       </div>
-      <div class="text-2xl text-red-500 transform transition-all hover:scale-125 hover:rotate-12 cursor-pointer">
-        ❤️
+      <div class="text-xl text-neutral-400 dark:text-neutral-500 transition-all hover:scale-125 cursor-default select-none">
+        ♥
       </div>
-      <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white dark:border-neutral-800 shadow-md transition-transform hover:scale-110">
+      <div class="w-14 h-14 rounded-full overflow-hidden border-[3px] border-neutral-900 dark:border-white shadow-md transition-transform hover:scale-110">
         <img src={config.avatar2} alt={config.name2} class="w-full h-full object-cover" />
       </div>
     </div>
 
     <!-- 计时器 -->
-    <div class="relationship-timer flex flex-col items-center gap-3">
-      <div class="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-sm">
-        <span class="timer-num" data-timer-years>0</span><span class="timer-unit bg-red-400">年</span>
-        <span class="timer-num" data-timer-months>0</span><span class="timer-unit bg-red-300">月</span>
-        <span class="timer-num" data-timer-days>0</span><span class="timer-unit bg-blue-400">天</span>
-        <span class="timer-num" data-timer-hours>0</span><span class="timer-unit bg-orange-400">时</span>
-        <span class="timer-num" data-timer-minutes>0</span><span class="timer-unit bg-blue-500">分</span>
+    <div class="relationship-timer flex flex-col items-center">
+      <!-- 年份大数字 -->
+      <div class="flex items-baseline gap-1 mb-1">
+        <span class="timer-years" data-timer-years>0</span>
+        <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">年</span>
+        <span class="timer-months" data-timer-months>0</span>
+        <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">月</span>
+        <span class="timer-days" data-timer-days>0</span>
+        <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">天</span>
       </div>
-      <div class="flex items-center gap-1">
-        <span class="text-xl font-bold text-neutral-700 dark:text-neutral-200" data-timer-seconds>00</span>
-        <span class="text-xs text-neutral-400 font-serif">"</span>
+      <!-- 时分秒小字 -->
+      <div class="flex items-center gap-0.5 text-neutral-400 dark:text-neutral-500">
+        <span class="text-lg font-mono font-bold tabular-nums text-neutral-500 dark:text-neutral-300" data-timer-hours>00</span>
+        <span class="text-xs mr-1">时</span>
+        <span class="text-lg font-mono font-bold tabular-nums text-neutral-500 dark:text-neutral-300" data-timer-minutes>00</span>
+        <span class="text-xs mr-1">分</span>
+        <span class="text-lg font-mono font-bold tabular-nums text-neutral-500 dark:text-neutral-300" data-timer-seconds>00</span>
+        <span class="text-xs">秒</span>
       </div>
     </div>
   </div>
 </WidgetLayout>
 
 <style>
-  @reference "tailwindcss";
-
-  .timer-num {
-    @apply font-bold text-neutral-700 dark:text-neutral-200 min-w-[1rem] text-center;
-  }
-  .timer-unit {
-    @apply px-1 py-0.5 rounded text-[10px] text-white font-medium shrink-0;
+  .timer-years,
+  .timer-months,
+  .timer-days {
+    font-size: 1.75rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, 'Cascadia Code', monospace;
+    color: var(--deep-text);
+    line-height: 1;
+    min-width: 1.5rem;
+    text-align: center;
   }
 </style>
 
@@ -71,12 +82,10 @@ const style = Astro.props.style;
   function updateRelationshipTimer() {
     const startDate = new Date(startDateStr);
     const now = new Date();
-    
+
     let diff = now.getTime() - startDate.getTime();
-    
     if (diff < 0) return;
 
-    // 计算年月日时分秒的差值
     let years = now.getFullYear() - startDate.getFullYear();
     let months = now.getMonth() - startDate.getMonth();
     let days = now.getDate() - startDate.getDate();
@@ -84,51 +93,34 @@ const style = Astro.props.style;
     let minutes = now.getMinutes() - startDate.getMinutes();
     let seconds = now.getSeconds() - startDate.getSeconds();
 
-    // 处理借位逻辑
-    if (seconds < 0) {
-      seconds += 60;
-      minutes--;
-    }
-    if (minutes < 0) {
-      minutes += 60;
-      hours--;
-    }
-    if (hours < 0) {
-      hours += 24;
-      days--;
-    }
+    if (seconds < 0) { seconds += 60; minutes--; }
+    if (minutes < 0) { minutes += 60; hours--; }
+    if (hours < 0) { hours += 24; days--; }
     if (days < 0) {
       const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
       days += lastMonth.getDate();
       months--;
     }
-    if (months < 0) {
-      months += 12;
-      years--;
-    }
+    if (months < 0) { months += 12; years--; }
 
-    // 更新所有实例，避免移动端和电脑端 ID 冲突
-    const update = (attr, value) => {
-      const elements = document.querySelectorAll(`[data-timer-${attr}]`);
-      elements.forEach(el => {
+    const set = (attr, value) => {
+      document.querySelectorAll(`[data-timer-${attr}]`).forEach(el => {
         el.innerText = value;
       });
     };
 
-    update('years', years);
-    update('months', months);
-    update('days', days);
-    update('hours', hours);
-    update('minutes', minutes);
-    update('seconds', seconds.toString().padStart(2, '0'));
+    set('years', years);
+    set('months', months);
+    set('days', days);
+    set('hours', String(hours).padStart(2, '0'));
+    set('minutes', String(minutes).padStart(2, '0'));
+    set('seconds', String(seconds).padStart(2, '0'));
   }
 
-  // 立即运行并每秒更新
   updateRelationshipTimer();
   if (!window.relationshipTimerInterval) {
     window.relationshipTimerInterval = setInterval(updateRelationshipTimer, 1000);
   }
 
-  // 监听 Swup 页面切换
   document.addEventListener('swup:content:replace', updateRelationshipTimer);
 </script>

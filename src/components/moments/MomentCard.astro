@@ -69,10 +69,7 @@ const getGridCols = (count: number) => {
 
 const momentId = moment.id;
 const imagesArray = parseImages(images);
-const maxImages = 9;
-const displayImages = imagesArray.slice(0, maxImages);
-const remainingCount = imagesArray.length - maxImages;
-const hiddenImages = imagesArray.slice(maxImages);
+const gridMax = 9;
 
 const getImgSrc = (img: string | ImageMetadata): string => {
 	if (typeof img === "string") return img;
@@ -96,6 +93,7 @@ const formatTimeAgo = (date: Date): string => {
 ---
 
 <div id={moment.id} class="moment-card group">
+		<div class="card-accent-bar"></div>
 	<!-- 卡片头部：头像 + 用户信息 -->
 	<div class="card-header">
 		<div class="card-avatar">
@@ -157,14 +155,15 @@ const formatTimeAgo = (date: Date): string => {
 	<!-- 图片 -->
 	{imagesArray && imagesArray.length > 0 && (
 		<div
-			class={`card-images image-cols-${getGridCols(imagesArray.length)} ${imagesArray.length === 1 ? "single-image" : ""}`}
+			class={`card-images image-cols-${getGridCols(imagesArray.length)} `}
 		>
-			{displayImages.map((img, index) => {
+			{imagesArray.map((img, index) => {
 				const imgSrc = getImgSrc(img);
-				const isMoreTrigger = index === maxImages - 1 && remainingCount > 0;
+				const isHidden = index >= gridMax;
+				const isLastVisible = index === gridMax - 1 && imagesArray.length > gridMax;
 
 				return (
-					<div class={`image-item ${isMoreTrigger ? "has-more" : ""}`}>
+					<div class={`image-item ${isHidden ? "hidden-image" : ""}`}>
 						{typeof img === "string" ? (
 							<img
 								src={img}
@@ -185,9 +184,9 @@ const formatTimeAgo = (date: Date): string => {
 							/>
 						)}
 
-						{isMoreTrigger && (
+						{isLastVisible && (
 							<div class="more-overlay">
-								<span class="more-text">+{remainingCount + 1}</span>
+								<span class="more-text">+{imagesArray.length - gridMax + 1}</span>
 							</div>
 						)}
 					</div>
@@ -215,19 +214,42 @@ const formatTimeAgo = (date: Date): string => {
 	 * 卡片主体
 	 * ============================================ */
 	.moment-card {
+		position: relative;
 		background: var(--card-bg);
 		border-radius: var(--radius-large);
-		padding: 1rem;
-		box-shadow: var(--shadow-sm);
-		border: 1px solid var(--border);
+		padding: 1.25rem 1.25rem 1.25rem 2.25rem;
+		border: 2px solid #000;
+		overflow: hidden;
 		transition:
-			box-shadow 0.2s ease,
-			transform 0.2s ease;
+			box-shadow 0.25s ease,
+			transform 0.25s ease,
+			border-color 0.25s ease;
+	}
+
+	:root.dark .moment-card {
+		border-color: #3f3f46;
+	}
+
+	.card-accent-bar {
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 4px;
+		background: var(--primary);
+		opacity: 0.35;
+		border-radius: 0 2px 2px 0;
 	}
 
 	.moment-card:hover {
-		box-shadow: var(--shadow-md);
-		transform: translateY(-1px);
+		border-color: var(--primary);
+		box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+		transform: translateY(-2px);
+	}
+
+	:root.dark .moment-card:hover {
+		border-color: #fff;
+		box-shadow: 0 4px 24px rgba(255, 255, 255, 0.08);
 	}
 
 	/* ============================================
@@ -331,16 +353,15 @@ const formatTimeAgo = (date: Date): string => {
 	}
 
 	.image-cols-1 {
-		grid-template-columns: 1fr;
-		max-width: 400px;
+		grid-template-columns: 100px;
 	}
 
 	.image-cols-2 {
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: repeat(2, 100px);
 	}
 
 	.image-cols-3 {
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(3, 90px);
 	}
 
 	.image-item {
@@ -352,11 +373,7 @@ const formatTimeAgo = (date: Date): string => {
 		aspect-ratio: 1;
 	}
 
-	.single-image .image-item {
-		aspect-ratio: auto;
-		border-radius: var(--radius-large);
-	}
-
+	
 	.image-img {
 		width: 100%;
 		height: 100%;
@@ -368,7 +385,8 @@ const formatTimeAgo = (date: Date): string => {
 		transform: scale(1.03);
 	}
 
-	.has-more .image-img {
+	.hidden-image { display: none !important; }
+.has-more .image-img {
 		filter: brightness(0.6);
 	}
 

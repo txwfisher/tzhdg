@@ -1,51 +1,30 @@
 ---
+import { Icon } from "astro-icon/components";
 import ArchivePanel from "@components/controls/ArchivePanel.svelte";
+import ArchiveHeatmap from "@components/widget/ArchiveHeatmap.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { getArchiveList } from "@/utils/content-utils";
+import { getArchiveList, getSortedPostsList } from "@/utils/content-utils";
 
-// 获取归档列表（posts + moments + bangumi + life）
 const archiveList = await getArchiveList();
-
-// 计算各类型数量
-const postsCount = archiveList.filter(item => item.type === "post").length;
-const momentsCount = archiveList.filter(item => item.type === "moment").length;
-const bangumiCount = archiveList.filter(item => item.type === "bangumi").length;
-const lifeCount = archiveList.filter(item => item.type === "life").length;
-const totalCount = postsCount + momentsCount + bangumiCount + lifeCount;
+const sortedPostsList = await getSortedPostsList();
+const title = i18n(I18nKey.archive);
 ---
 
-<MainGridLayout title={i18n(I18nKey.archive)}>
-    <!-- 统计信息 -->
-    <div class="card-base px-8 py-6 mb-6">
-        <div class="flex flex-wrap gap-6 justify-center text-center">
-            <div class="flex flex-col">
-                <span class="text-3xl font-bold text-amber-500">{postsCount}</span>
-                <span class="text-sm text-30 mt-1">{i18n(I18nKey.postList)}</span>
-            </div>
-            <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
-            <div class="flex flex-col">
-                <span class="text-3xl font-bold text-(--primary)">{momentsCount}</span>
-                <span class="text-sm text-30 mt-1">{i18n(I18nKey.moments)}</span>
-            </div>
-            <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
-            <div class="flex flex-col">
-                <span class="text-3xl font-bold text-red-500 dark:text-red-400">{bangumiCount}</span>
-                <span class="text-sm text-30 mt-1">{i18n(I18nKey.bangumi)}</span>
-            </div>
-            <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
-            <div class="flex flex-col">
-                <span class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{lifeCount}</span>
-                <span class="text-sm text-30 mt-1">生活</span>
-            </div>
-            <div class="w-px bg-neutral-200 dark:bg-neutral-700"></div>
-            <div class="flex flex-col">
-                <span class="text-3xl font-bold text-(--primary)">{totalCount}</span>
-                <span class="text-sm text-30 mt-1">总计</span>
-            </div>
+<MainGridLayout title={title}>
+  <div class="flex w-full overflow-hidden relative min-h-32">
+    <div class="card-base z-10 px-4 py-6 md:px-9 relative w-full">
+      <ArchiveHeatmap posts={sortedPostsList} />
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-3">
+          <Icon name="material-symbols:schedule-outline-rounded" class="text-[1.875rem]" />
+          <div class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            {title}
+          </div>
         </div>
+      </div>
+      <ArchivePanel sortedPosts={archiveList as any} client:load />
     </div>
-
-    <ArchivePanel archiveList={archiveList} client:only="svelte" />
+  </div>
 </MainGridLayout>

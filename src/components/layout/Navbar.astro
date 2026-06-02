@@ -5,7 +5,6 @@ import type { ImageMetadata } from "astro";
 import { Icon } from "astro-icon/components";
 import DisplaySettings from "@/components/controls/DisplaySettingsIntegrated.svelte";
 import LightDarkSwitch from "@/components/controls/LightDarkSwitch.svelte";
-import Search from "@/components/controls/Search.svelte";
 import MusicPlayer from "@/components/features/MusicPlayer.astro";
 import { backgroundWallpaper, navBarConfig, siteConfig } from "@/config";
 import { musicPlayerConfig } from "@/config/musicConfig";
@@ -127,31 +126,10 @@ if (isLocalSrcLogo) {
             })}
         </div>
         <div class:list={["flex items-center", navbarWidthFull ? "ml-auto" : ""]}>
-            <!--<SearchPanel client:load>-->
-            <Search
-                client:load
-            />
-            {musicPlayerConfig.showInNavbar && (
-                <button aria-label={i18n(I18nKey.music)} class="btn-plain rounded-lg h-11 w-11 navbar-icon-btn active:scale-90" id="music-player-switch">
-                    <Icon name="material-symbols:music-note-rounded" class="text-[1.25rem]"></Icon>
-                </button>
-            )}
-            {hasDisplaySettings && (
-                    <button aria-label="Display Settings" class="btn-plain rounded-lg h-11 w-11 navbar-icon-btn active:scale-90" id="display-settings-switch">
-                        <Icon name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
-                    </button>
-            )}
-            {/* @ts-ignore */}
-            <LightDarkSwitch client:load></LightDarkSwitch>
             <button aria-label="Menu" name="Nav Menu" class="btn-plain rounded-lg w-11 h-11 lg:hidden! nav-hamburger-btn" id="nav-menu-switch">
                 <Icon name="material-symbols:menu-rounded" class="text-[1.5rem] hamburger-icon-menu" /><Icon name="material-symbols:close-rounded" class="text-[1.5rem] hamburger-icon-close hidden" />
             </button>
         </div>
-        {musicPlayerConfig.showInNavbar && (
-            <div id="music-nav-panel" class="float-panel float-panel-closed absolute transition-all right-16 p-2 pt-4.5 w-80 z-50">
-                <MusicPlayer />
-            </div>
-        )}
         <NavMenuPanel links={links} siteTitle={navbarTitle}></NavMenuPanel>
         <DisplaySettings client:load></DisplaySettings>
     </div>
@@ -159,118 +137,55 @@ if (isLocalSrcLogo) {
 
 <script>
 function loadButtonScript() {
-    let settingBtn = document.getElementById("display-settings-switch");
-    if (settingBtn) {
-        settingBtn.onclick = function () {
-            let settingPanel = document.getElementById("display-setting");
-            if (settingPanel) {
-                settingPanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
-
-    let musicBtn = document.getElementById("music-player-switch");
-    if (musicBtn) {
-        musicBtn.onclick = function () {
-            let musicPanel = document.getElementById("music-nav-panel");
-            if (musicPanel) {
-                musicPanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
-
-    let themeSwitchBtn = document.getElementById("scheme-switch");
-    if (themeSwitchBtn) {
-        themeSwitchBtn.onclick = function () {
-            let themePanel = document.getElementById("theme-mode-panel");
-            if (themePanel) {
-                themePanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
-
     document.addEventListener("click", function(event) {
-        const panels = ["display-setting", "music-nav-panel", "theme-mode-panel"];
-        const buttons = ["display-settings-switch", "music-player-switch", "scheme-switch"];
-
-        panels.forEach((id, index) => {
-            const panel = document.getElementById(id);
-            const button = document.getElementById(buttons[index]);
-            if (panel && button && !panel.classList.contains("float-panel-closed")) {
-                if (event.target instanceof Node && !panel.contains(event.target) && !button.contains(event.target)) {
-                    panel.classList.add("float-panel-closed");
-                }
+        const panel = document.getElementById("display-setting");
+        if (panel && !panel.classList.contains("float-panel-closed")) {
+            if (event.target instanceof Node && !panel.contains(event.target)) {
+                panel.classList.add("float-panel-closed");
             }
-        });
+        }
     });
 }
 
 loadButtonScript();
 
-// 为semifull模式添加滚动检测逻辑
-function initSemifullScrollDetection() {
+// 滚动方向检测：向下滚动隐藏导航栏，向上滚动显示
+(function() {
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
 
-    const transparentMode = navbar.getAttribute('data-transparent-mode');
-    if (transparentMode !== 'semifull') return;
-
-    // 无论首页/非首页，semifull 都由滚动位置决定是否进入 scrolled 状态
-    // 先移除之前的滚动监听器，避免重复绑定
-    if (window.semifullScrollHandler) {
-        window.removeEventListener('scroll', window.semifullScrollHandler as () => void);
-        window.semifullScrollHandler = undefined;
-    }
-
-    // 初始状态不强制加 scrolled，保持透明；滚动后再切换
-    navbar.classList.remove('scrolled');
-
+    let lastScrollY = window.scrollY;
     let ticking = false;
+    const threshold = 10;
 
-    function updateNavbarState() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const threshold = 50; // 滚动阈值，可以根据需要调整
-        // 使用批量DOM操作优化性能
-        if (scrollTop > threshold) {
-            navbar!.classList.add('scrolled');
-        } else {
-            navbar!.classList.remove('scrolled');
+    function updateNavbar() {
+        const currentScrollY = window.scrollY;
+        const diff = currentScrollY - lastScrollY;
+
+        if (currentScrollY <= 0) {
+            // 在页面顶部，始终显示 + 恢复药丸态
+            navbar.classList.remove('nav-hidden');
+            navbar.classList.remove('scrolled');
+        } else if (diff > threshold) {
+            // 向下滚动：隐藏
+            navbar.classList.add('nav-hidden');
+        } else if (diff < -threshold) {
+            // 向上滚动：显示 + 收缩为药丸
+            navbar.classList.remove('nav-hidden');
+            navbar.classList.add('scrolled');
         }
 
+        lastScrollY = currentScrollY;
         ticking = false;
     }
 
-    function requestTick() {
+    window.addEventListener('scroll', function() {
         if (!ticking) {
-            requestAnimationFrame(updateNavbarState);
+            requestAnimationFrame(updateNavbar);
             ticking = true;
         }
-    }
-
-    // 移除之前的滚动事件监听器（如果存在）
-    if (window.semifullScrollHandler) {
-        window.removeEventListener('scroll', window.semifullScrollHandler as () => void);
-    }
-
-    // 保存新的事件处理器引用
-    window.semifullScrollHandler = requestTick as unknown as (() => void);
-
-    // 监听滚动事件
-    window.addEventListener('scroll', requestTick, { passive: true });
-
-    // 初始化状态
-    updateNavbarState();
-}
-
-// 将函数暴露到全局对象，供页面切换时调用
-window.initSemifullScrollDetection = initSemifullScrollDetection;
-
-// 页面加载完成后初始化滚动检测
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSemifullScrollDetection);
-} else {
-    initSemifullScrollDetection();
-}
+    }, { passive: true });
+})();
 </script>
 
 {

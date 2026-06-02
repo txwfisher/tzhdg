@@ -42,7 +42,7 @@ export const sponsorConfig: SponsorConfig = {
 			qrCode: "",
 			link: "https://re.0824.uk/zl/qq.webp",
 			description: "Buy a Coffee for Firefly",
-			enabled: true,
+			enabled: false,
 		},
 		{
 			name: "爱发电",
@@ -50,7 +50,7 @@ export const sponsorConfig: SponsorConfig = {
 			qrCode: "",
 			link: "https://re.0824.uk/zl/qq.webp",
 			description: "通过 爱发电 进行赞助",
-			enabled: true,
+			enabled: false,
 		},
 	],
 

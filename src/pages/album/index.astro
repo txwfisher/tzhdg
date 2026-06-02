@@ -4,400 +4,332 @@ import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 
 const albums = await getCollection("album", ({ data }) => {
-	return import.meta.env.PROD ? data.draft !== true : true;
+  return import.meta.env.PROD ? data.draft !== true : true;
 });
 
-// 按日期降序排序
 const sortedAlbums = albums.sort(
-	(a, b) => b.data.date.getTime() - a.data.date.getTime(),
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
 
-// 计算统计数据
 const totalPhotos = sortedAlbums.reduce((sum, album) => sum + (album.data.photos?.length || 0), 0);
-const earliestDate = sortedAlbums.length > 0 
-	? sortedAlbums[sortedAlbums.length - 1].data.date 
-	: new Date();
-const latestDate = sortedAlbums.length > 0 
-	? sortedAlbums[0].data.date 
-	: new Date();
+const earliestDate = sortedAlbums.length > 0
+  ? sortedAlbums[sortedAlbums.length - 1].data.date
+  : new Date();
+const latestDate = sortedAlbums.length > 0
+  ? sortedAlbums[0].data.date
+  : new Date();
 
-// 格式化日期范围
 const formatDateRange = (start: Date, end: Date) => {
-	const format = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-	return `${format(start)} - ${format(end)}`;
+  const format = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return `${format(start)} - ${format(end)}`;
 };
 
-// 获取预览图片
 function getPreviewPhotos(album: any) {
-	const photos = album.data.photos || [];
-	return photos.slice(0, 3);
+  const photos = album.data.photos || [];
+  return photos.slice(0, 3);
 }
 ---
 
 <MainGridLayout title="相册" description="记录生活中的美好瞬间">
-	<div class="flex flex-col w-full relative min-h-[50vh]">
-		<!-- 返回按钮 -->
-		<a 
-			href="/moments/" 
-			class="inline-flex items-center gap-2 text-sm text-[var(--content-meta)] hover:text-[var(--primary)] transition-colors mb-6 w-fit group"
-		>
-			<Icon name="material-symbols:arrow-left-rounded" class="text-xl group-hover:-translate-x-1 transition-transform" />
-			<span>返回动态</span>
-		</a>
-		
-		<!-- 头部横幅 - 简洁风格 -->
-		<div class="relative w-full mb-10">
-			<div class="flex items-center gap-4 mb-2">
-				<div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary)]/60 flex items-center justify-center shadow-lg shadow-[var(--primary)]/20">
-					<Icon name="material-symbols:photo-library" class="text-2xl text-white" />
-				</div>
-				<div>
-					<h1 data-pagefind-meta="title" data-pagefind-weight="10" class="">我的相册</h1>
-					<p class="text-sm text-[var(--content-meta)]">记录生活中的美好瞬间</p>
-				</div>
-			</div>
-			
-			<!-- 统计信息 - 胶囊样式 -->
-			<div class="flex items-center gap-3 mt-5">
-				<div class="stat-pill">
-					<Icon name="material-symbols:photo-album" class="text-sm" />
-					<span class="font-semibold">{sortedAlbums.length}</span>
-					<span class="text-[var(--content-meta)]">相册</span>
-				</div>
-				<div class="stat-pill">
-					<Icon name="material-symbols:imagesmode" class="text-sm" />
-					<span class="font-semibold">{totalPhotos}</span>
-					<span class="text-[var(--content-meta)]">照片</span>
-				</div>
-				<div class="stat-pill">
-					<Icon name="material-symbols:calendar-month" class="text-sm" />
-					<span class="text-[var(--content-meta)]">{formatDateRange(earliestDate, latestDate)}</span>
-				</div>
-			</div>
-		</div>
+  <div class="flex flex-col w-full relative min-h-[50vh]">
+    <!-- 头部横幅 -->
+    <div class="relative w-full mb-10">
+      <div class="flex items-center gap-4 mb-2">
+        <div class="w-12 h-12 rounded-2xl bg-black dark:bg-white flex items-center justify-center">
+          <Icon name="material-symbols:collections-bookmark" class="text-2xl text-white dark:text-black" />
+        </div>
+        <div>
+          <h1 data-pagefind-meta="title" data-pagefind-weight="10" class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">我的相册</h1>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">记录生活中的美好瞬间</p>
+        </div>
+      </div>
 
-		<!-- 相册网格 -->
-		<div class="albums-grid">
-			{sortedAlbums.length > 0 ? (
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-					{sortedAlbums.map((album, index) => {
-						const previewPhotos = getPreviewPhotos(album);
-						const photoCount = album.data.photos?.length || 0;
-						return (
-							<a 
-								href={`/album/${album.id}/`} 
-								class="album-card group onload-animation"
-								style={`animation-delay: calc(var(--content-delay) + ${index * 80}ms)`}
-							>
-								<!-- 拍立得照片区域 -->
-								<div class="polaroid-stack">
-									{previewPhotos.length >= 3 ? (
-										<>
-											<!-- 底部照片 -->
-											<div class="polariod base-layer">
-												<div class="photo-img">
-													<img 
-														src={typeof previewPhotos[2] === 'string' ? previewPhotos[2] : (previewPhotos[2] as any).src}
-														alt=""
-														loading="lazy"
-													/>
-												</div>
-											</div>
-											
-											<!-- 中间照片 -->
-											<div class="polariod mid-layer">
-												<div class="photo-img">
-													<img 
-														src={typeof previewPhotos[1] === 'string' ? previewPhotos[1] : (previewPhotos[1] as any).src}
-														alt=""
-														loading="lazy"
-													/>
-												</div>
-											</div>
-											
-											<!-- 顶层照片 -->
-											<div class="polariod top-layer">
-												<div class="photo-img">
-													<img 
-														src={typeof previewPhotos[0] === 'string' ? previewPhotos[0] : (previewPhotos[0] as any).src}
-														alt=""
-														loading="lazy"
-													/>
-												</div>
-												{photoCount > 3 && (
-													<div class="photo-badge">+{photoCount - 3}</div>
-												)}
-											</div>
-										</>
-									) : previewPhotos.length === 2 ? (
-										<>
-											<div class="polariod base-layer" style="--rotate: -6deg">
-												<div class="photo-img">
-													<img 
-														src={typeof previewPhotos[1] === 'string' ? previewPhotos[1] : (previewPhotos[1] as any).src}
-														alt=""
-														loading="lazy"
-													/>
-												</div>
-											</div>
-											<div class="polariod top-layer" style="--rotate: 5deg">
-												<div class="photo-img">
-													<img 
-														src={typeof previewPhotos[0] === 'string' ? previewPhotos[0] : (previewPhotos[0] as any).src}
-														alt=""
-														loading="lazy"
-													/>
-												</div>
-											</div>
-										</>
-									) : previewPhotos.length === 1 ? (
-										<div class="polariod single-layer">
-											<div class="photo-img">
-												<img 
-													src={typeof previewPhotos[0] === 'string' ? previewPhotos[0] : (previewPhotos[0] as any).src}
-													alt=""
-													loading="lazy"
-												/>
-											</div>
-										</div>
-									) : (
-										<div class="empty-placeholder">
-											<Icon name="material-symbols:add-photo-alternate-outline" class="text-4xl" />
-										</div>
-									)}
-								</div>
-								
-								<!-- 相册信息 -->
-								<div class="card-body">
-									<h3 class="card-title">{album.data.title}</h3>
-									<div class="card-meta">
-										<span class="meta-item">
-											<Icon name="material-symbols:calendar-today" class="text-xs" />
-											{album.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' })}
-										</span>
-										<span class="meta-item">
-											<Icon name="material-symbols:imagesmode" class="text-xs" />
-											{photoCount} 张
-										</span>
-									</div>
-								</div>
-							</a>
-						);
-					})}
-				</div>
-			) : (
-				<div class="w-full p-12 text-center">
-					<Icon name="material-symbols:photo-album-outline" class="text-6xl text-[var(--content-meta)]/50 mx-auto mb-4" />
-					<p class="text-[var(--content-meta)]">还没有创建任何相册哦~</p>
-					<p class="text-sm text-[var(--content-meta)]/70 mt-2">快去记录生活中的美好瞬间吧！</p>
-				</div>
-			)}
-		</div>
-	</div>
+      <!-- 统计信息 -->
+      <div class="flex items-center gap-3 mt-5">
+        <div class="stat-pill">
+          <Icon name="material-symbols:photo-album" class="text-sm" />
+          <span class="font-semibold">{sortedAlbums.length}</span>
+          <span class="text-neutral-500 dark:text-neutral-400">相册</span>
+        </div>
+        <div class="stat-pill">
+          <Icon name="material-symbols:imagesmode" class="text-sm" />
+          <span class="font-semibold">{totalPhotos}</span>
+          <span class="text-neutral-500 dark:text-neutral-400">照片</span>
+        </div>
+        <div class="stat-pill">
+          <Icon name="material-symbols:calendar-month" class="text-sm" />
+          <span class="text-neutral-400 dark:text-neutral-500">{formatDateRange(earliestDate, latestDate)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 相册网格 -->
+    <div class="albums-grid">
+      {sortedAlbums.length > 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {sortedAlbums.map((album, index) => {
+            const previewPhotos = getPreviewPhotos(album);
+            const photoCount = album.data.photos?.length || 0;
+            return (
+              <a
+                href={`/album/${album.id}/`}
+                class="album-card group onload-animation"
+                style={`animation-delay: calc(var(--content-delay) + ${index * 80}ms)`}
+              >
+                <!-- 拍立得照片堆叠 -->
+                <div class="polaroid-stack">
+                  {previewPhotos.length >= 3 ? (
+                    <>
+                      <div class="polariod base-layer">
+                        <div class="photo-img">
+                          <img src={typeof previewPhotos[2] === 'string' ? previewPhotos[2] : (previewPhotos[2] as any).src} alt="" loading="lazy" />
+                        </div>
+                      </div>
+                      <div class="polariod mid-layer">
+                        <div class="photo-img">
+                          <img src={typeof previewPhotos[1] === 'string' ? previewPhotos[1] : (previewPhotos[1] as any).src} alt="" loading="lazy" />
+                        </div>
+                      </div>
+                      <div class="polariod top-layer">
+                        <div class="photo-img">
+                          <img src={typeof previewPhotos[0] === 'string' ? previewPhotos[0] : (previewPhotos[0] as any).src} alt="" loading="lazy" />
+                        </div>
+                        {photoCount > 3 && (
+                          <div class="photo-badge">+{photoCount - 3}</div>
+                        )}
+                      </div>
+                    </>
+                  ) : previewPhotos.length === 2 ? (
+                    <>
+                      <div class="polariod base-layer" style="--rotate: -6deg">
+                        <div class="photo-img">
+                          <img src={typeof previewPhotos[1] === 'string' ? previewPhotos[1] : (previewPhotos[1] as any).src} alt="" loading="lazy" />
+                        </div>
+                      </div>
+                      <div class="polariod top-layer" style="--rotate: 5deg">
+                        <div class="photo-img">
+                          <img src={typeof previewPhotos[0] === 'string' ? previewPhotos[0] : (previewPhotos[0] as any).src} alt="" loading="lazy" />
+                        </div>
+                      </div>
+                    </>
+                  ) : previewPhotos.length === 1 ? (
+                    <div class="polariod single-layer">
+                      <div class="photo-img">
+                        <img src={typeof previewPhotos[0] === 'string' ? previewPhotos[0] : (previewPhotos[0] as any).src} alt="" loading="lazy" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div class="empty-placeholder">
+                      <Icon name="material-symbols:add-photo-alternate-outline" class="text-4xl" />
+                    </div>
+                  )}
+                </div>
+
+                <!-- 相册信息 -->
+                <div class="card-body">
+                  <h3 class="card-title">{album.data.title}</h3>
+                  <div class="card-meta">
+                    <span class="meta-item">
+                      <Icon name="material-symbols:calendar-today" class="text-xs" />
+                      {album.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' })}
+                    </span>
+                    <span class="meta-item">
+                      <Icon name="material-symbols:imagesmode" class="text-xs" />
+                      {photoCount} 张
+                    </span>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="w-full p-12 text-center">
+          <Icon name="material-symbols:photo-album-outline" class="text-6xl text-neutral-300 dark:text-neutral-600 mb-4" />
+          <p class="text-neutral-500 dark:text-neutral-400">还没有创建任何相册哦~</p>
+          <p class="text-sm text-neutral-400 dark:text-neutral-500 mt-2">快去记录生活中的美好瞬间吧！</p>
+        </div>
+      )}
+    </div>
+  </div>
 </MainGridLayout>
 
 <style>
-	.albums-grid {
-		animation: fadeIn 0.5s ease-out;
-	}
+  .albums-grid {
+    animation: fadeIn 0.5s ease-out;
+  }
 
-	@keyframes fadeIn {
-		from { opacity: 0; transform: translateY(10px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-	/* 统计胶囊 */
-	.stat-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		padding: 8px 14px;
-		background: var(--card-bg);
-		border: 1px solid var(--border);
-		border-radius: 50px;
-		font-size: 13px;
-		color: var(--content-meta);
-	}
+  /* 统计胶囊 */
+  .stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--card-bg);
+    border: 2px solid #000;
+    border-radius: 50px;
+    font-size: 13px;
+    color: var(--deep-text);
+  }
+  :root.dark .stat-pill { border-color: #fff; }
 
-	.stat-pill :global(svg) {
-		color: var(--primary);
-	}
+  .stat-pill :global(svg) {
+    color: var(--primary);
+  }
 
-	/* 相册卡片 */
-	.album-card {
-		display: flex;
-		flex-direction: column;
-		background: transparent;
-		border-radius: 16px;
-		overflow: visible;
-		box-shadow: none;
-		transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-	}
+  /* 相册卡片 */
+  .album-card {
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    border-radius: 16px;
+    overflow: visible;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-	.album-card:hover {
-		transform: translateY(-6px);
-	}
+  .album-card:hover {
+    transform: translateY(-6px);
+  }
 
-	/* 拍立得堆叠区域 */
-	.polaroid-stack {
-		position: relative;
-		height: 200px;
-		padding: 20px 20px 0 20px;
-		background: transparent;
-	}
+  /* 拍立得堆叠区域 */
+  .polaroid-stack {
+    position: relative;
+    height: 200px;
+    padding: 20px 20px 0 20px;
+    background: transparent;
+  }
 
-	/* 拍立得基础样式 */
-	.polariod {
-		position: absolute;
-		background: transparent;
-		padding: 6px;
-		border-radius: 2px;
-		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-		transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	}
+  .polariod {
+    position: absolute;
+    background: #fff;
+    padding: 6px;
+    border-radius: 2px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  :root.dark .polariod {
+    background: #1c1c1e;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.06);
+  }
 
-	.photo-img {
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-		border-radius: 1px;
-	}
+  .photo-img {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 1px;
+  }
 
-	.photo-img img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transition: transform 0.4s ease;
-	}
+  .photo-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
 
-	/* 底层照片 */
-	.base-layer {
-		width: 60%;
-		height: 75%;
-		bottom: 0;
-		left: 10%;
-		z-index: 1;
-		transform: rotate(-5deg);
-	}
+  .base-layer {
+    width: 60%; height: 75%; bottom: 0; left: 10%;
+    z-index: 1; transform: rotate(-5deg);
+  }
 
-	/* 中间照片 */
-	.mid-layer {
-		width: 62%;
-		height: 78%;
-		bottom: 2%;
-		left: 18%;
-		z-index: 2;
-		transform: rotate(2deg);
-	}
+  .mid-layer {
+    width: 62%; height: 78%; bottom: 2%; left: 18%;
+    z-index: 2; transform: rotate(2deg);
+  }
 
-	/* 顶层照片 */
-	.top-layer {
-		width: 65%;
-		height: 80%;
-		bottom: 4%;
-		left: 25%;
-		z-index: 3;
-		transform: rotate(6deg);
-	}
+  .top-layer {
+    width: 65%; height: 80%; bottom: 4%; left: 25%;
+    z-index: 3; transform: rotate(6deg);
+  }
 
-	.single-layer {
-		width: 70%;
-		height: 85%;
-		bottom: 4%;
-		left: 15%;
-		z-index: 1;
-		transform: rotate(-2deg);
-	}
+  .single-layer {
+    width: 70%; height: 85%; bottom: 4%; left: 15%;
+    z-index: 1; transform: rotate(-2deg);
+  }
 
-	/* 照片数量徽章 */
-	.photo-badge {
-		position: absolute;
-		bottom: 12px;
-		right: 12px;
-		background: rgba(0, 0, 0, 0.75);
-		color: white;
-		font-size: 11px;
-		font-weight: 600;
-		padding: 3px 8px;
-		border-radius: 12px;
-		backdrop-filter: blur(4px);
-	}
+  .photo-badge {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white; font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 12px;
+    backdrop-filter: blur(4px);
+  }
 
-	/* 悬浮效果 - 照片散开 */
-	.album-card:hover .base-layer {
-		transform: rotate(-10deg) translate(-6px, -4px) scale(1.03);
-		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
-	}
+  .album-card:hover .base-layer {
+    transform: rotate(-10deg) translate(-6px, -4px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  }
+  :root.dark .album-card:hover .base-layer {
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
+  }
 
-	.album-card:hover .mid-layer {
-		transform: rotate(0deg) translate(0, -6px) scale(1.04);
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-	}
+  .album-card:hover .mid-layer {
+    transform: rotate(0deg) translate(0, -6px) scale(1.04);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
+  :root.dark .album-card:hover .mid-layer {
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+  }
 
-	.album-card:hover .top-layer {
-		transform: rotate(10deg) translate(6px, -4px) scale(1.05);
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
-	}
+  .album-card:hover .top-layer {
+    transform: rotate(10deg) translate(6px, -4px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  }
+  :root.dark .album-card:hover .top-layer {
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+  }
 
-	.album-card:hover .single-layer {
-		transform: rotate(0deg) scale(1.04);
-		box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
-	}
+  .album-card:hover .single-layer {
+    transform: rotate(0deg) scale(1.04);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+  }
+  :root.dark .album-card:hover .single-layer {
+    box-shadow: 0 12px 35px rgba(255, 255, 255, 0.1);
+  }
 
-	.album-card:hover .photo-img img {
-		transform: scale(1.08);
-	}
+  .album-card:hover .photo-img img {
+    transform: scale(1.08);
+  }
 
-	/* 占位图 */
-	.empty-placeholder {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		color: var(--primary);
-		opacity: 0.3;
-	}
+  .empty-placeholder {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--primary);
+    opacity: 0.3;
+  }
 
-	/* 卡片内容 */
-	.card-body {
-		padding: 14px 8px 8px;
-	}
+  .card-body {
+    padding: 14px 8px 8px;
+  }
 
-	.card-title {
-		font-size: 15px;
-		font-weight: 600;
-		color: var(--text-color);
-		margin-bottom: 6px;
-		transition: color 0.3s;
-	}
+  .card-title {
+    font-size: 15px; font-weight: 600;
+    color: var(--deep-text);
+    margin-bottom: 6px;
+    transition: color 0.3s;
+  }
 
-	.album-card:hover .card-title {
-		color: var(--primary);
-	}
+  .album-card:hover .card-title {
+    color: var(--primary);
+  }
 
-	.card-meta {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		font-size: 12px;
-		color: var(--content-meta);
-	}
+  .card-meta {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 12px; color: var(--content-meta);
+  }
 
-	.meta-item {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-	}
+  .meta-item {
+    display: flex; align-items: center; gap: 4px;
+  }
 
-	/* 响应式 */
-	@media (max-width: 640px) {
-		.polaroid-stack {
-			height: 180px;
-		}
-		
-		.stat-pill {
-			padding: 6px 12px;
-			font-size: 12px;
-		}
-	}
+  @media (max-width: 640px) {
+    .polaroid-stack { height: 180px; }
+    .stat-pill { padding: 6px 12px; font-size: 12px; }
+  }
 </style>

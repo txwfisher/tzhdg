@@ -40,6 +40,11 @@ const { books } = Astro.props;
 <style>
 	.bookshelf {
 		padding: 24px 16px 8px;
+		border: 2px solid #000;
+		border-radius: 16px;
+	}
+	:root.dark .bookshelf {
+		border-color: #3f3f46;
 	}
 
 	.shelf-grid {

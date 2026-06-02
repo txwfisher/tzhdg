@@ -15,6 +15,7 @@ import RelationshipTimer from "@/components/widget/RelationshipTimer.astro";
 import LifeStats from "@/components/widget/LifeStats.astro";
 import SiteHeatmap from "@/components/widget/SiteHeatmap.astro";
 import QuoteOfTheDay from "@/components/widget/QuoteOfTheDay.astro";
+import SiteVisitCounter from "@/components/widget/SiteVisitCounter.astro";
 import { sidebarLayoutConfig } from "@/config";
 import type {
 	MobileBottomComponentConfig,
@@ -61,6 +62,7 @@ const componentMap = {
 	lifeStats: LifeStats,
 	siteHeatmap: SiteHeatmap,
 	quoteOfTheDay: QuoteOfTheDay,
+	siteVisitCounter: SiteVisitCounter as any,
 } satisfies Record<WidgetComponentType, any>;
 
 // 获取侧边栏位置
@@ -85,7 +87,9 @@ const getComponents = (): (
 	return [];
 };
 
-// 过滤并排序组件（不再进行 showOnPostPage 过滤，交由客户端处理）
+// 过滤组件：仅按 enable 过滤
+// showOnPostPage / showOnNonPostPage 由客户端 JS 通过 CSS class 控制显隐
+// 这样可以确保 Swup 导航时所有 widget 都在 DOM 中，不会因静态容器不刷新而消失
 const filterAndSortComponents = (
 	components: (WidgetComponentConfig | MobileBottomComponentConfig)[],
 ) => {
@@ -177,7 +181,7 @@ const bottomComponents = isMobileBottom ? filteredComponents : [];
 						const Component = componentMap[comp.type];
 						if (!Component) return null;
 						const props = getComponentProps(comp, index) as any;
-						return <Component {...props} />;
+						const { class: compClass, style: compStyle, ...restProps } = props as any; return <div class={compClass} style={compStyle}><Component {...restProps} /></div>;
 					})}
 				</div>
 			) : (
@@ -189,7 +193,7 @@ const bottomComponents = isMobileBottom ? filteredComponents : [];
 								const Component = componentMap[comp.type];
 								if (!Component) return null;
 								const props = getComponentProps(comp, index) as any;
-								return <Component {...props} />;
+								const { class: compClass, style: compStyle, ...restProps } = props as any; return <div class={compClass} style={compStyle}><Component {...restProps} /></div>;
 							})}
 						</div>
 					)}
@@ -211,7 +215,7 @@ const bottomComponents = isMobileBottom ? filteredComponents : [];
 									comp,
 									topComponents.length + index
 								) as any;
-								return <Component {...props} />;
+								const { class: compClass, style: compStyle, ...restProps } = props as any; return <div class={compClass} style={compStyle}><Component {...restProps} /></div>;
 							})}
 						</div>
 					)}

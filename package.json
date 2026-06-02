@@ -38,6 +38,7 @@
     "@iconify/utils": "^3.1.0",
     "@swup/astro": "^1.8.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/three": "^0.184.1",
     "@waline/client": "^3.13.0",
     "astro": "5.17.2",
     "astro-expressive-code": "^0.42.0",
@@ -48,6 +49,7 @@
     "expressive-code-language-badge": "^1.1.0",
     "glob": "^11.1.0",
     "gray-matter": "^4.0.3",
+    "gsap": "^3.15.0",
     "hastscript": "^9.0.1",
     "katex": "^0.16.28",
     "marked": "^16.4.2",
@@ -72,6 +74,7 @@
     "sharp": "^0.34.5",
     "stylus": "^0.64.0",
     "svelte": "^5.50.3",
+    "three": "^0.184.0",
     "typescript": "^5.9.2",
     "unist-util-visit": "^5.1.0"
   },

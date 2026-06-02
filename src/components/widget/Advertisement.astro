@@ -170,7 +170,7 @@ const paddingClass = getPaddingStyle();
             href={currentAdConfig.link.url}
             target={currentAdConfig.link.external ? "_blank" : "_self"}
             rel={currentAdConfig.link.external ? "noopener noreferrer" : ""}
-            class="inline-flex items-center gap-2 px-4 py-2 bg-[oklch(0.75_0.14_var(--hue))] hover:bg-[oklch(0.7_0.16_var(--hue))] text-white rounded-lg transition-all duration-200 font-medium text-sm shadow-lg shadow-[oklch(0.75_0.14_var(--hue))]/25 hover:shadow-xl hover:shadow-[oklch(0.75_0.14_var(--hue))]/30 hover:scale-105 transform"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-[oklch(0.75_0_0)] hover:bg-[oklch(0.7_0_0)] text-white rounded-lg transition-all duration-200 font-medium text-sm shadow-lg shadow-[oklch(0.75_0_0)]/25 hover:shadow-xl hover:shadow-[oklch(0.75_0_0)]/30 hover:scale-105 transform"
           >
             <span>{currentAdConfig.link.text}</span>
             {currentAdConfig.link.external && (
@@ -276,18 +276,18 @@ const paddingClass = getPaddingStyle();
       0 4px 12px rgba(0, 0, 0, 0.08),
       0 0 0 1px var(--line-divider);
     transform: translateY(-2px);
-    border-color: oklch(0.75 0.14 var(--hue));
+    border-color: oklch(0.75 0 0);
   }
 
   /* 深色模式特殊效果 */
   :global(.dark) .advertisement-widget:hover {
     box-shadow:
       0 4px 20px rgba(0, 0, 0, 0.3),
-      0 0 0 1px oklch(0.75 0.14 var(--hue));
+      0 0 0 1px oklch(0.75 0 0);
     background: color-mix(
       in srgb,
       var(--card-bg),
-      oklch(0.75 0.14 var(--hue)) 5%
+      oklch(0.75 0 0) 5%
     );
   }
 
@@ -303,14 +303,14 @@ const paddingClass = getPaddingStyle();
 
   /* 主题色按钮效果 */
   .advertisement-widget a[class*="bg-[oklch"] {
-    background: oklch(0.75 0.14 var(--hue));
+    background: oklch(0.75 0 0);
     transition: all 0.2s ease;
   }
 
   .advertisement-widget a[class*="bg-[oklch"]:hover {
-    background: oklch(0.7 0.16 var(--hue));
+    background: oklch(0.7 0 0);
     box-shadow: 0 4px 12px
-      color-mix(in srgb, oklch(0.75 0.14 var(--hue)), transparent 70%);
+      color-mix(in srgb, oklch(0.75 0 0), transparent 70%);
   }
 
   /* 图片悬停效果 */
@@ -345,7 +345,7 @@ const paddingClass = getPaddingStyle();
     :global(.dark) .advertisement-widget:hover {
       box-shadow:
         0 2px 12px rgba(0, 0, 0, 0.2),
-        0 0 0 1px oklch(0.75 0.14 var(--hue));
+        0 0 0 1px oklch(0.75 0 0);
     }
   }
 
@@ -356,7 +356,7 @@ const paddingClass = getPaddingStyle();
     }
 
     .advertisement-widget:hover {
-      border-color: oklch(0.6 0.2 var(--hue));
+      border-color: oklch(0.6 0 0);
     }
   }
 

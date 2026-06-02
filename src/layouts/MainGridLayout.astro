@@ -8,7 +8,7 @@ import SideBar from "@components/layout/SideBar.astro";
 import type { MarkdownHeading } from "astro";
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
-import FloatingControls from "@/components/controls/FloatingControls.astro";
+import FloatingDock from "@/components/controls/FloatingDock.astro";
 import TypewriterText from "@/components/features/TypewriterText.astro";
 import CategoryBar from "@/components/layout/CategoryBar.astro";
 import {
@@ -585,7 +585,7 @@ const mobileQuality = Math.round(configQuality * 0.9);
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-(--page-width) mx-auto pointer-events-auto">
         <div id="main-grid"
-          class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto gap-4 px-2 md:px-4 ${!sidebarConfig.mobileShowSidebar ? 'mobile-no-sidebar' : ''}`}
+          class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto px-2 md:px-4 ${!sidebarConfig.mobileShowSidebar ? 'mobile-no-sidebar' : ''} ${isPostPage ? 'gap-0 is-post-layout' : 'gap-4'}`}
           data-sidebar-position={sidebarLayoutConfig.position}
           data-tablet-sidebar={sidebarLayoutConfig.tabletSidebar ?? "left"}
           data-show-both-sidebars-on-post={sidebarLayoutConfig.showBothSidebarsOnPostPage ? "true" : "false"}
@@ -644,7 +644,7 @@ const mobileQuality = Math.round(configQuality * 0.9);
                     <slot></slot>
 
                 </div>
-                <FloatingControls currentSlug={postSlug} />
+                <FloatingDock headings={headings} />
             </main>
             </div>
 
@@ -722,6 +722,25 @@ const mobileQuality = Math.round(configQuality * 0.9);
     }
     to {
       opacity: 0.95;
+    }
+  }
+
+  /* 文章页统一布局：列间无间距，侧边栏+内容合并为整体 */
+  .is-post-layout > #left-sidebar-wrapper > *,
+  .is-post-layout > #left-sidebar-dynamic > *,
+  .is-post-layout > #right-sidebar-static > *,
+  .is-post-layout > #right-sidebar-dynamic > * {
+    border-radius: 0;
+  }
+
+  .is-post-layout #content-wrapper .card-base {
+    border: none !important;
+  }
+
+  /* 移动端恢复间距 */
+  @media (max-width: 767px) {
+    .is-post-layout {
+      gap: 1rem !important;
     }
   }
 

@@ -354,94 +354,51 @@ const activeTab = sections[0]?.tabKey || "all";
 </style>
 
 <script is:inline>
-	function initMgTabs() {
-		var tabButtons = document.querySelectorAll('.mg-tab');
-		var sections = document.querySelectorAll('[data-section]');
-
-		tabButtons.forEach(function(button) {
-			var newButton = button.cloneNode(true);
-			if (button.parentNode) {
-				button.parentNode.replaceChild(newButton, button);
-			}
-		});
-
-		var newTabButtons = document.querySelectorAll('.mg-tab');
-
-		newTabButtons.forEach(function(button) {
-			button.addEventListener('click', function() {
-				var targetTab = this.dataset.tab;
-
-				newTabButtons.forEach(function(btn) {
-					btn.classList.remove('bg-[var(--card-bg)]', 'dark:bg-[var(--btn-regular-bg)]', 'text-[var(--primary)]', 'shadow-sm');
-					btn.classList.add('text-[var(--content-meta)]', 'hover:text-[var(--deep-text)]', 'hover:bg-[var(--btn-card-bg-hover)]');
-				});
-
-				this.classList.remove('text-[var(--content-meta)]', 'hover:text-[var(--deep-text)]', 'hover:bg-[var(--btn-card-bg-hover)]');
-				this.classList.add('bg-[var(--card-bg)]', 'dark:bg-[var(--btn-regular-bg)]', 'text-[var(--primary)]', 'shadow-sm');
-
-				sections.forEach(function(section) {
-					if (section.dataset.section === targetTab) {
-						section.classList.remove('hidden');
-					} else {
-						section.classList.add('hidden');
-					}
-				});
+	// 事件委托：在 document 上监听，不依赖初始化时机
+	document.addEventListener('click', function(e) {
+		// Tab 切换
+		var tab = e.target.closest('.mg-tab');
+		if (tab) {
+			var targetTab = tab.dataset.tab;
+			document.querySelectorAll('.mg-tab').forEach(function(btn) {
+				btn.classList.remove('bg-[var(--card-bg)]', 'dark:bg-[var(--btn-regular-bg)]', 'text-[var(--primary)]', 'shadow-sm');
+				btn.classList.add('text-[var(--content-meta)]', 'hover:text-[var(--deep-text)]', 'hover:bg-[var(--btn-card-bg-hover)]');
 			});
-		});
-	}
+			tab.classList.remove('text-[var(--content-meta)]', 'hover:text-[var(--deep-text)]', 'hover:bg-[var(--btn-card-bg-hover)]');
+			tab.classList.add('bg-[var(--card-bg)]', 'dark:bg-[var(--btn-regular-bg)]', 'text-[var(--primary)]', 'shadow-sm');
 
-	function initMgFilters() {
-		document.querySelectorAll('.mg-filter-btn').forEach(function(button) {
-			var newButton = button.cloneNode(true);
-			if (button.parentNode) {
-				button.parentNode.replaceChild(newButton, button);
-			}
-		});
-
-		document.querySelectorAll('.mg-filter-btn').forEach(function(button) {
-			button.addEventListener('click', function() {
-				var filter = this.dataset.filter;
-				var sid = this.dataset.section;
-
-				var sectionButtons = document.querySelectorAll('[data-section="' + sid + '"].mg-filter-btn');
-				sectionButtons.forEach(function(btn) {
-					btn.classList.remove('bg-[var(--primary)]', 'text-white', 'border-[var(--primary)]', 'shadow-sm');
-					btn.classList.add('bg-[var(--card-bg)]', 'text-[var(--content-meta)]', 'border-[var(--line-divider)]', 'hover:border-[var(--primary)]/30', 'hover:text-[var(--deep-text)]');
-				});
-
-				this.classList.remove('bg-[var(--card-bg)]', 'text-[var(--content-meta)]', 'border-[var(--line-divider)]', 'hover:border-[var(--primary)]/30', 'hover:text-[var(--deep-text)]');
-				this.classList.add('bg-[var(--primary)]', 'text-white', 'border-[var(--primary)]', 'shadow-sm');
-
-				var items = document.querySelectorAll('[data-item-section="' + sid + '"]');
-				items.forEach(function(item) {
-					var itemStatus = item.dataset.itemStatus;
-					if (filter === 'all' || itemStatus === filter) {
-						item.classList.remove('hidden');
-						item.style.display = 'block';
-					} else {
-						item.classList.add('hidden');
-						item.style.display = 'none';
-					}
-				});
-
-				var pagination = document.querySelector('[data-pagination-section="' + sid + '"]');
-				if (pagination) {
-					var visibleItems = document.querySelectorAll('[data-item-section="' + sid + '"]:not(.hidden)');
-					pagination.dispatchEvent(new CustomEvent('updatePagination', {
-						detail: { visibleCount: visibleItems.length }
-					}));
-				}
+			document.querySelectorAll('[data-section]').forEach(function(section) {
+				section.classList.toggle('hidden', section.dataset.section !== targetTab);
 			});
-		});
-	}
+			return;
+		}
 
-	document.addEventListener('astro:page-load', function() { initMgTabs(); initMgFilters(); });
-	document.addEventListener('swup:contentReplaced', function() { initMgTabs(); initMgFilters(); });
+		// 筛选按钮
+		var filterBtn = e.target.closest('.mg-filter-btn');
+		if (filterBtn) {
+			var filter = filterBtn.dataset.filter;
+			var sid = filterBtn.dataset.section;
 
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', function() { initMgTabs(); initMgFilters(); });
-	} else {
-		initMgTabs();
-		initMgFilters();
-	}
+			document.querySelectorAll('[data-section="' + sid + '"].mg-filter-btn').forEach(function(btn) {
+				btn.classList.remove('bg-[var(--primary)]', 'text-white', 'border-[var(--primary)]', 'shadow-sm');
+				btn.classList.add('bg-[var(--card-bg)]', 'text-[var(--content-meta)]', 'border-[var(--line-divider)]', 'hover:border-[var(--primary)]/30', 'hover:text-[var(--deep-text)]');
+			});
+			filterBtn.classList.remove('bg-[var(--card-bg)]', 'text-[var(--content-meta)]', 'border-[var(--line-divider)]', 'hover:border-[var(--primary)]/30', 'hover:text-[var(--deep-text)]');
+			filterBtn.classList.add('bg-[var(--primary)]', 'text-white', 'border-[var(--primary)]', 'shadow-sm');
+
+			document.querySelectorAll('[data-item-section="' + sid + '"]').forEach(function(item) {
+				var match = filter === 'all' || item.dataset.itemStatus === filter;
+				item.classList.toggle('hidden', !match);
+				item.style.display = match ? 'block' : 'none';
+			});
+
+			var pagination = document.querySelector('[data-pagination-section="' + sid + '"]');
+			if (pagination) {
+				var visibleItems = document.querySelectorAll('[data-item-section="' + sid + '"]:not(.hidden)');
+				pagination.dispatchEvent(new CustomEvent('updatePagination', {
+					detail: { visibleCount: visibleItems.length }
+				}));
+			}
+		}
+	});
 </script>

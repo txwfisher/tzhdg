@@ -30,6 +30,7 @@ import { sponsorConfig } from "@/config/sponsorConfig";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getApiUrlList, processCoverImageSync } from "@/utils/image-utils";
 import { url } from "@/utils/url-utils";
+import MobilePostToolbar from "@/components/layout/MobilePostToolbar.astro";
 
 export async function getStaticPaths() {
 	const blogEntries = await getSortedPosts();
