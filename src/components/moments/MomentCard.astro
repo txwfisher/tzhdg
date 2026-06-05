@@ -13,7 +13,7 @@ interface Props {
 
 const { moment } = Astro.props;
 const { Content } = await render(moment);
-const { author, avatar, published, images, tags, location, device } =
+const { author, avatar, published, images, tags, location, device, pinned } =
 	moment.data;
 
 // 获取 moments 资产目录下的所有图片
@@ -117,6 +117,12 @@ const formatTimeAgo = (date: Date): string => {
 		<div class="card-user-info">
 			<div class="user-row">
 				<span class="user-name">{author || "匿名"}</span>
+				{pinned && (
+					<span class="pinned-badge">
+						<Icon name="material-symbols:pinboard" class="pinned-icon" />
+						<span>置顶</span>
+					</span>
+				)}
 			</div>
 			<div class="meta-row">
 				<time
@@ -292,6 +298,22 @@ const formatTimeAgo = (date: Date): string => {
 		font-size: 0.9375rem;
 		font-weight: 600;
 		color: var(--primary);
+	}
+
+	.pinned-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.125rem 0.5rem;
+		background: var(--btn-regular-bg);
+		color: var(--btn-content);
+		border-radius: var(--radius);
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.pinned-icon {
+		font-size: 0.875rem;
 	}
 
 	.meta-row {

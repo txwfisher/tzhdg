@@ -24,16 +24,15 @@ import Icon from "@/components/common/Icon.svelte";
 import { backgroundWallpaper, siteConfig } from "@/config";
 import type { WALLPAPER_MODE } from "@/types/config";
 
-let hue = $state(getHue());
+// SSR 安全的初始值：使用配置默认值，避免 SSR/客户端不一致
+let hue = $state(250);
 const defaultHue = getDefaultHue();
 let wallpaperMode: WALLPAPER_MODE = $state(backgroundWallpaper.mode);
 const defaultWallpaperMode = backgroundWallpaper.mode;
 let currentLayout: "list" | "grid" = $state("list");
 const defaultLayout = siteConfig.postListLayout.defaultMode;
 let mounted = $state(false);
-let isSmallScreen = $state(
-	typeof window !== "undefined" ? window.innerWidth < 1200 : false,
-);
+let isSmallScreen = $state(false);
 let isSwitching = $state(false);
 let wavesEnabled = $state(true);
 const defaultWavesEnabled = getDefaultWavesEnabled();
@@ -149,7 +148,11 @@ function switchLayout() {
 
 onMount(() => {
 	mounted = true;
+	isSmallScreen = window.innerWidth < 1200;
 	checkScreenSize();
+
+	// 从localStorage读取保存的hue值（SSR安全）
+	hue = getHue();
 
 	// 从localStorage读取保存的壁纸模式
 	wallpaperMode = getStoredWallpaperMode();

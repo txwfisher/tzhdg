@@ -41,6 +41,7 @@ const momentsCollection = defineCollection({
 		z.object({
 			author: z.string().optional().default(""),
 			avatar: z.string().optional().default(""),
+			pinned: z.boolean().optional().default(false),
 			published: z.date(),
 			images: z
 				.array(image().or(z.string()))

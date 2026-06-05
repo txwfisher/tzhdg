@@ -9,16 +9,18 @@ import Icon from "@/components/common/Icon.svelte";
  * 目前已弃用，已集成至DisplaySettingsIntegrated.svelte，当前文件保留以备将来可能的单独使用
  */
 
-let hue = getHue();
+let hue = $state(getHue());
 const defaultHue = getDefaultHue();
 
 function resetHue() {
 	hue = getDefaultHue();
 }
 
-$: if (hue || hue === 0) {
-	setHue(hue);
-}
+$effect(() => {
+	if (hue || hue === 0) {
+		setHue(hue);
+	}
+});
 </script>
 
 <div id="display-setting" class="float-panel float-panel-closed absolute transition-all w-80 right-4 px-4 py-4">

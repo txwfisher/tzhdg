@@ -7,21 +7,21 @@
   const PATH = "/guestbook/";
   const PER_PAGE = 50;
 
-  let allMessages: Msg[] = [];
-  let currentIndex: number = 0;
-  let isDragging: boolean = false;
-  let startX = 0, startY = 0, currentX = 0, currentY = 0;
-  let flyOutTransform: string | null = null;
-  let flyDirection: "left" | "right" | "up" | null = null;
-  let enteringId: string | null = null;
-  let enterTransform: string | null = null;
+  let allMessages: Msg[] = $state([]);
+  let currentIndex: number = $state(0);
+  let isDragging: boolean = $state(false);
+  let startX = 0, startY = 0, currentX = $state(0), currentY = $state(0);
+  let flyOutTransform: string | null = $state(null);
+  let flyDirection: "left" | "right" | "up" | null = $state(null);
+  let enteringId: string | null = $state(null);
+  let enterTransform: string | null = $state(null);
   let rafId: number | null = null;
   let timers: ReturnType<typeof setTimeout>[] = [];
   let page = 1;
-  let hasMore = true;
+  let hasMore = $state(true);
   let fetching = false;
-  $: visibleCards = allMessages.slice(currentIndex, currentIndex + 5).map((m, i) => ({ ...m, si: i }));
-  $: topCard = visibleCards[0];
+  let visibleCards = $derived(allMessages.slice(currentIndex, currentIndex + 5).map((m, i) => ({ ...m, si: i })));
+  let topCard = $derived(visibleCards[0]);
 
   onDestroy(() => {
     if (rafId) cancelAnimationFrame(rafId);

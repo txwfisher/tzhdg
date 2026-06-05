@@ -117,6 +117,12 @@ workHours?: { start: number; end: number; workDays: number[]; };
 		microsoftClarityId?: string; // Microsoft Clarity ID
 	};
 
+	// 说说页面封面配置
+	momentsCover?: {
+		enable: boolean; // 是否显示封面区域
+		image: string; // 封面图片URL
+	};
+
 	// 图片优化配置
 	imageOptimization?: {
 		/**

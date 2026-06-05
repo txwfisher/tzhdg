@@ -8,10 +8,10 @@ import type { SearchResult } from "@/global";
 import { url as formatUrl, getSearchUrl } from "@/utils/url-utils";
 
 // --- State ---
-let keyword = "";
-let result: SearchResult[] = [];
-let isSearching = false;
-let initialized = false;
+let keyword = $state("");
+let result: SearchResult[] = $state([]);
+let isSearching = $state(false);
+let initialized = $state(false);
 let debounceTimer: NodeJS.Timeout;
 
 // --- Mocks for Dev Mode ---
@@ -114,9 +114,12 @@ onMount(() => {
 });
 
 // --- Reactive Statements ---
-  $: if (initialized && (keyword || keyword === "")) {
-    search(keyword);
-  }
+  $effect(() => {
+    // 只在客户端且初始化完成后执行搜索
+    if (initialized) {
+      search(keyword);
+    }
+  });
 </script>
 
 <!-- 搜索面板 - 浮动坞触发 -->
@@ -141,7 +144,7 @@ onMount(() => {
   {:else if result.length > 0}
     {#each result.slice(0, 5) as item}
       <a href={item.url}
-         on:click={(e) => handleResultClick(e, item.url)}
+         onclick={(e) => handleResultClick(e, item.url)}
          class="transition first-of-type:mt-2 group block
            rounded-xl text-lg px-3 py-2 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)">
         <div class="transition text-90 inline-flex font-bold group-hover:text-(--primary)">
@@ -160,7 +163,7 @@ onMount(() => {
     {/each}
     {#if result.length > 5}
       <a href={getSearchUrl(keyword)}
-         on:click={(e) => handleResultClick(e, getSearchUrl(keyword))}
+         onclick={(e) => handleResultClick(e, getSearchUrl(keyword))}
          class="transition first-of-type:mt-2 group block rounded-xl text-lg px-3 py-2 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) text-(--primary) font-bold text-center">
         <span class="inline-flex items-center">
           {i18n(I18nKey.searchViewMore).replace('{count}', (result.length - 5).toString())}
