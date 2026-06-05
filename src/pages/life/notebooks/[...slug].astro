@@ -262,7 +262,10 @@ const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
 	.diary-detail-page { max-width: 48rem; margin: 0 auto; }
 	.diary-paper {
 		background: #fff; color: #333;
-		padding: 2rem 2.5rem;
+		padding: 2rem 0.75rem;
+	}
+	@media (min-width: 768px) {
+		.diary-paper { padding: 2rem 1.25rem; }
 	}
 	:global(html.dark) .diary-paper { background: #1a1a1a; color: #ddd; }
 
