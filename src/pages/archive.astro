@@ -6,6 +6,11 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getArchiveList, getSortedPostsList } from "@/utils/content-utils";
+import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+
+const extConfig = externalMomentsConfig.enable && externalMomentsConfig.gistId
+  ? { gistId: externalMomentsConfig.gistId, fileName: externalMomentsConfig.fileName }
+  : null;
 
 const archiveList = await getArchiveList();
 const sortedPostsList = await getSortedPostsList();
@@ -24,7 +29,7 @@ const title = i18n(I18nKey.archive);
           </div>
         </div>
       </div>
-      <ArchivePanel sortedPosts={archiveList as any} client:load />
+      <ArchivePanel sortedPosts={archiveList as any} extConfig={extConfig} client:load />
     </div>
   </div>
 </MainGridLayout>

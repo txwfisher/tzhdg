@@ -12,6 +12,7 @@
   export let tags: string[] = [];
   export let categories: string[] = [];
   export let sortedPosts: Post[] = [];
+  export let extConfig: { gistId: string; fileName: string } | null = null;
 
   const typeLabels: Record<string, string> = { post: "文章", moment: "说说", bangumi: "记录", life: "生活" };
   function getTypeLabel(t: string | undefined): string { return t ? (typeLabels[t] || t) : ""; }
@@ -71,6 +72,9 @@
   }
 
   function getItemUrl(post: Post): string {
+    if (post.type === "moment" && typeof post.id === "string" && post.id.startsWith("ext-")) {
+      return "/moments/";
+    }
     if (post.type && post.type !== "post") {
       // @ts-ignore - data.link exists on ArchiveItem
       return (post as any).data?.link || getPostUrlBySlug(post.id);
@@ -113,12 +117,12 @@
   async function onPostEnter(id: string) { hoveredPostId = id; await computeHighlight(id) }
   function onPostLeave() { hoveredPostId = null; highlightedYear = null; highlightedMonth = null; highlightSegs = []; highlightHLines = [] }
 
-  onMount(() => {
+  function applyFilters(allPosts: Post[]) {
     const params = new URLSearchParams(window.location.search);
     tags = params.has("tag") ? params.getAll("tag") : [];
     categories = params.has("category") ? params.getAll("category") : [];
     const uncategorized = params.get("uncategorized");
-    let filtered = sortedPosts;
+    let filtered = allPosts;
     const cf: ActiveFilter[] = [];
     if (categories.length > 0) cf.push({ labelKey: I18nKey.categories, values: categories });
     if (uncategorized) cf.push({ labelKey: I18nKey.categories, values: [i18n(I18nKey.uncategorized)] });
@@ -133,6 +137,41 @@
     filteredPostCount = filtered.length;
     initCategoryColors(filtered);
     yearGroups = groupByYearMonth(filtered);
+  }
+
+  onMount(async () => {
+    let allPosts = [...sortedPosts];
+
+    // 加载外部说说
+    if (extConfig && extConfig.gistId) {
+      try {
+        const token = localStorage.getItem("gh_moments_token") || "";
+        const headers: Record<string, string> = { "Accept": "application/vnd.github+json" };
+        if (token) headers["Authorization"] = "Bearer " + token;
+        const res = await fetch(`https://api.github.com/gists/${extConfig.gistId}`, { headers });
+        if (res.ok) {
+          const gist = await res.json();
+          const file = gist.files[extConfig.fileName];
+          if (file) {
+            const moments = JSON.parse(file.content || "[]");
+            for (const m of moments) {
+              allPosts.push({
+                id: m.id || `ext-${Date.now()}`,
+                type: "moment",
+                data: {
+                  title: (m.content || "").slice(0, 50) || "说说",
+                  tags: m.tags || [],
+                  category: "说说",
+                  published: new Date(m.published),
+                }
+              } as any);
+            }
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    applyFilters(allPosts);
   });
 </script>
 
