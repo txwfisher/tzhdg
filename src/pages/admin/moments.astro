@@ -113,6 +113,20 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
     .input-single:focus { border-color: var(--primary); }
     .input-single::placeholder { color: var(--text-3); }
 
+    input[type="datetime-local"] {
+      width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.875rem; background: var(--input-bg);
+      color: var(--text); outline: none; transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    input[type="datetime-local"]:focus { border-color: var(--primary); }
+    .custom-time-panel {
+      margin-top: 0.5rem; padding-top: 0.5rem;
+      border-top: 1px dashed var(--border);
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
     /* 图片预览 */
     .img-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
     .img-thumb {
@@ -334,6 +348,16 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
           <input type="text" class="input-single" id="location-input" placeholder="可选" />
         </div>
         <div class="field">
+          <label class="toggle-row" for="custom-time-toggle">
+            <span class="toggle-label"><span class="icon">🕐</span> 自定义发布时间</span>
+            <input type="checkbox" id="custom-time-toggle" class="toggle-checkbox" onchange="toggleCustomTime()" />
+            <span class="toggle-switch"></span>
+          </label>
+          <div class="custom-time-panel hidden" id="custom-time-panel">
+            <input type="datetime-local" id="time-input" />
+          </div>
+        </div>
+        <div class="field">
           <label class="toggle-row" for="pinned-input">
             <span class="toggle-label"><span class="icon">📌</span> 置顶</span>
             <input type="checkbox" id="pinned-input" class="toggle-checkbox" />
@@ -510,6 +534,28 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
       $("list-count").textContent = "";
     }
 
+    // ===== 自定义时间 =====
+    function toggleCustomTime() {
+      var panel = $("custom-time-panel");
+      if ($("custom-time-toggle").checked) {
+        panel.classList.remove("hidden");
+      } else {
+        panel.classList.add("hidden");
+        $("time-input").value = "";
+      }
+    }
+
+    function getPublishedTime() {
+      if ($("custom-time-toggle").checked) {
+        var custom = $("time-input").value;
+        if (custom) {
+          var d = new Date(custom);
+          if (!isNaN(d.getTime())) return d.toISOString();
+        }
+      }
+      return new Date().toISOString();
+    }
+
     // ===== 发布 =====
     function submitMoment() {
       var content = $("content-input").value.trim();
@@ -519,6 +565,7 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
       var tags = $("tags-input").value.split(",").map(function(s) { return s.trim(); }).filter(Boolean);
       var location = $("location-input").value.trim();
       var pinned = $("pinned-input").checked;
+      var published = getPublishedTime();
       var btn = $("submit-btn");
       btn.disabled = true;
       btn.textContent = images.length ? "发布中...（含 " + images.length + " 张图）" : "发布中...";
@@ -531,7 +578,7 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
         if (file) { try { moments = JSON.parse(file.content || "[]"); } catch(e) {} }
         moments.push({
           id: "ext-" + Date.now(), content: content,
-          published: new Date().toISOString(),
+          published: published,
           images: images, tags: tags, location: location,
           pinned: pinned || false
         });
@@ -544,6 +591,8 @@ import { externalMomentsConfig } from "@/config/externalMomentsConfig";
         if (r.ok) {
           toast("发布成功 ✓", "ok");
           $("content-input").value = ""; $("tags-input").value = ""; $("location-input").value = "";
+          $("time-input").value = ""; $("custom-time-toggle").checked = false;
+          $("custom-time-panel").classList.add("hidden");
           $("pinned-input").checked = false;
           setImages([]); renderImgs(); loadMoments();
         } else { toast("发布失败", "err"); }
