@@ -103,26 +103,16 @@ const albums = await getCollection("album");
     </a>
   )}
 
-  <!-- 外部置顶说说（从 Gist 拉取） -->
-  {externalMomentsConfig.enable && externalMomentsConfig.gistId && (
-    <div id="ext-pinned-feed" style="display:none;margin-bottom:1.25rem;"></div>
-  )}
-
-  <!-- 外部普通说说列表（从 Gist 拉取） -->
-  {externalMomentsConfig.enable && externalMomentsConfig.gistId && (
-    <div class="wx-feed" id="external-moments-feed"></div>
-  )}
-
-  <!-- 说说列表 -->
+  <!-- 说说列表（本地 + 外部合并，按时间排序） -->
   <div class="wx-feed" id="moments-feed">
     {sortedMoments.length > 0 ? (
       sortedMoments.map((moment) => (
-        <div class="wx-feed-item">
+        <div class="wx-feed-item" data-published={moment.data.published.toISOString()}>
           <MomentCard moment={moment} />
         </div>
       ))
     ) : (
-      <div class="wx-empty">
+      <div class="wx-empty" id="moments-empty">
         <div class="wx-empty-icon">
           <Icon name="material-symbols:sentiment-neutral-outline" />
         </div>
@@ -173,8 +163,8 @@ const albums = await getCollection("album");
   var fileName = _s.getAttribute("data-file");
   var defaultAuthor = _s.getAttribute("data-author");
   var defaultAvatar = _s.getAttribute("data-avatar");
-  var container = document.getElementById("external-moments-feed");
-  if (!container) return;
+  var feed = document.getElementById("moments-feed");
+  if (!feed) return;
 
   // 使用缓存避免 Swup 切换页面时重复请求
   var cacheKey = "__externalMomentsCache";
@@ -197,7 +187,6 @@ const albums = await getCollection("album");
   }
 
   function renderMarkdown(text) {
-    // 简单 markdown 渲染：换行、粗体、斜体、链接
     return escapeHtml(text)
       .replace(/\n/g, "<br>")
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -211,7 +200,6 @@ const albums = await getCollection("album");
     return 3;
   }
 
-  // 解析图片（兼容数组和逗号/分号分隔的字符串）
   function parseImages(raw) {
     if (!raw) return [];
     if (Array.isArray(raw)) return raw.filter(Boolean);
@@ -221,7 +209,8 @@ const albums = await getCollection("album");
     return [];
   }
 
-  function renderCard(m) {
+  // 将外部说说渲染为 DOM 元素（和 MomentCard.astro 结构一致）
+  function createCard(m) {
     var author = m.author || defaultAuthor;
     var avatar = m.avatar || defaultAvatar;
     var date = new Date(m.published);
@@ -231,91 +220,174 @@ const albums = await getCollection("album");
     var tags = m.tags || [];
     var location = m.location || "";
 
-    // 图片网格 — 和 MomentCard.astro 一致
-    var imagesHtml = "";
+    var item = document.createElement("div");
+    item.className = "wx-feed-item";
+    item.setAttribute("data-published", date.toISOString());
+
+    var card = document.createElement("div");
+    card.className = "moment-card";
+
+    // accent bar
+    var accent = document.createElement("div");
+    accent.className = "card-accent-bar";
+    card.appendChild(accent);
+
+    // header
+    var header = document.createElement("div");
+    header.className = "card-header";
+
+    var avatarDiv = document.createElement("div");
+    avatarDiv.className = "card-avatar";
+    var avatarImg = document.createElement("img");
+    avatarImg.src = avatar;
+    avatarImg.alt = author;
+    avatarImg.className = "avatar-img";
+    avatarImg.loading = "lazy";
+    avatarDiv.appendChild(avatarImg);
+
+    var userInfo = document.createElement("div");
+    userInfo.className = "card-user-info";
+
+    var userRow = document.createElement("div");
+    userRow.className = "user-row";
+    var userName = document.createElement("span");
+    userName.className = "user-name";
+    userName.textContent = author;
+    userRow.appendChild(userName);
+    if (m.pinned) {
+      var badge = document.createElement("span");
+      badge.className = "pinned-badge";
+      badge.innerHTML = '<svg class="pinned-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a1 1 0 0 1 1-1h1a1 1 0 0 0 0-8H7a1 1 0 0 0 0 8h1a1 1 0 0 1 1 1z"/></svg>';
+      var badgeText = document.createElement("span");
+      badgeText.textContent = "置顶";
+      badge.appendChild(badgeText);
+      userRow.appendChild(badge);
+    }
+
+    var metaRow = document.createElement("div");
+    metaRow.className = "meta-row";
+    var time = document.createElement("time");
+    time.textContent = timeStr;
+    metaRow.appendChild(time);
+    if (location) {
+      var dot = document.createElement("span");
+      dot.className = "meta-dot";
+      dot.textContent = "·";
+      metaRow.appendChild(dot);
+      var loc = document.createElement("span");
+      loc.className = "location";
+      loc.innerHTML = '<svg class="location-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+      var locText = document.createTextNode(location);
+      loc.appendChild(locText);
+      metaRow.appendChild(loc);
+    }
+
+    userInfo.appendChild(userRow);
+    userInfo.appendChild(metaRow);
+    header.appendChild(avatarDiv);
+    header.appendChild(userInfo);
+    card.appendChild(header);
+
+    // content
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "card-content";
+    var markdownDiv = document.createElement("div");
+    markdownDiv.className = "moment-markdown";
+    markdownDiv.style.cssText = "color:var(--text-color);font-size:0.9375rem;line-height:1.75;";
+    markdownDiv.innerHTML = content;
+    contentDiv.appendChild(markdownDiv);
+    card.appendChild(contentDiv);
+
+    // images
     if (images.length > 0) {
       var cols = getGridCols(images.length);
-      var imgsHtml = images.slice(0, 9).map(function(url, i) {
-        var isLast = i === 8 && images.length > 9;
-        return '<div class="image-item">' +
-          '<img src="' + url + '" alt="" class="image-img" loading="lazy" onerror="this.parentElement.style.display=\'none\'" data-fancybox="gallery-ext-' + m.id + '">' +
-          (isLast ? '<div class="more-overlay"><span class="more-text">+' + (images.length - 8) + '</span></div>' : "") +
-        '</div>';
-      }).join("");
-      imagesHtml = '<div class="card-images image-cols-' + cols + '">' + imgsHtml + '</div>';
+      var imagesDiv = document.createElement("div");
+      imagesDiv.className = "card-images image-cols-" + cols;
+      images.slice(0, 9).forEach(function(url, i) {
+        var imgItem = document.createElement("div");
+        imgItem.className = "image-item";
+        var img = document.createElement("img");
+        img.src = url;
+        img.alt = "";
+        img.className = "image-img";
+        img.loading = "lazy";
+        img.setAttribute("data-fancybox", "gallery-ext-" + m.id);
+        img.onerror = function() { imgItem.style.display = "none"; };
+        imgItem.appendChild(img);
+        if (i === 8 && images.length > 9) {
+          var overlay = document.createElement("div");
+          overlay.className = "more-overlay";
+          var moreText = document.createElement("span");
+          moreText.className = "more-text";
+          moreText.textContent = "+" + (images.length - 8);
+          overlay.appendChild(moreText);
+          imgItem.appendChild(overlay);
+        }
+        imagesDiv.appendChild(imgItem);
+      });
+      card.appendChild(imagesDiv);
     }
 
-    // 标签 — 和 MomentCard.astro 一致，带链接
-    var tagsHtml = "";
+    // tags
     if (tags.length > 0) {
-      tagsHtml = '<div class="card-tags">' + tags.map(function(t) {
+      var tagsDiv = document.createElement("div");
+      tagsDiv.className = "card-tags";
+      tags.forEach(function(t) {
         var tagText = t.trim();
-        return '<a href="/archive/?tag=' + encodeURIComponent(tagText) + '" class="tag-item">#' + escapeHtml(tagText) + '</a>';
-      }).join("") + '</div>';
+        var a = document.createElement("a");
+        a.href = "/archive/?tag=" + encodeURIComponent(tagText);
+        a.className = "tag-item";
+        a.textContent = "#" + tagText;
+        tagsDiv.appendChild(a);
+      });
+      card.appendChild(tagsDiv);
     }
 
-    // 位置 — 和 MomentCard.astro 一致
-    var locationHtml = location
-      ? '<span class="meta-dot">·</span><span class="location"><svg class="location-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapeHtml(location) + '</span>'
-      : "";
-
-    // 置顶徽章
-    var pinnedBadge = m.pinned
-      ? '<span class="pinned-badge"><svg class="pinned-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a1 1 0 0 1 1-1h1a1 1 0 0 0 0-8H7a1 1 0 0 0 0 8h1a1 1 0 0 1 1 1z"/></svg><span>置顶</span></span>'
-      : "";
-
-    // 完整卡片 — 和 MomentCard.astro 结构一致
-    return '<div class="moment-card">' +
-      '<div class="card-accent-bar"></div>' +
-      '<div class="card-header">' +
-        '<div class="card-avatar">' +
-          '<img src="' + avatar + '" alt="' + escapeHtml(author) + '" class="avatar-img" loading="lazy">' +
-        '</div>' +
-        '<div class="card-user-info">' +
-          '<div class="user-row"><span class="user-name">' + escapeHtml(author) + '</span>' + pinnedBadge + '</div>' +
-          '<div class="meta-row"><time>' + timeStr + '</time>' + locationHtml + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="card-content"><div class="moment-markdown" style="color:var(--text-color);font-size:0.9375rem;line-height:1.75;">' + content + '</div></div>' +
-      imagesHtml + tagsHtml +
-    '</div>';
+    item.appendChild(card);
+    return item;
   }
 
-  function renderMoments(moments) {
-    if (!moments || moments.length === 0) { container.style.display = "none"; return; }
-    moments.sort(function(a, b) { return new Date(b.published) - new Date(a.published); });
+  // 按时间顺序将外部说说插入到主 feed 中
+  function insertExternalMoments(extMoments) {
+    if (!extMoments || extMoments.length === 0) return;
+    extMoments.sort(function(a, b) { return new Date(b.published) - new Date(a.published); });
 
-    // 分离置顶和普通
-    var pinned = moments.filter(function(m) { return m.pinned; });
-    var normal = moments.filter(function(m) { return !m.pinned; });
+    // 移除空状态提示
+    var emptyEl = document.getElementById("moments-empty");
+    if (emptyEl) emptyEl.remove();
 
-    // 渲染外部置顶到置顶块
-    if (pinned.length > 0) {
-      var pinnedContainer = document.getElementById("ext-pinned-feed");
-      if (pinnedContainer) {
-        pinnedContainer.innerHTML = '<div class="wx-feed">' +
-          pinned.map(function(m) {
-            return '<div class="wx-feed-item">' + renderCard(m) + '</div>';
-          }).join("") + '</div>';
-        pinnedContainer.style.display = "";
+    // 收集现有本地说说的时间戳
+    var localItems = feed.querySelectorAll(".wx-feed-item[data-published]");
+    var localTimes = [];
+    localItems.forEach(function(el) {
+      localTimes.push({ el: el, time: new Date(el.getAttribute("data-published")).getTime() });
+    });
+
+    extMoments.forEach(function(m) {
+      var card = createCard(m);
+      var extTime = new Date(m.published).getTime();
+      var inserted = false;
+      // 找到第一个发布时间更早的本地说说，插在它前面
+      for (var i = 0; i < localTimes.length; i++) {
+        if (localTimes[i].time < extTime) {
+          feed.insertBefore(card, localTimes[i].el);
+          inserted = true;
+          break;
+        }
       }
-    }
-
-    // 渲染普通说说
-    if (normal.length === 0) { container.style.display = "none"; return; }
-    container.innerHTML = normal.map(function(m) {
-      return '<div class="wx-feed-item">' + renderCard(m) + '</div>';
-    }).join("");
+      if (!inserted) {
+        feed.appendChild(card);
+      }
+    });
   }
 
   function fetchMoments() {
     // 检查缓存（5分钟内有效）
     if (window[cacheKey] && window[cacheKey].time > Date.now() - 300000) {
-      renderMoments(window[cacheKey].data);
+      insertExternalMoments(window[cacheKey].data);
       return;
     }
 
-    // 使用 Token 读取（Secret Gist 需要认证）
     var token = localStorage.getItem("gh_moments_token") || "";
     var headers = { "Accept": "application/vnd.github+json" };
     if (token) headers["Authorization"] = "Bearer " + token;
@@ -327,16 +399,14 @@ const albums = await getCollection("album");
       })
       .then(function(gist) {
         var file = gist.files[fileName];
-        if (!file) { container.style.display = "none"; return; }
+        if (!file) return;
         var moments = JSON.parse(file.content || "[]");
-        if (!moments.length) { container.style.display = "none"; return; }
-        console.log("[外部说说] 加载到", moments.length, "条，第一条图片:", moments[0] && moments[0].images);
+        if (!moments.length) return;
         window[cacheKey] = { data: moments, time: Date.now() };
-        renderMoments(moments);
+        insertExternalMoments(moments);
       })
       .catch(function(e) {
         console.warn("[外部说说] 加载失败:", e.message);
-        container.style.display = "none";
       });
   }
 
@@ -349,7 +419,7 @@ const albums = await getCollection("album");
 
   // Swup 页面切换后从缓存恢复
   document.addEventListener("swup:content:replace", function() {
-    if (window[cacheKey]) renderMoments(window[cacheKey].data);
+    if (window[cacheKey]) insertExternalMoments(window[cacheKey].data);
   });
 })();
 </script>
@@ -583,10 +653,10 @@ const albums = await getCollection("album");
 
 <style is:global>
   /* ============================================
-   * 外部说说卡片（复用 MomentCard.astro 的结构）
-   * 需要 is:global 因为卡片 HTML 由 JS 动态生成
+   * JS 动态插入的说说卡片样式
+   * 需要 is:global 因为卡片 DOM 由 JS 动态创建
    * ============================================ */
-  #external-moments-feed .moment-card {
+  #moments-feed .moment-card {
     position: relative;
     background: var(--card-bg);
     border-radius: var(--radius-large);
@@ -595,94 +665,94 @@ const albums = await getCollection("album");
     overflow: hidden;
     transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
   }
-  :root.dark #external-moments-feed .moment-card { border-color: #3f3f46; }
-  #external-moments-feed .moment-card:hover {
+  :root.dark #moments-feed .moment-card { border-color: #3f3f46; }
+  #moments-feed .moment-card:hover {
     border-color: var(--primary);
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
     transform: translateY(-2px);
   }
-  :root.dark #external-moments-feed .moment-card:hover {
+  :root.dark #moments-feed .moment-card:hover {
     border-color: #fff;
     box-shadow: 0 4px 24px rgba(255,255,255,0.08);
   }
 
-  #external-moments-feed .card-accent-bar {
+  #moments-feed .card-accent-bar {
     position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
     background: var(--primary); opacity: 0.35; border-radius: 0 2px 2px 0;
   }
 
-  #external-moments-feed .card-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.75rem; }
-  #external-moments-feed .card-avatar { flex-shrink: 0; }
-  #external-moments-feed .avatar-img {
+  #moments-feed .card-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.75rem; }
+  #moments-feed .card-avatar { flex-shrink: 0; }
+  #moments-feed .avatar-img {
     width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;
     border: 2px solid var(--primary); box-sizing: border-box;
   }
-  #external-moments-feed .card-user-info { flex: 1; min-width: 0; }
-  #external-moments-feed .user-row { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
-  #external-moments-feed .pinned-badge {
+  #moments-feed .card-user-info { flex: 1; min-width: 0; }
+  #moments-feed .user-row { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
+  #moments-feed .pinned-badge {
     display: inline-flex; align-items: center; gap: 0.25rem;
     padding: 0.125rem 0.5rem; background: var(--btn-regular-bg);
     color: var(--btn-content); border-radius: var(--radius);
     font-size: 0.75rem; font-weight: 600;
   }
-  #external-moments-feed .pinned-icon { width: 14px; height: 14px; }
-  #external-moments-feed .user-name { font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
-  #external-moments-feed .meta-row { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: var(--content-meta); }
-  #external-moments-feed .meta-dot { opacity: 0.5; }
-  #external-moments-feed .location {
+  #moments-feed .pinned-icon { width: 14px; height: 14px; }
+  #moments-feed .user-name { font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
+  #moments-feed .meta-row { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: var(--content-meta); }
+  #moments-feed .meta-dot { opacity: 0.5; }
+  #moments-feed .location {
     display: inline-flex; align-items: center; gap: 0.125rem;
     max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  #external-moments-feed .location-icon { font-size: 0.875rem; flex-shrink: 0; width: 14px; height: 14px; }
+  #moments-feed .location-icon { font-size: 0.875rem; flex-shrink: 0; width: 14px; height: 14px; }
 
-  #external-moments-feed .card-content { margin-bottom: 0.75rem; }
-  #external-moments-feed .moment-markdown { word-break: break-word; }
-  #external-moments-feed .moment-markdown p { margin-bottom: 0.375rem; }
-  #external-moments-feed .moment-markdown p:last-child { margin-bottom: 0; }
-  #external-moments-feed .moment-markdown img { border-radius: var(--radius); margin: 0.5rem 0; max-width: 100%; }
-  #external-moments-feed .moment-markdown a { color: var(--primary); text-decoration: underline; }
+  #moments-feed .card-content { margin-bottom: 0.75rem; }
+  #moments-feed .moment-markdown { word-break: break-word; }
+  #moments-feed .moment-markdown p { margin-bottom: 0.375rem; }
+  #moments-feed .moment-markdown p:last-child { margin-bottom: 0; }
+  #moments-feed .moment-markdown img { border-radius: var(--radius); margin: 0.5rem 0; max-width: 100%; }
+  #moments-feed .moment-markdown a { color: var(--primary); text-decoration: underline; }
 
-  #external-moments-feed .card-images { display: grid; gap: 0.375rem; margin-bottom: 0.75rem; }
-  #external-moments-feed .image-cols-1 { grid-template-columns: 100px; }
-  #external-moments-feed .image-cols-2 { grid-template-columns: repeat(2, 100px); }
-  #external-moments-feed .image-cols-3 { grid-template-columns: repeat(3, 90px); }
-  #external-moments-feed .image-item {
+  #moments-feed .card-images { display: grid; gap: 0.375rem; margin-bottom: 0.75rem; }
+  #moments-feed .image-cols-1 { grid-template-columns: 100px; }
+  #moments-feed .image-cols-2 { grid-template-columns: repeat(2, 100px); }
+  #moments-feed .image-cols-3 { grid-template-columns: repeat(3, 90px); }
+  #moments-feed .image-item {
     position: relative; border-radius: var(--radius); overflow: hidden;
     cursor: pointer; background: var(--btn-regular-bg); aspect-ratio: 1;
   }
-  #external-moments-feed .image-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-  #external-moments-feed .image-item:hover .image-img { transform: scale(1.03); }
-  #external-moments-feed .hidden-image { display: none !important; }
-  #external-moments-feed .has-more .image-img { filter: brightness(0.6); }
-  #external-moments-feed .more-overlay {
+  #moments-feed .image-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+  #moments-feed .image-item:hover .image-img { transform: scale(1.03); }
+  #moments-feed .hidden-image { display: none !important; }
+  #moments-feed .has-more .image-img { filter: brightness(0.6); }
+  #moments-feed .more-overlay {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   }
-  #external-moments-feed .more-text { font-size: 1.5rem; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  #moments-feed .more-text { font-size: 1.5rem; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.3); }
 
-  #external-moments-feed .card-tags {
+  #moments-feed .card-tags {
     display: flex; flex-wrap: wrap; gap: 0.375rem;
     padding-top: 0.625rem; border-top: 1px solid var(--border);
   }
-  #external-moments-feed .tag-item {
+  #moments-feed .tag-item {
     padding: 0.25rem 0.625rem; background: transparent;
     border: 1px solid var(--primary); border-radius: 9999px;
     font-size: 0.75rem; color: var(--primary);
     transition: all 0.2s ease;
   }
-  #external-moments-feed .tag-item:hover {
+  #moments-feed .tag-item:hover {
     background: color-mix(in srgb, var(--primary) 10%, transparent);
   }
 
   /* 移动端 */
   @media (max-width: 480px) {
-    #external-moments-feed .moment-card {
+    #moments-feed .moment-card {
       padding: 0.875rem 0.875rem 0.875rem 1.75rem;
     }
-    #external-moments-feed .avatar-img { width: 2.25rem; height: 2.25rem; }
-    #external-moments-feed .user-name { font-size: 0.875rem; }
-    #external-moments-feed .meta-row { font-size: 0.6875rem; }
-    #external-moments-feed .location { max-width: 80px; }
-    #external-moments-feed .card-images { gap: 0.25rem; }
-    #external-moments-feed .more-text { font-size: 1.25rem; }
+    #moments-feed .avatar-img { width: 2.25rem; height: 2.25rem; }
+    #moments-feed .user-name { font-size: 0.875rem; }
+    #moments-feed .meta-row { font-size: 0.6875rem; }
+    #moments-feed .location { max-width: 80px; }
+    #moments-feed .card-images { gap: 0.25rem; }
+    #moments-feed .more-text { font-size: 1.25rem; }
   }
 </style>
