@@ -97,6 +97,25 @@
 .nav-hamburger-btn.hamburger-open .hamburger-icon-menu { display: none; }
 .nav-hamburger-btn.hamburger-open .hamburger-icon-close { display: inline-block; }
 
+/* ============ 暗色模式导航栏链接可见性修复 ============ */
+:root.dark #navbar .navbar-link-item,
+:root.dark #navbar .btn-plain {
+  color: oklch(0.95 0 0 / 0.85);
+}
+:root.dark #navbar .navbar-link-item:hover,
+:root.dark #navbar .btn-plain:hover {
+  color: var(--primary);
+}
+:root.dark #navbar .navbar-logo-content {
+  color: oklch(0.95 0 0 / 0.85);
+}
+:root.dark #navbar .admin-entry-btn {
+  color: oklch(0.95 0 0 / 0.85);
+}
+:root.dark #navbar .nav-hamburger-btn {
+  color: oklch(0.95 0 0 / 0.85);
+}
+
 /* 去掉站点 Logo 的 hover/click 阴影 */
 .navbar-logo-link::before {
   content: none;

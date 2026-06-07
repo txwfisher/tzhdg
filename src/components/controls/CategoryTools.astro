@@ -1,0 +1,416 @@
+---
+import { getCategoryList } from "@/utils/content-utils";
+import { url, getCategoryPageUrl } from "@/utils/url-utils";
+
+const categories = await getCategoryList();
+const categoriesUrl = getCategoryPageUrl();
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={["category-tools", className]} id="category-tools">
+  <!-- 封面图拨动开关 (tsc.md 样式) -->
+  <label class="cover-toggle" id="cover-toggle" title="封面图开关">
+    <input class="cover-checkbox" type="checkbox" id="cover-checkbox" checked />
+    <div class="cover-track"></div>
+    <div class="cover-knob"></div>
+  </label>
+
+  <!-- 分类气泡菜单按钮 (an.md BubbleMenu 样式) -->
+  <button
+    class="cat-bubble-btn"
+    id="cat-bubble-btn"
+    aria-label="分类菜单"
+    aria-expanded="false"
+  >
+    <span class="cat-bubble-line"></span>
+    <span class="cat-bubble-line cat-bubble-line-short"></span>
+  </button>
+</div>
+
+<!-- 分类气泡菜单覆盖层 -->
+<div class="cat-bubble-overlay" id="cat-bubble-overlay" aria-hidden="true">
+  <ul class="cat-pill-list" role="menu" aria-label="分类列表">
+    {categories.map((cat, idx) => (
+      <li class="cat-pill-col" role="none">
+        <a
+          role="menuitem"
+          href={cat.url}
+          aria-label={`查看 ${cat.name} 分类`}
+          class="cat-pill-link"
+          data-idx={idx}
+        >
+          <span class="cat-pill-label">{cat.name}</span>
+          <span class="cat-pill-count">{cat.count}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  /* ============ 工具栏容器 ============ */
+  .category-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px;
+  }
+
+  /* ============ 封面图拨动开关 ============ */
+  .cover-toggle {
+    position: relative;
+    display: block;
+    width: 54px;
+    height: 24px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+  .cover-checkbox { display: none; }
+
+  .cover-track {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: #2ecc71;
+    border: 2px solid var(--deep-text, #000);
+    box-sizing: border-box;
+    box-shadow: inset 1px 1px 0 rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease;
+  }
+  :root.dark .cover-track {
+    border-color: #fff;
+  }
+
+  .cover-knob {
+    position: absolute;
+    top: 50%; left: 0;
+    transform: translate(-2px, -50%);
+    width: 24px; height: 28px;
+    background: white;
+    border: 2px solid var(--deep-text, #000);
+    box-shadow: 1px 1px 0 var(--deep-text, #000);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    transition: transform 0.3s cubic-bezier(0.7, -0.4, 0.4, 1.4);
+  }
+  :root.dark .cover-knob {
+    border-color: #fff;
+    box-shadow: 1px 1px 0 #fff;
+  }
+
+  .cover-toggle:active .cover-knob {
+    box-shadow: 0.5px 0.5px 0 var(--deep-text, #000);
+    margin-top: 1px; margin-left: 1px;
+  }
+  :root.dark .cover-toggle:active .cover-knob {
+    box-shadow: 0.5px 0.5px 0 #fff;
+  }
+
+  .cover-knob::after {
+    content: ":)";
+    font-weight: 900; font-size: 13px;
+    color: black;
+    transform: rotate(90deg);
+  }
+
+  .cover-checkbox:checked + .cover-track {
+    background-color: #e74c3c;
+  }
+  .cover-checkbox:checked ~ .cover-knob {
+    transform: translate(30px, -50%);
+  }
+  .cover-checkbox:checked ~ .cover-knob::after {
+    content: ":(";
+  }
+
+  /* ============ 分类气泡菜单按钮 ============ */
+  .cat-bubble-btn {
+    --bubble-size: 30px;
+    width: var(--bubble-size);
+    height: var(--bubble-size);
+    border-radius: 6px;
+    background: var(--page-bg, #fff);
+    border: 1.5px solid var(--deep-text, #000);
+    box-shadow: 1px 1px 0 var(--deep-text, #000);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    gap: 4px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  :root.dark .cat-bubble-btn {
+    border-color: #fff;
+    box-shadow: 1px 1px 0 #fff;
+  }
+  .cat-bubble-btn:hover {
+    transform: scale(1.08);
+  }
+  .cat-bubble-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0.5px 0.5px 0 var(--deep-text, #000);
+  }
+  :root.dark .cat-bubble-btn:active {
+    box-shadow: 0.5px 0.5px 0 #fff;
+  }
+
+  .cat-bubble-line {
+    display: block;
+    width: 14px; height: 1.5px;
+    background: var(--deep-text, #111);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform-origin: center;
+  }
+  :root.dark .cat-bubble-line {
+    background: #fff;
+  }
+  .cat-bubble-line-short {
+    width: 10px;
+  }
+
+  .cat-bubble-btn.open .cat-bubble-line:first-child {
+    transform: translateY(2.75px) rotate(45deg);
+  }
+  .cat-bubble-btn.open .cat-bubble-line:last-child {
+    transform: translateY(-2.75px) rotate(-45deg);
+  }
+
+  /* ============ 分类气泡菜单覆盖层 ============ */
+  .cat-bubble-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 98;
+    background: color-mix(in srgb, var(--page-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .cat-bubble-overlay.show {
+    display: flex;
+    pointer-events: auto;
+  }
+
+  .cat-pill-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    row-gap: 12px;
+    width: 100%;
+    max-width: 900px;
+    pointer-events: auto;
+    justify-content: center;
+  }
+
+  .cat-pill-col {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex: 0 0 calc(100% / 3);
+    box-sizing: border-box;
+    padding: 0 6px;
+  }
+
+  .cat-pill-link {
+    --pill-bg: var(--page-bg, #fff);
+    --pill-color: var(--deep-text, #111);
+    --hover-bg: var(--primary);
+    --hover-color: var(--page-bg, #fff);
+    width: 100%;
+    min-height: 80px;
+    padding: 1.25rem 1rem;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    color: var(--pill-color);
+    text-decoration: none;
+    border: 2px solid var(--deep-text, #000);
+    box-shadow: 3px 3px 0 var(--deep-text, #000);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    position: relative;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    will-change: transform;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  :root.dark .cat-pill-link {
+    border-color: #fff;
+    box-shadow: 3px 3px 0 #fff;
+  }
+
+  .cat-pill-link:hover {
+    background: var(--hover-bg);
+    color: var(--hover-color);
+    transform: rotate(var(--item-rot, 0deg)) scale(1.04);
+  }
+  :root.dark .cat-pill-link:hover {
+    border-color: var(--primary);
+    box-shadow: 3px 3px 0 var(--primary);
+  }
+
+  .cat-pill-link:active {
+    transform: rotate(var(--item-rot, 0deg)) scale(0.96);
+    box-shadow: 1px 1px 0 var(--deep-text, #000);
+  }
+  :root.dark .cat-pill-link:active {
+    box-shadow: 1px 1px 0 #fff;
+  }
+
+  .cat-pill-label {
+    display: inline-block;
+  }
+
+  .cat-pill-count {
+    font-size: 0.6em;
+    opacity: 0.5;
+    font-weight: 400;
+  }
+
+  .cat-pill-col:nth-child(odd) .cat-pill-link {
+    --item-rot: -3deg;
+  }
+  .cat-pill-col:nth-child(even) .cat-pill-link {
+    --item-rot: 3deg;
+  }
+
+  .cat-pill-link:not(.cat-pill-visible) {
+    transform: rotate(var(--item-rot, 0deg)) scale(0) !important;
+  }
+  .cat-pill-link.cat-pill-visible {
+    transform: rotate(var(--item-rot, 0deg)) scale(1);
+  }
+
+  /* 小屏适配 */
+  @media (max-width: 640px) {
+    .cat-pill-list {
+      padding: 0 12px;
+      row-gap: 8px;
+    }
+    .cat-pill-link {
+      min-height: 60px;
+      padding: 0.8rem 0.6rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<script is:inline data-swup-ignore-script>
+(function() {
+  var isOpen = false;
+
+  function openMenu() {
+    var btn = document.getElementById("cat-bubble-btn");
+    var overlay = document.getElementById("cat-bubble-overlay");
+    if (!btn || !overlay) return;
+
+    isOpen = true;
+    btn.classList.add("open");
+    btn.setAttribute("aria-expanded", "true");
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden", "false");
+
+    var pills = overlay.querySelectorAll(".cat-pill-link");
+    pills.forEach(function(pill, i) {
+      pill.classList.remove("cat-pill-visible");
+      pill.style.opacity = "0";
+      setTimeout(function() {
+        pill.style.transition = "opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)";
+        pill.style.opacity = "1";
+        pill.classList.add("cat-pill-visible");
+      }, i * 60 + 30);
+    });
+  }
+
+  function closeMenu() {
+    var btn = document.getElementById("cat-bubble-btn");
+    var overlay = document.getElementById("cat-bubble-overlay");
+    if (!btn || !overlay) return;
+
+    isOpen = false;
+    btn.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+
+    var pills = overlay.querySelectorAll(".cat-pill-link");
+    pills.forEach(function(pill) {
+      pill.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+      pill.style.opacity = "0";
+      pill.classList.remove("cat-pill-visible");
+    });
+
+    setTimeout(function() {
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    }, 250);
+  }
+
+  // 初始化封面图开关状态
+  function initCoverToggle() {
+    var cb = document.getElementById("cover-checkbox");
+    if (!cb) return;
+    var stored = localStorage.getItem("hideCovers");
+    if (stored === null) {
+      // 首次访问：默认隐藏封面
+      localStorage.setItem("hideCovers", "true");
+      document.documentElement.setAttribute("data-hide-covers", "true");
+      cb.checked = true;
+    } else if (stored === "true") {
+      cb.checked = true;
+    } else {
+      cb.checked = false;
+    }
+  }
+
+  // 事件委托 - 绑定在 document 上，不受 Swup DOM 替换影响
+  document.addEventListener("change", function(e) {
+    if (e.target && e.target.id === "cover-checkbox") {
+      var active = e.target.checked;
+      localStorage.setItem("hideCovers", String(active));
+      document.documentElement.setAttribute("data-hide-covers", String(active));
+    }
+  });
+
+  document.addEventListener("click", function(e) {
+    var target = e.target;
+    // 气泡按钮点击
+    if (target && (target.id === "cat-bubble-btn" || target.closest("#cat-bubble-btn"))) {
+      if (isOpen) closeMenu();
+      else openMenu();
+      return;
+    }
+    // 覆盖层空白处点击关闭
+    if (target && target.id === "cat-bubble-overlay") {
+      closeMenu();
+    }
+  });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && isOpen) closeMenu();
+  });
+
+  // 初始化
+  initCoverToggle();
+  document.addEventListener("astro:page-load", initCoverToggle);
+  document.addEventListener("swup:contentReplaced", initCoverToggle);
+})();
+</script>

@@ -237,7 +237,7 @@ const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
 		background: linear-gradient(135deg,var(--card-bg) 0%,color-mix(in srgb,var(--primary) 20%,var(--card-bg)) 100%);
 		border: 1px solid var(--line-divider);
 	}
-	.notebook-hero:not([style*="background-image"]) .notebook-hero-title { color: var(--text-color); text-shadow: none; }
+	.notebook-hero:not([style*="background-image"]) .notebook-hero-title { color: var(--deep-text); text-shadow: none; }
 	.notebook-hero:not([style*="background-image"]) .notebook-hero-desc { color: var(--content-meta); }
 	.notebook-hero:not([style*="background-image"]) .notebook-hero-stat { color: var(--content-meta); }
 	.notebook-hero:not([style*="background-image"]) .notebook-hero-tag { background: color-mix(in srgb,var(--primary) 15%,transparent); color: var(--primary); }
@@ -254,55 +254,76 @@ const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
 	.entry-card-date { display: block; font-size: 0.75rem; color: var(--content-meta); margin-bottom: 0.35rem; }
 	.entry-card-preview { font-size: 0.825rem; color: var(--content-meta); line-height: 1.5; margin: 0; }
 
-	.entry-card-images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+	.entry-card-images { display: grid; grid-template-columns: repeat(3, 90px); gap: 0.5rem; }
 	.entry-card-image { aspect-ratio: 1 / 1; border-radius: var(--radius-md); overflow: hidden; }
 	.entry-card-img { width: 100%; height: 100%; object-fit: cover; }
 
 	/* ===== 日记详情页 ===== */
 	.diary-detail-page { max-width: 48rem; margin: 0 auto; }
 	.diary-paper {
-		background: #fff; color: #333;
+		background: var(--page-bg); color: var(--deep-text);
 		padding: 2rem 0.75rem;
 	}
 	@media (min-width: 768px) {
 		.diary-paper { padding: 2rem 1.25rem; }
 	}
-	:global(html.dark) .diary-paper { background: #1a1a1a; color: #ddd; }
 
 	/* 返回按钮 — 融入卡片 */
 	.diary-paper-back {
 		display: inline-flex; align-items: center; gap: 0.4rem;
-		font-size: 0.85rem; color: #999; text-decoration: none;
+		font-size: 0.85rem; color: var(--content-meta); text-decoration: none;
 		margin-bottom: 2rem; transition: color 0.2s;
 	}
 	.diary-paper-back:hover { color: var(--primary); }
 
 	/* 标题 */
-	.diary-paper-title { font-size: 1.75rem; font-weight: 700; color: #222; margin: 0 0 2rem; line-height: 1.4; }
-	:global(html.dark) .diary-paper-title { color: #eee; }
+	.diary-paper-title { font-size: 1.75rem; font-weight: 700; color: var(--deep-text); margin: 0 0 2rem; line-height: 1.4; }
 
 	/* 正文 */
 	.diary-paper-content { font-size: 1rem; line-height: 1.9; }
 	.diary-paper-content :global(p) { margin: 0 0 1.25rem; }
 	.diary-paper-content :global(blockquote) { border-left-color: var(--primary); }
 
+	/* 图片网格布局 — 参考说说页 */
+	.diary-paper-content :global(p:has(> img:only-child)) {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.5rem;
+	}
+	.diary-paper-content :global(p:has(> img:only-child):has(img:nth-child(2)):not(:has(img:nth-child(3)))) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.diary-paper-content :global(p:has(> img:only-child):not(:has(img:nth-child(2)))) {
+		grid-template-columns: 280px;
+		justify-content: start;
+	}
+	.diary-paper-content :global(img) {
+		border-radius: 0.5rem;
+		max-width: 100%;
+		aspect-ratio: 1 / 1;
+		object-fit: cover;
+		cursor: zoom-in;
+	}
+	.diary-paper-content :global(p:has(> img:only-child)) img {
+		width: 100%;
+		height: 100%;
+	}
+
 	/* 底部：日期右下角 */
 	.diary-paper-footer {
 		display: flex; align-items: flex-end; justify-content: space-between;
 		margin-top: 3rem; padding-top: 2rem;
-		border-top: 1px solid #eee;
+		border-top: 1px solid var(--line-divider);
 	}
-	:global(html.dark) .diary-paper-footer { border-top-color: #333; }
 	.diary-date-final {
-		font-size: 0.85rem; color: #999; text-align: right;
+		font-size: 0.85rem; color: var(--content-meta); text-align: right;
 		font-style: italic;
 	}
 
 	/* 标签 */
 	.diary-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 	.diary-tag {
-		padding: 0.25rem 0.75rem; background: #f3f4f6;
-		border-radius: 9999px; font-size: 0.75rem; color: #666;
+		padding: 0.25rem 0.75rem; background: var(--btn-regular-bg-hover);
+		border-radius: 9999px; font-size: 0.75rem; color: var(--content-meta);
 	}
-	:global(html.dark) .diary-tag { background: #333; color: #aaa; }
 </style>

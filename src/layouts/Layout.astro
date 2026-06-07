@@ -25,8 +25,6 @@ import { getDefaultBackground, isHomePage } from "@/utils/layout-utils";
 import { url } from "@/utils/url-utils";
 
 import "@/styles/main.css";
-import "@/styles/variables.styl";
-import "@/styles/markdown-extend.styl";
 import "@rehype-callouts-theme";
 
 interface Props {
@@ -409,7 +407,8 @@ const siteLang = lang.replace("_", "-");
       // Initialize hide-covers state before first paint
       (function applyHideCovers() {
         const hideCovers = localStorage.getItem("hideCovers");
-        if (hideCovers === "true") {
+        // 默认隐藏封面（首次访问或明确设置为 true）
+        if (hideCovers !== "false") {
           document.documentElement.setAttribute("data-hide-covers", "true");
         }
       })();
@@ -742,6 +741,32 @@ function disableAnimation() {
       }
     });
     window.swup.hooks.on("content:replace", () => {
+      // 修复 Swup 过渡：在此处切换布局类，避免 visit:start 时切换导致 Banner 高度跳动
+      const bodyElement = document.querySelector("body");
+      const isHome = pathsEqual(window.location.pathname, url("/"));
+
+      if (isHome) {
+        bodyElement!.classList.add("lg:is-home");
+      } else {
+        bodyElement!.classList.remove("lg:is-home");
+      }
+
+      // 同步 banner 文字覆盖层可见性
+      const bannerTextOverlay = document.querySelector(".banner-home-text-overlay");
+      if (bannerTextOverlay) {
+        if (isHome) {
+          bannerTextOverlay.classList.remove("hidden");
+        } else {
+          bannerTextOverlay.classList.add("hidden");
+        }
+      }
+
+      // 同步导航栏透明模式
+      const navEl = document.getElementById("navbar");
+      if (navEl) {
+        navEl.setAttribute("data-is-home", isHome.toString());
+      }
+
       // 更新侧边栏组件的可见性（根据新页面的 URL）
       updateSidebarComponentsVisibility();
 
@@ -768,9 +793,9 @@ function disableAnimation() {
       }
 
       // 重新初始化semifull模式的滚动检测
-      const navbar = document.getElementById("navbar");
-      if (navbar) {
-        const transparentMode = navbar.getAttribute("data-transparent-mode");
+      const navElForSemifull = document.getElementById("navbar");
+      if (navElForSemifull) {
+        const transparentMode = navElForSemifull.getAttribute("data-transparent-mode");
 
         if (transparentMode === "semifull") {
           // 重新调用初始化函数来重新绑定滚动事件
@@ -801,46 +826,10 @@ function disableAnimation() {
         progressBar.classList.add("loading");
       }
 
-      // change banner height immediately when a link is clicked
-      const bodyElement = document.querySelector("body");
-      const isHomePage = pathsEqual(visit.to.url, url("/"));
-
-      if (isHomePage) {
-        bodyElement!.classList.add("lg:is-home");
-      } else {
-        bodyElement!.classList.remove("lg:is-home");
-      }
-
-      // Control banner text visibility based on page
-      const bannerTextOverlay = document.querySelector(".banner-home-text-overlay");
-      if (bannerTextOverlay) {
-        if (isHomePage) {
-          bannerTextOverlay.classList.remove("hidden");
-        } else {
-          bannerTextOverlay.classList.add("hidden");
-        }
-      }
-
-      // Control navbar transparency based on page
-      const navbar = document.getElementById("navbar");
-      if (navbar) {
-        navbar.setAttribute("data-is-home", isHomePage.toString());
-
-        // 重新初始化semifull模式的滚动检测
-        const transparentMode = navbar.getAttribute("data-transparent-mode");
-        if (transparentMode === "semifull") {
-          // 重新调用初始化函数来重新绑定滚动事件
-          if (
-            typeof (window as any).initSemifullScrollDetection === "function"
-          ) {
-            (window as any).initSemifullScrollDetection();
-          }
-        }
-      }
-
       // Control mobile banner visibility based on page with improved staging animation
       // 只在移动端（1024px以下）处理banner隐藏
       const isMobile = window.innerWidth < 1024;
+      const isHomePage = pathsEqual(visit.to.url, url("/"));
 
       // 在移动端禁用文章列表容器的过渡动画，防止与主内容区位置变化冲突
       if (isMobile) {

@@ -89,14 +89,6 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
         </button>
       )}
 
-      <!-- 主题切换 -->
-      <button class="dock-btn" id="dock-theme-btn" aria-label="Theme" type="button">
-        <span class="dock-btn-icon">
-          <Icon name="material-symbols:wb-sunny-outline-rounded" class="text-2xl dock-theme-icon-light" />
-          <Icon name="material-symbols:dark-mode-outline-rounded" class="text-2xl dock-theme-icon-dark hidden" />
-        </span>
-        <span class="dock-btn-label">主题</span>
-      </button>
 
       <!-- 笔记本 -->
       <button class="dock-btn" id="dock-notebook-btn" aria-label="Notebook" type="button">
@@ -293,15 +285,15 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
       }
     }, { signal });
 
-    // 主题切换
-    const themeBtn = document.getElementById("dock-theme-btn");
-    if (themeBtn) {
-      const lightIcon = themeBtn.querySelector(".dock-theme-icon-light");
-      const darkIcon = themeBtn.querySelector(".dock-theme-icon-dark");
-      themeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isDark = document.documentElement.classList.contains("dark");
-        const next = isDark ? "light" : "dark";
+    // 主题切换（骷髅开关）
+    const skullCb = document.getElementById("skull-theme-cb") as HTMLInputElement;
+    if (skullCb) {
+      // 同步初始状态
+      const isDarkNow = document.documentElement.classList.contains("dark");
+      skullCb.checked = isDarkNow;
+
+      skullCb.addEventListener("change", () => {
+        const next = skullCb.checked ? "dark" : "light";
         localStorage.setItem("theme", next);
         if (next === "dark") {
           document.documentElement.classList.add("dark");
@@ -310,12 +302,7 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
           document.documentElement.classList.remove("dark");
           document.documentElement.setAttribute("data-theme", "one-light");
         }
-        lightIcon?.classList.toggle("hidden", next === "dark");
-        darkIcon?.classList.toggle("hidden", next !== "dark");
       });
-      const isDark = document.documentElement.classList.contains("dark");
-      lightIcon?.classList.toggle("hidden", isDark);
-      darkIcon?.classList.toggle("hidden", !isDark);
     }
 
     // 笔记本

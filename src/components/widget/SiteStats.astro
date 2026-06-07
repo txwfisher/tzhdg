@@ -44,6 +44,16 @@ const gameCount = bangumi.filter(
 
 // 统计生活数据
 const lifeEntries = await getCollection("life");
+const routinesEntries = await getCollection("routines");
+
+// 足迹记录
+const isIn = (entryId: string, folder: string) =>
+	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
+const placesCount = lifeEntries.filter((entry) => isIn(entry.id, "places")).length;
+const routinesCount = routinesEntries.length;
+
+// 记录次数 = 影视 + 书籍 + 游戏 + 音乐 + 足迹 + 日常规划
+const recordCount = animeCount + bookCount + gameCount + musicCount + placesCount + routinesCount;
 
 // 计算总字数
 let totalWords = 0;
@@ -93,24 +103,9 @@ const stats = [
 		value: moments.length,
 	},
 	{
-		icon: "material-symbols:movie-outline",
-		label: i18n(I18nKey.bangumiCategoryAnime),
-		value: animeCount,
-	},
-	{
-		icon: "material-symbols:menu-book-outline",
-		label: i18n(I18nKey.bangumiCategoryBook),
-		value: bookCount,
-	},
-	{
-		icon: "material-symbols:sports-esports-outline",
-		label: i18n(I18nKey.bangumiCategoryGame),
-		value: gameCount,
-	},
-	{
-		icon: "material-symbols:library-music-outline",
-		label: i18n(I18nKey.bangumiCategoryMusic),
-		value: musicCount,
+		icon: "material-symbols:edit-note-outline",
+		label: "记录次数",
+		value: recordCount,
 	},
 	{
 		icon: "material-symbols:folder-outline",

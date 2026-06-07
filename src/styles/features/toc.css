@@ -71,3 +71,25 @@
 	transition: all 0.2s ease;
 	z-index: -1;
 }
+
+/* ============ 暗色模式目录文字可见性修复 ============ */
+:root.dark .toc-content a {
+	color: oklch(0.90 0 0 / 0.70);
+}
+:root.dark .toc-content a:hover {
+	color: var(--primary);
+	background: var(--toc-btn-hover);
+}
+:root.dark .toc-content a .text-50 {
+	color: oklch(0.90 0 0 / 0.65);
+}
+:root.dark .toc-content a .text-30 {
+	color: oklch(0.90 0 0 / 0.45);
+}
+:root.dark .toc-content a.visible {
+	color: var(--primary);
+}
+:root.dark .toc-content a.visible .text-50,
+:root.dark .toc-content a.visible .text-30 {
+	color: var(--primary);
+}
