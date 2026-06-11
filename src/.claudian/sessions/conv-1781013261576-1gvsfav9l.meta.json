@@ -4,20 +4,19 @@
   "title": "整理一下",
   "titleGenerationStatus": "failed",
   "createdAt": 1781013261577,
-  "updatedAt": 1781014406964,
-  "lastResponseAt": 1781013283027,
+  "updatedAt": 1781177648559,
+  "lastResponseAt": 1781177617658,
   "sessionId": "cc8700a5-70a0-4d3f-a080-4f7032b2acf2",
   "providerState": {
     "providerSessionId": "cc8700a5-70a0-4d3f-a080-4f7032b2acf2"
   },
-  "currentNote": "notes/草稿/记笔记方法规范.md",
   "usage": {
     "model": "haiku",
-    "inputTokens": 488,
+    "inputTokens": 28896,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 28224,
+    "cacheReadInputTokens": 0,
     "contextWindow": 200000,
-    "contextTokens": 28712,
+    "contextTokens": 28896,
     "percentage": 14,
     "contextWindowIsAuthoritative": true
   }

@@ -4,6 +4,7 @@ import { getCollection, render } from "astro:content";
 import { Icon } from "astro-icon/components";
 import Markdown from "@components/common/Markdown.astro";
 import Comment from "@components/comment/index.astro";
+import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
 import { marked } from "marked";
 import type { ImageMetadata } from "astro";
 import * as path from "node:path";
@@ -115,8 +116,15 @@ const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
 			</section>
 
 			<section class="diary-entries-section">
+				{/* 远程笔记容器 - 插入到本地笔记前面 */}
+				{externalNotebooksConfig.enable && (
+					<div id="remote-entries-container" style="display:none;">
+						<div class="diary-entries-list" id="remote-entries-list"></div>
+					</div>
+				)}
+
 				{sortedEntriesWithImages.length === 0 ? (
-					<div class="diary-empty-entries"><div class="text-5xl mb-4">📝</div><p class="text-[var(--content-meta)]">还没有日记内容</p></div>
+					<div class="diary-empty-entries" id="local-empty"><div class="text-5xl mb-4">📝</div><p class="text-[var(--content-meta)]">还没有日记内容</p></div>
 				) : (
 					<div class="diary-entries-list">
 						{sortedEntriesWithImages.map((noteItem) => {
@@ -247,12 +255,13 @@ const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
 	.diary-empty-entries { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; background: var(--card-bg); border: 2px dashed var(--line-divider); border-radius: var(--radius-2xl); }
 	.diary-entries-list { display: flex; flex-direction: column; gap: 0.15rem; }
 
-	.diary-entry-card { display: block; text-decoration: none; background: var(--card-bg); border: 1px solid var(--line-divider); overflow: hidden; transition: all 0.2s ease; }
-	.diary-entry-card:hover { border-color: var(--primary); background: color-mix(in srgb,var(--primary) 3%,var(--card-bg)); }
-	.entry-card-inner { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem; }
-	.entry-card-text { flex: 1; min-width: 0; }
-	.entry-card-date { display: block; font-size: 0.75rem; color: var(--content-meta); margin-bottom: 0.35rem; }
-	.entry-card-preview { font-size: 0.825rem; color: var(--content-meta); line-height: 1.5; margin: 0; }
+	/* 卡片样式需要全局，因为远程笔记由 JS 动态创建，没有 Astro 作用域属性 */
+	:global(.diary-entry-card) { display: block; text-decoration: none; background: var(--card-bg); border: 1px solid var(--line-divider); overflow: hidden; transition: all 0.2s ease; }
+	:global(.diary-entry-card:hover) { border-color: var(--primary); background: color-mix(in srgb,var(--primary) 3%,var(--card-bg)); }
+	:global(.entry-card-inner) { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem; }
+	:global(.entry-card-text) { flex: 1; min-width: 0; }
+	:global(.entry-card-date) { display: block; font-size: 0.75rem; color: var(--content-meta); margin-bottom: 0.35rem; }
+	:global(.entry-card-preview) { font-size: 0.825rem; color: var(--content-meta); line-height: 1.5; margin: 0; }
 
 	.entry-card-images { display: grid; grid-template-columns: repeat(3, 90px); gap: 0.5rem; }
 	.entry-card-image { aspect-ratio: 1 / 1; border-radius: var(--radius-md); overflow: hidden; }
@@ -326,4 +335,84 @@ const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
 		padding: 0.25rem 0.75rem; background: var(--btn-regular-bg-hover);
 		border-radius: 9999px; font-size: 0.75rem; color: var(--content-meta);
 	}
+
+	/* 远程笔记样式 */
+	.remote-entry-card {
+		display: block; text-decoration: none; background: var(--card-bg);
+		border: 1px dashed var(--line-divider); overflow: hidden;
+		transition: all 0.2s ease;
+	}
+	.remote-entry-card:hover { border-color: var(--primary); border-style: solid; background: color-mix(in srgb,var(--primary) 3%,var(--card-bg)); }
+	.remote-entry-card .entry-card-inner { padding: 1.25rem; }
+	.remote-entry-badge {
+		display: inline-block; font-size: 0.625rem; padding: 0.125rem 0.5rem;
+		background: color-mix(in srgb,var(--primary) 15%,transparent);
+		color: var(--primary); border-radius: 9999px; margin-bottom: 0.5rem;
+	}
 </style>
+
+{/* 远程笔记注入脚本 - 仅在笔记本索引页生效 */}
+{isNotebookIndex && externalNotebooksConfig.enable && (
+	<script is:inline
+		data-gists={JSON.stringify(externalNotebooksConfig.notebookGists || {})}
+		data-notebook={folderName}>
+		(function() {
+			var _s = document.currentScript;
+			var GISTS = JSON.parse(_s.getAttribute("data-gists") || "{}");
+			var NOTEBOOK = _s.getAttribute("data-notebook");
+			var GIST_ID = GISTS[NOTEBOOK];
+			if (!GIST_ID || !NOTEBOOK) return;
+
+			// 用 Raw URL 读取（Secret Gist 也能访问，不需要 API 认证）
+			var rawUrl = "https://gist.githubusercontent.com/raw/" + GIST_ID + "?t=" + Date.now();
+
+			fetch(rawUrl)
+				.then(function(r) { if (!r.ok) return null; return r.text(); })
+				.then(function(text) {
+					if (!text) return;
+					var entries = [];
+					try { entries = JSON.parse(text); } catch(e) { return; }
+					if (!Array.isArray(entries)) return;
+
+					var filtered = entries.filter(function(e) { return e.notebook === NOTEBOOK; });
+					if (!filtered.length) return;
+
+					filtered.sort(function(a, b) {
+						return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
+					});
+
+					var container = document.getElementById("remote-entries-container");
+					var list = document.getElementById("remote-entries-list");
+					if (!container || !list) return;
+
+					function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+
+					filtered.forEach(function(entry) {
+						var date = entry.date || "";
+						var contentBody = (entry.content || "").replace(/[#*`>\-\[\]!]/g, "").replace(/\n/g, " ");
+						var preview = contentBody.slice(0, 100) + (contentBody.length > 100 ? "..." : "");
+
+						// 用和本地笔记完全一样的 HTML 结构
+						var card = document.createElement("a");
+						card.href = "/life/notebooks/remote-entry/?nb=" + encodeURIComponent(NOTEBOOK) + "&id=" + encodeURIComponent(entry.id);
+						card.className = "diary-entry-card group";
+						card.innerHTML =
+							'<div class="entry-card-inner">' +
+							'<div class="entry-card-text">' +
+							'<span class="entry-card-date">' + esc(date) + '</span>' +
+							'<p class="entry-card-preview">' + esc(entry.title || preview) + '</p>' +
+							'</div>' +
+							'</div>';
+						list.appendChild(card);
+					});
+
+					container.style.display = "";
+
+					// 如果本地没有笔记，隐藏空状态
+					var localEmpty = document.getElementById("local-empty");
+					if (localEmpty) localEmpty.style.display = "none";
+				})
+				.catch(function() {});
+		})();
+	</script>
+)}

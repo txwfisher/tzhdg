@@ -24,6 +24,14 @@
     box-shadow: none !important;
   }
 
+  /* 封面关闭时，文章卡片显示黑线框 */
+  [data-hide-covers="true"] .post-card-wrapper.card-base {
+    border: 2.5px solid var(--deep-text) !important;
+  }
+  :root.dark [data-hide-covers="true"] .post-card-wrapper.card-base {
+    border-color: #fff !important;
+  }
+
   /* 阴影（极简模式几乎为零） */
   .card-shadow {
     @apply drop-shadow-[0_2px_4px_rgba(0,0,0,0.005)];

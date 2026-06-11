@@ -7,10 +7,10 @@ import { i18n } from "@/i18n/translation";
 import I18nKey from "@/i18n/i18nKey";
 import { Icon } from "astro-icon/components";
 import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
 
-const extConfig = externalMomentsConfig.enable && externalMomentsConfig.gistId
-  ? { gistId: externalMomentsConfig.gistId, fileName: externalMomentsConfig.fileName }
-  : null;
+const momentsGistId = externalMomentsConfig.enable ? externalMomentsConfig.gistId : "";
+const notebookGists = externalNotebooksConfig.enable ? externalNotebooksConfig.notebookGists : {};
 
 const posts = await getCollection("posts", ({ data }) => {
   return import.meta.env.PROD ? data.draft !== true : true;
@@ -75,7 +75,7 @@ const allItems = [
   })),
 ];
 
-const recentItems = allItems.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 8);
+const recentItems = allItems.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
 const defaultImage = "https://re.0824.uk/zl/tx.webp";
 
 const typeLabel: Record<string, () => string> = {
@@ -91,7 +91,7 @@ const style = Astro.props.style;
 <WidgetLayout name={i18n(I18nKey.recentItems)} id="recent-items" class={className} style={style}>
   <Icon name="material-symbols:history" slot="title-icon" class="text-xl" />
   <div class="flex flex-col" id="recent-items-list">
-    {extConfig && <div id="ext-recent-items"></div>}
+    {(momentsGistId || Object.keys(notebookGists).length > 0) && <div id="ext-recent-items"></div>}
     {recentItems.map((item, i) => (
       <a href={item.url} class="recent-item group" style={`animation-delay: ${i * 50}ms`}>
         <div class="recent-thumb">
@@ -214,7 +214,7 @@ const style = Astro.props.style;
   }
 </style>
 
-{extConfig && (
+{(momentsGistId || Object.keys(notebookGists).length > 0) && (
 <style is:global>
   #ext-recent-items .recent-item {
     display: flex; align-items: center; gap: 0.625rem;
@@ -255,62 +255,103 @@ const style = Astro.props.style;
   :root.dark #ext-recent-items .recent-badge { background: oklch(0.20 0 0); }
   #ext-recent-items .recent-item:hover .recent-badge { background: var(--primary); color: var(--page-bg); }
   :root.dark #ext-recent-items .recent-item:hover .recent-badge { background: #fff; color: #000; }
-  @keyframes recentFadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
 </style>
-<script is:inline data-gist={extConfig.gistId} data-file={extConfig.fileName}>
+<script is:inline data-moments-gist={momentsGistId} data-notebook-gists={JSON.stringify(notebookGists)}>
 (function() {
   var _s = document.currentScript;
-  var gistId = _s.getAttribute("data-gist");
-  var fileName = _s.getAttribute("data-file");
-  var container = document.getElementById("ext-recent-items");
-  if (!container || !gistId) return;
+  var MOMENTS_GIST = _s.getAttribute("data-moments-gist");
+  var NB_GISTS = JSON.parse(_s.getAttribute("data-notebook-gists") || "{}");
+  var containers = document.querySelectorAll("#ext-recent-items");
+  if (!containers.length) return;
 
-  var cacheKey = "__extRecentCache";
+  var allRemote = [];
+  var fetched = 0;
+  var total = 0;
 
-  function render(items) {
-    if (!items.length) { container.style.display = "none"; return; }
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function render() {
+    allRemote.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+    // 远程最多3条，其余留给本地
+    var maxRemote = 3;
+    var remoteCount = Math.min(allRemote.length, maxRemote);
+    var top = allRemote.slice(0, remoteCount);
     var defaultImg = "https://re.0824.uk/zl/tx.webp";
-    container.innerHTML = items.map(function(m) {
-      var title = (m.content || "").replace(/[#*`]/g, "").trim();
-      if (title.length > 40) title = title.substring(0, 40) + "...";
-      if (!title) title = "日常动态";
-      var img = defaultImg;
-      if (m.images && m.images.length) img = typeof m.images[0] === "string" ? m.images[0] : defaultImg;
-      var date = new Date(m.published);
-      var dateStr = date.getFullYear() + "-" + String(date.getMonth()+1).padStart(2,"0") + "-" + String(date.getDate()).padStart(2,"0");
-      return '<a href="/moments/" class="recent-item" style="animation-delay:0ms">' +
+    var html = top.map(function(m) {
+      var img = m.image || defaultImg;
+      return '<a href="' + esc(m.url) + '" class="recent-item" style="animation-delay:0ms">' +
         '<div class="recent-thumb"><img src="' + img + '" alt="" class="w-full h-full object-cover" onerror="this.onerror=null;this.src=\'' + defaultImg + '\';" loading="lazy"></div>' +
-        '<div class="recent-body"><span class="recent-title">' + title.replace(/</g,"&lt;") + '</span>' +
-        '<span class="recent-date"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ' + dateStr + ' <span class="recent-badge">说说</span></span></div></a>';
+        '<div class="recent-body"><span class="recent-title">' + esc(m.title) + '</span>' +
+        '<span class="recent-date"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ' + m.date + ' <span class="recent-badge">' + esc(m.badge) + '</span></span></div></a>';
     }).join("");
+
+    // 更新所有实例（桌面端 + 移动端）
+    containers.forEach(function(c) {
+      if (!allRemote.length) { c.style.display = "none"; return; }
+      c.innerHTML = html;
+    });
+
+    // 隐藏多余的本地条目（所有 recent-items 容器内的）
+    var localKeep = Math.max(0, 10 - remoteCount);
+    document.querySelectorAll("#recent-items-list").forEach(function(list) {
+      var localItems = list.querySelectorAll(":scope > a.recent-item");
+      for (var i = localKeep; i < localItems.length; i++) {
+        localItems[i].style.display = "none";
+      }
+    });
   }
 
-  function fetchExt() {
-    if (window[cacheKey] && window[cacheKey].time > Date.now() - 300000) {
-      render(window[cacheKey].data); return;
-    }
-    var token = localStorage.getItem("gh_moments_token") || "";
-    var headers = { "Accept": "application/vnd.github+json" };
-    if (token) headers["Authorization"] = "Bearer " + token;
-    fetch("https://api.github.com/gists/" + gistId, { headers: headers })
-      .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
-      .then(function(gist) {
-        var file = gist.files[fileName];
-        if (!file) return;
-        var moments = JSON.parse(file.content || "[]");
-        moments.sort(function(a, b) { return new Date(b.published) - new Date(a.published); });
-        var top = moments.slice(0, 2);
-        window[cacheKey] = { data: top, time: Date.now() };
-        render(top);
+  function done() { fetched++; if (fetched >= total) render(); }
+
+  // 获取远程说说
+  if (MOMENTS_GIST) {
+    total++;
+    fetch("https://gist.githubusercontent.com/raw/" + MOMENTS_GIST + "?t=" + Date.now())
+      .then(function(r) { if (!r.ok) return null; return r.text(); })
+      .then(function(text) {
+        if (!text) return;
+        var moments = [];
+        try { moments = JSON.parse(text); } catch(e) { return; }
+        if (!Array.isArray(moments)) return;
+        moments.forEach(function(m) {
+          var title = (m.content || "").replace(/[#*`]/g, "").trim();
+          if (title.length > 40) title = title.substring(0, 40) + "...";
+          if (!title) title = "日常动态";
+          var img = "";
+          if (m.images && m.images.length) img = typeof m.images[0] === "string" ? m.images[0] : "";
+          allRemote.push({ type: "moment", title: title, date: (m.published || "").substring(0, 10), url: "/moments/", image: img, badge: "说说" });
+        });
       })
-      .catch(function() { container.style.display = "none"; });
+      .catch(function() {})
+      .finally(done);
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fetchExt);
-  else fetchExt();
-  document.addEventListener("swup:content:replace", function() {
-    if (window[cacheKey]) render(window[cacheKey].data);
+  // 获取远程笔记
+  var nbKeys = Object.keys(NB_GISTS);
+  nbKeys.forEach(function(nbName) {
+    var gistId = NB_GISTS[nbName];
+    if (!gistId) return;
+    total++;
+    fetch("https://gist.githubusercontent.com/raw/" + gistId + "?t=" + Date.now())
+      .then(function(r) { if (!r.ok) return null; return r.text(); })
+      .then(function(text) {
+        if (!text) return;
+        var entries = [];
+        try { entries = JSON.parse(text); } catch(e) { return; }
+        if (!Array.isArray(entries)) return;
+        entries.forEach(function(e) {
+          allRemote.push({ type: "notebook", title: nbName + " · " + (e.title || "未命名"), date: (e.date || "").substring(0, 10), url: "/life/notebooks/" + encodeURIComponent(nbName) + "/", image: "", badge: "笔记" });
+        });
+      })
+      .catch(function() {})
+      .finally(done);
   });
+
+  if (total === 0) { container.style.display = "none"; return; }
+
+  // 超时保护
+  setTimeout(function() { if (fetched < total) { fetched = total; render(); } }, 5000);
 })();
 </script>
 )}

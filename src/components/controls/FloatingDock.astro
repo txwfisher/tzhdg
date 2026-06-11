@@ -285,15 +285,12 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
       }
     }, { signal });
 
-    // 主题切换（骷髅开关）
-    const skullCb = document.getElementById("skull-theme-cb") as HTMLInputElement;
-    if (skullCb) {
-      // 同步初始状态
-      const isDarkNow = document.documentElement.classList.contains("dark");
-      skullCb.checked = isDarkNow;
-
-      skullCb.addEventListener("change", () => {
-        const next = skullCb.checked ? "dark" : "light";
+    // 主题切换（太阳/月亮按钮）
+    const themeBtn = document.getElementById("sun-moon-theme-btn");
+    if (themeBtn) {
+      themeBtn.addEventListener("click", () => {
+        const isDark = document.documentElement.classList.contains("dark");
+        const next = isDark ? "light" : "dark";
         localStorage.setItem("theme", next);
         if (next === "dark") {
           document.documentElement.classList.add("dark");

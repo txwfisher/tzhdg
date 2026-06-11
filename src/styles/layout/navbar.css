@@ -97,6 +97,12 @@
 .nav-hamburger-btn.hamburger-open .hamburger-icon-menu { display: none; }
 .nav-hamburger-btn.hamburger-open .hamburger-icon-close { display: inline-block; }
 
+/* ============ 去掉导航栏按钮的 hover 背景 ============ */
+#navbar .btn-plain:hover,
+#navbar .btn-plain:active {
+  background: transparent !important;
+}
+
 /* ============ 暗色模式导航栏链接可见性修复 ============ */
 :root.dark #navbar .navbar-link-item,
 :root.dark #navbar .btn-plain {
