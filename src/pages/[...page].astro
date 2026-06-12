@@ -1,6 +1,8 @@
 ---
 import type { GetStaticPaths } from "astro";
 import Pagination from "@/components/common/Pagination.astro";
+import CategoryTools from "@/components/controls/CategoryTools.astro";
+import HomePortal from "@/components/layout/HomePortal.astro";
 import PostPage from "@/components/layout/PostPage.astro";
 import { siteConfig } from "@/config";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
@@ -19,6 +21,10 @@ const len = page.data.length;
 ---
 
 <MainGridLayout>
+  <Fragment slot="portal">
+    {page.currentPage === 1 && <HomePortal />}
+  </Fragment>
+  {page.currentPage === 1 && siteConfig.categoryBar && <CategoryTools />}
   <PostPage page={page} />
   {
     page.total > page.size && (

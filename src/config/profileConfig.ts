@@ -4,15 +4,27 @@ export const profileConfig: ProfileConfig = {
 	// 头像
 	// 图片路径支持三种格式：
 	// 1. public 目录（以 "/" 开头，不优化）："/assets/images/avatar.webp"
-	// 2. src 目录（不以 "/" 开头，自动优化但会增加构建时间，推荐）："assets/images/avatar.webp"
+	// 2. src 目录（不以 "/"开头，自动优化但会增加构建时间，推荐）："assets/images/avatar.webp"
 	// 3. 远程 URL："https://example.com/avatar.jpg"
 	avatar: "https://re.tsh520.cn/zl/tx.webp",
+
+	// 下班时间头像（为空则始终使用上方 avatar）
+	avatarOffWork: "",
 
 	// 名字
 	name: "团子和蛋糕",
 
-	// 个人签名
-	bio: "海棠花未眠，老陈总在我身边",
+	// 首页展示名字（留空则使用 name）
+	displayName: "团子",
+
+	// 职业/身份标签
+	occupation: "[技术博主 / 生活记录者]",
+
+	// 个人签名（支持多条，会循环打字+删除效果）
+	bio: [
+		"海棠花未眠，老陈总在我身边",
+		"记录更多，言语更少",
+	],
 
 	// 链接配置
 	// 已经预装的图标集：fa7-brands，fa7-regular，fa7-solid，material-symbols，simple-icons

@@ -221,7 +221,7 @@ export type ProfileConfig = {
 	displayName?: string;
 		occupation?: string;
 		avatarOffWork?: string;
-	bio?: string;
+	bio?: string | string[];
 	links: {
 		name: string;
 		url: string;

@@ -280,6 +280,11 @@ export const ru: Translation = {
 	[Key.siteStatsLastUpdate]: "Последняя активность",
 	[Key.siteStatsDaysAgo]: "{days} дней назад",
 	[Key.siteStatsDays]: "{days} дней",
+	[Key.siteStatsVisitorPrefix]: "Вы ",
+	[Key.siteStatsVisitorSuffix]: "-й посетитель. Рады встрече.",
+	[Key.siteStatsPageViewPrefix]: "Всего просмотров: ",
+	[Key.siteStatsPageViewSuffix]: "",
+	[Key.siteStatsLoading]: "--",
 	[Key.siteHeatmap]: "Тепловая карта активности",
 	[Key.today]: "Сегодня",
 

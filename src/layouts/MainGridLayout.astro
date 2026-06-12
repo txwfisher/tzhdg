@@ -11,7 +11,6 @@ import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import FloatingDock from "@/components/controls/FloatingDock.astro";
 import WelcomeCard from "@/components/features/WelcomeCard.astro";
 import TypewriterText from "@/components/features/TypewriterText.astro";
-import CategoryTools from "@/components/controls/CategoryTools.astro";
 import {
 	backgroundWallpaper,
 	commentConfig,
@@ -586,6 +585,10 @@ const mobileQuality = Math.round(configQuality * 0.9);
 <div class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${!(isBannerMode && isBackgroundEnabled) ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${finalMainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-(--page-width) mx-auto pointer-events-auto">
+        {/* 门户区 - grid 外部，全宽 */}
+        <div id="portal-zone" class="portal-zone-wrapper">
+            <slot name="portal" />
+        </div>
         <div id="main-grid"
           class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto px-2 md:px-4 ${!sidebarConfig.mobileShowSidebar ? 'mobile-no-sidebar' : ''} ${isPostPage ? 'gap-0 is-post-layout' : 'gap-4'}`}
           data-sidebar-position={sidebarLayoutConfig.position}
@@ -635,8 +638,6 @@ const mobileQuality = Math.round(configQuality * 0.9);
                 <main id="swup-container" class="transition-main">
                 {/* 携带网格布局类名，用于JS更新父容器 */}
                 <div id="grid-class-carrier" data-grid-class={gridCols} class="hidden"></div>
-                {/* 封面图开关 + 分类气泡菜单 - 仅首页 */}
-                {siteConfig.categoryBar && isHomePageCheck && <CategoryTools />}
                 {/* 备用 h1 标题 - 当主页横幅文本未启用时，提供隐藏的主标题 */}
                 {isHomePageCheck && !showHomeText && (
                         <h1 class="sr-only">{siteConfig.title}</h1>
@@ -1028,6 +1029,11 @@ const mobileQuality = Math.round(configQuality * 0.9);
 </Layout>
 
 <style is:global>
+  /* 门户区容器 - 空时隐藏 */
+  .portal-zone-wrapper:empty {
+    display: none;
+  }
+
   /* 右侧栏平滑过渡 */
   #right-sidebar {
     transition: opacity 0.35s ease-in-out,

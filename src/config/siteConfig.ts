@@ -88,6 +88,14 @@ export const siteConfig: SiteConfig = {
 	// 站点开始日期，用于统计运行天数
 	siteStartDate: "2025-9-1",
 
+	// 上下班时间配置（24小时制），用于首页头像涟漪动效和状态按钮
+	workHours: {
+		start: 9, // 上班时间 9:00
+		end: 18, // 下班时间 18:00
+		// 工作日范围，0=周日 1=周一 ... 6=周六，默认周一到周五
+		workDays: [1, 2, 3, 4, 5],
+	},
+
 	// 站点时区（IANA 时区字符串），用于格式化bangumi、rss里的构建日期时间等等..
 	// 示例："Asia/Shanghai", "UTC", 如果为空，则按照构建服务器的时区进行时区转换
 	timezone: "Asia/Shanghai",

@@ -279,6 +279,11 @@ enum I18nKey {
 	siteStatsLastUpdate = "siteStatsLastUpdate",
 	siteStatsDaysAgo = "siteStatsDaysAgo",
 	siteStatsDays = "siteStatsDays",
+	siteStatsVisitorPrefix = "siteStatsVisitorPrefix",
+	siteStatsVisitorSuffix = "siteStatsVisitorSuffix",
+	siteStatsPageViewPrefix = "siteStatsPageViewPrefix",
+	siteStatsPageViewSuffix = "siteStatsPageViewSuffix",
+	siteStatsLoading = "siteStatsLoading",
 	siteHeatmap = "siteHeatmap",
 	today = "today",
 

@@ -283,6 +283,11 @@ export const en: Translation = {
 	[Key.siteStatsLastUpdate]: "Last Activity",
 	[Key.siteStatsDaysAgo]: "{days} days ago",
 	[Key.siteStatsDays]: "{days} days",
+	[Key.siteStatsVisitorPrefix]: "You are the ",
+	[Key.siteStatsVisitorSuffix]: "th visitor. Nice to meet you.",
+	[Key.siteStatsPageViewPrefix]: "Total views: ",
+	[Key.siteStatsPageViewSuffix]: "",
+	[Key.siteStatsLoading]: "--",
 	[Key.siteHeatmap]: "Activity Heatmap",
 	[Key.today]: "Today",
 

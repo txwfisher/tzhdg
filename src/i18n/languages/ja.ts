@@ -278,6 +278,11 @@ export const ja: Translation = {
 	[Key.siteStatsLastUpdate]: "最終活動",
 	[Key.siteStatsDaysAgo]: "{days} 日前",
 	[Key.siteStatsDays]: "{days} 日",
+	[Key.siteStatsVisitorPrefix]: "あなたは ",
+	[Key.siteStatsVisitorSuffix]: " 人目の訪問者です。はじめまして。",
+	[Key.siteStatsPageViewPrefix]: "総アクセス数: ",
+	[Key.siteStatsPageViewSuffix]: "",
+	[Key.siteStatsLoading]: "--",
 	[Key.siteHeatmap]: "アクティビティヒートマップ",
 	[Key.today]: "今日",
 

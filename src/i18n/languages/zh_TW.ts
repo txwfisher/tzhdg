@@ -272,6 +272,11 @@ export const zh_TW: Translation = {
 	[Key.siteStatsLastUpdate]: "最後活動",
 	[Key.siteStatsDaysAgo]: "{days} 天前",
 	[Key.siteStatsDays]: "{days} 天",
+	[Key.siteStatsVisitorPrefix]: "您是造訪本站的第 ",
+	[Key.siteStatsVisitorSuffix]: " 位旅人，很高興與你相遇。",
+	[Key.siteStatsPageViewPrefix]: "小破站訪問量為 ",
+	[Key.siteStatsPageViewSuffix]: "",
+	[Key.siteStatsLoading]: "--",
 	[Key.siteHeatmap]: "更新熱力圖",
 	[Key.today]: "今天",
 
