@@ -1,16 +1,20 @@
 ---
-import { Icon } from "astro-icon/components";
 import ArchivePanel from "@components/controls/ArchivePanel.svelte";
 import ArchiveHeatmap from "@components/widget/ArchiveHeatmap.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { getArchiveList, getSortedPostsList } from "@/utils/content-utils";
+import { Icon } from "astro-icon/components";
 import { externalMomentsConfig } from "@/config/externalMomentsConfig";
+import { getArchiveList, getSortedPostsList } from "@/utils/content-utils";
 
-const extConfig = externalMomentsConfig.enable && externalMomentsConfig.gistId
-  ? { gistId: externalMomentsConfig.gistId, fileName: externalMomentsConfig.fileName }
-  : null;
+const extConfig =
+	externalMomentsConfig.enable && externalMomentsConfig.gistId
+		? {
+				gistId: externalMomentsConfig.gistId,
+				fileName: externalMomentsConfig.fileName,
+			}
+		: null;
 
 const archiveList = await getArchiveList();
 const sortedPostsList = await getSortedPostsList();

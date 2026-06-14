@@ -1,9 +1,9 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getCollection } from "astro:content";
-import { Icon } from "astro-icon/components";
-import type { ImageMetadata } from "astro";
 import * as path from "node:path";
+import type { ImageMetadata } from "astro";
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 // 预加载笔记本文件夹内的封面图片
 const notebookCoverFiles = import.meta.glob<ImageMetadata>(
@@ -13,19 +13,25 @@ const notebookCoverFiles = import.meta.glob<ImageMetadata>(
 
 const allEntries = await getCollection("notebooks");
 
-const sortByDateDesc = <T extends Record<string, unknown>>(list: T[], field: keyof T) =>
+const sortByDateDesc = <T extends Record<string, unknown>>(
+	list: T[],
+	field: keyof T,
+) =>
 	[...list].sort((a, b) => {
 		const aDate = a[field] instanceof Date ? a[field]!.getTime() : 0;
 		const bDate = b[field] instanceof Date ? b[field]!.getTime() : 0;
 		return bDate - aDate;
 	});
 
-	const notebooks = allEntries.map((entry) => {
+const notebooks = allEntries
+	.map((entry) => {
 		const normalizedId = entry.id.replace(/\\/g, "/");
 		if (normalizedId === "readme" || normalizedId === "readme.md") {
 			return null;
 		}
-		const isNotebookRoot = normalizedId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/) || normalizedId.match(/^([^/]+)\/_index$/);
+		const isNotebookRoot =
+			normalizedId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/) ||
+			normalizedId.match(/^([^/]+)\/_index$/);
 
 		if (!isNotebookRoot) {
 			return null;
@@ -35,13 +41,17 @@ const sortByDateDesc = <T extends Record<string, unknown>>(list: T[], field: key
 
 		const folderEntries = allEntries.filter((item) => {
 			const itemId = item.id.replace(/\\/g, "/");
-			const isIndexFile = itemId === `${folderName}/_index` ||
-			                    itemId === `${folderName}/_index.md` ||
-			                    itemId === `${folderName}/_index.json`;
+			const isIndexFile =
+				itemId === `${folderName}/_index` ||
+				itemId === `${folderName}/_index.md` ||
+				itemId === `${folderName}/_index.json`;
 			return itemId.startsWith(`${folderName}/`) && !isIndexFile;
 		});
 
-		const sortedEntries = sortByDateDesc(folderEntries.map((e) => e.data), "date");
+		const sortedEntries = sortByDateDesc(
+			folderEntries.map((e) => e.data),
+			"date",
+		);
 		const latestEntry = sortedEntries[0];
 
 		return {
@@ -50,11 +60,13 @@ const sortByDateDesc = <T extends Record<string, unknown>>(list: T[], field: key
 			cover: entry.data.cover,
 			summary: entry.data.summary,
 			entries: folderEntries.length,
-			updatedAt: latestEntry?.date instanceof Date ? latestEntry.date : new Date(0),
+			updatedAt:
+				latestEntry?.date instanceof Date ? latestEntry.date : new Date(0),
 			selfPath: `/life/notebooks/${folderName}/`,
 			folderName,
 		};
-	}).filter(Boolean);
+	})
+	.filter(Boolean);
 
 // 解析封面图：本地图片 → Astro ImageMetadata，URL → 直接使用
 const notebooksWithCovers = await Promise.all(
@@ -68,7 +80,13 @@ const notebooksWithCovers = await Promise.all(
 					coverSrc = rawCover;
 				} else {
 					const imageKey = path
-						.normalize(path.join("../../content/life/notebooks", book.folderName, rawCover))
+						.normalize(
+							path.join(
+								"../../content/life/notebooks",
+								book.folderName,
+								rawCover,
+							),
+						)
 						.replace(/\\/g, "/");
 					const loader = notebookCoverFiles[imageKey];
 					if (loader) {

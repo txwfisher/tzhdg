@@ -1,75 +1,80 @@
 ---
 interface Props {
-  images?: (string | { src: string; alt?: string })[];
-  fit?: number;
-  minRadius?: number;
-  maxRadius?: number;
-  segments?: number;
-  maxVerticalRotationDeg?: number;
-  dragSensitivity?: number;
-  dragDampening?: number;
-  enlargeTransitionMs?: number;
-  openedImageWidth?: string;
-  openedImageHeight?: string;
-  imageBorderRadius?: string;
-  openedImageBorderRadius?: string;
-  grayscale?: boolean;
-  overlayBlurColor?: string;
-  padFactor?: number;
+	images?: (string | { src: string; alt?: string })[];
+	fit?: number;
+	minRadius?: number;
+	maxRadius?: number;
+	segments?: number;
+	maxVerticalRotationDeg?: number;
+	dragSensitivity?: number;
+	dragDampening?: number;
+	enlargeTransitionMs?: number;
+	openedImageWidth?: string;
+	openedImageHeight?: string;
+	imageBorderRadius?: string;
+	openedImageBorderRadius?: string;
+	grayscale?: boolean;
+	overlayBlurColor?: string;
+	padFactor?: number;
 }
 
 const {
-  images = [],
-  fit = 0.5,
-  minRadius = 600,
-  maxRadius = 999999,
-  segments = 35,
-  maxVerticalRotationDeg = 5,
-  dragSensitivity = 20,
-  dragDampening = 2,
-  enlargeTransitionMs = 300,
-  openedImageWidth = "400px",
-  openedImageHeight = "400px",
-  imageBorderRadius = "30px",
-  openedImageBorderRadius = "30px",
-  grayscale = true,
-  overlayBlurColor = "#120F17",
-  padFactor = 0.25,
+	images = [],
+	fit = 0.5,
+	minRadius = 600,
+	maxRadius = 999999,
+	segments = 35,
+	maxVerticalRotationDeg = 5,
+	dragSensitivity = 20,
+	dragDampening = 2,
+	enlargeTransitionMs = 300,
+	openedImageWidth = "400px",
+	openedImageHeight = "400px",
+	imageBorderRadius = "30px",
+	openedImageBorderRadius = "30px",
+	grayscale = true,
+	overlayBlurColor = "#120F17",
+	padFactor = 0.25,
 } = Astro.props;
 
 // 构建球面坐标
 function buildItems(pool: any[], seg: number) {
-  const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
-  const evenYs = [-4, -2, 0, 2, 4];
-  const oddYs = [-3, -1, 1, 3, 5];
+	const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
+	const evenYs = [-4, -2, 0, 2, 4];
+	const oddYs = [-3, -1, 1, 3, 5];
 
-  const coords = xCols.flatMap((x, c) => {
-    const ys = c % 2 === 0 ? evenYs : oddYs;
-    return ys.map(y => ({ x, y, sizeX: 2, sizeY: 2 }));
-  });
+	const coords = xCols.flatMap((x, c) => {
+		const ys = c % 2 === 0 ? evenYs : oddYs;
+		return ys.map((y) => ({ x, y, sizeX: 2, sizeY: 2 }));
+	});
 
-  const totalSlots = coords.length;
-  if (pool.length === 0) return coords.map(c => ({ ...c, src: "", alt: "" }));
+	const totalSlots = coords.length;
+	if (pool.length === 0) return coords.map((c) => ({ ...c, src: "", alt: "" }));
 
-  const normalized = pool.map(img =>
-    typeof img === "string" ? { src: img, alt: "" } : { src: img.src || "", alt: img.alt || "" }
-  );
+	const normalized = pool.map((img) =>
+		typeof img === "string"
+			? { src: img, alt: "" }
+			: { src: img.src || "", alt: img.alt || "" },
+	);
 
-  const used = Array.from({ length: totalSlots }, (_, i) => normalized[i % normalized.length]);
+	const used = Array.from(
+		{ length: totalSlots },
+		(_, i) => normalized[i % normalized.length],
+	);
 
-  // 避免相邻重复
-  for (let i = 1; i < used.length; i++) {
-    if (used[i].src === used[i - 1].src) {
-      for (let j = i + 1; j < used.length; j++) {
-        if (used[j].src !== used[i].src) {
-          [used[i], used[j]] = [used[j], used[i]];
-          break;
-        }
-      }
-    }
-  }
+	// 避免相邻重复
+	for (let i = 1; i < used.length; i++) {
+		if (used[i].src === used[i - 1].src) {
+			for (let j = i + 1; j < used.length; j++) {
+				if (used[j].src !== used[i].src) {
+					[used[i], used[j]] = [used[j], used[i]];
+					break;
+				}
+			}
+		}
+	}
 
-  return coords.map((c, i) => ({ ...c, src: used[i].src, alt: used[i].alt }));
+	return coords.map((c, i) => ({ ...c, src: used[i].src, alt: used[i].alt }));
 }
 
 const items = buildItems(images, segments);

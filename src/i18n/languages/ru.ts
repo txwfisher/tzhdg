@@ -86,6 +86,14 @@ export const ru: Translation = {
 	[Key.license]: "Лицензия",
 	[Key.bangumi]: "Бангуми",
 
+	[Key.recentMoments]: "Недавние обновления",
+	[Key.portalRecentPosts]: "Недавние записи",
+	[Key.portalRecentMoments]: "Недавние обновления",
+	[Key.portalViewAll]: "Смотреть все",
+	[Key.portalViewMore]: "Ещё",
+	[Key.portalRunningDays]: "Работает",
+	[Key.portalDays]: "дней",
+
 	// Фильтр и статус Бангуми текст
 	[Key.bangumiTitle]: "Мой план группы",
 	[Key.bangumiSubtitle]: "Запись моего аниме путешествия",

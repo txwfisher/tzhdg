@@ -14,7 +14,7 @@
 }
 
 #navbar>div {
-  background: transparent;
+  background: var(--page-bg);
   border: none;
   border-radius: 0;
   width: 100%;
@@ -29,13 +29,7 @@
   border-radius: 0;
   margin: 0 auto;
   border: 2px solid #000;
-  background: oklch(1 0 0 / 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-:root.dark #navbar.scrolled>div {
-  border-color: #fff;
-  background: oklch(0.08 0 0 / 0.7);
+  background: var(--page-bg);
 }
 :root.dark #navbar.scrolled>div {
   border-color: #fff;
@@ -80,14 +74,12 @@
 /* ============ 下拉菜单 / 浮动面板背景 ============ */
 .dropdown-content,
 .float-panel {
-  background: oklch(1 0 0 / 0.8) !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--page-bg) !important;
   border: 2px solid #000 !important;
 }
 :root.dark .dropdown-content,
 :root.dark .float-panel {
-  background: oklch(0.08 0 0 / 0.8) !important;
+  background: #0a0a0a !important;
   border-color: #fff !important;
 }
 

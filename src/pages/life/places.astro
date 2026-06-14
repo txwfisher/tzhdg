@@ -1,46 +1,48 @@
 ---
-import MainGridLayout from '@/layouts/MainGridLayout.astro';
-import { getCollection } from 'astro:content';
-import { Icon } from 'astro-icon/components';
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
-const lifeEntries = await getCollection('life');
+const lifeEntries = await getCollection("life");
 
 const isIn = (entryId: string, folder: string) =>
-  entryId.replace(/\\/g, '/').startsWith(`${folder}/`);
+	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
 
 const now = new Date();
 const currentYear = now.getFullYear();
 
 const isSameYear = (date?: Date | string) => {
-  if (!date) return false;
-  const d = date instanceof Date ? date : new Date(String(date));
-  if (Number.isNaN(d.getTime())) return false;
-  return d.getFullYear() === currentYear;
+	if (!date) return false;
+	const d = date instanceof Date ? date : new Date(String(date));
+	if (Number.isNaN(d.getTime())) return false;
+	return d.getFullYear() === currentYear;
 };
 
 const sum = (arr: number[]) => arr.reduce((acc, num) => acc + num, 0);
 
 const visitedPlaces = lifeEntries
-  .filter((entry) => isIn(entry.id, 'places'))
-  .filter((entry) => !entry.id.toLowerCase().includes("readme"))
-  .map((entry) => entry.data);
+	.filter((entry) => isIn(entry.id, "places"))
+	.filter((entry) => !entry.id.toLowerCase().includes("readme"))
+	.map((entry) => entry.data);
 
 const sortedPlaces = [...visitedPlaces].sort((a, b) => {
-  const aTime = a.date instanceof Date ? a.date.getTime() : 0;
-  const bTime = b.date instanceof Date ? b.date.getTime() : 0;
-  return bTime - aTime;
+	const aTime = a.date instanceof Date ? a.date.getTime() : 0;
+	const bTime = b.date instanceof Date ? b.date.getTime() : 0;
+	return bTime - aTime;
 });
 
 const totalVisitCount = sum(sortedPlaces.map((p) => p.visitCount || 1));
-const thisYearVisitCount = sortedPlaces.filter((p) => isSameYear(p.date)).length;
+const thisYearVisitCount = sortedPlaces.filter((p) =>
+	isSameYear(p.date),
+).length;
 
-const clientSortedPlaces = sortedPlaces.map(p => ({
-  province: p.province,
-  city: p.city || '',
-  district: p.district || '',
-  experience: p.experience || '',
-  visitCount: p.visitCount || 1,
-  date: p.date instanceof Date ? p.date.toISOString().split('T')[0] : '',
+const clientSortedPlaces = sortedPlaces.map((p) => ({
+	province: p.province,
+	city: p.city || "",
+	district: p.district || "",
+	experience: p.experience || "",
+	visitCount: p.visitCount || 1,
+	date: p.date instanceof Date ? p.date.toISOString().split("T")[0] : "",
 }));
 ---
 

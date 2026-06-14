@@ -1,9 +1,11 @@
 ---
 import GoogleAnalytics from "@components/analytics/GoogleAnalytics.astro";
 import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
+import UmamiAnalytics from "@components/analytics/UmamiAnalytics.astro";
 import FancyboxManager from "@components/features/FancyboxManager.astro";
 import FontManager from "@components/features/FontManager.astro";
 import MusicManager from "@components/features/MusicManager.astro";
+import PageLoader from "@components/features/PageLoader.astro";
 import SakuraEffect from "@components/features/SakuraEffect.astro";
 import ConfigCarrier from "@components/layout/ConfigCarrier.astro";
 
@@ -99,6 +101,12 @@ const siteLang = lang.replace("_", "-");
     )}
     {siteConfig.analytics?.microsoftClarityId && (
             <MicrosoftClarity clarityId={siteConfig.analytics.microsoftClarityId} />
+    )}
+    {siteConfig.analytics?.umamiAnalytics?.websiteId && (
+            <UmamiAnalytics
+                websiteId={siteConfig.analytics.umamiAnalytics.websiteId}
+                scriptUrl={siteConfig.analytics.umamiAnalytics.scriptUrl}
+            />
     )}
 
     <title>{pageTitle}</title>
@@ -431,6 +439,9 @@ const siteLang = lang.replace("_", "-");
     />
 
     <!-- Font Manager -->
+    {siteConfig.font.enable && siteConfig.font.selected?.includes("aazongyiyuan") && (
+      <link rel="preload" href="/fonts/AaZongYiYuan/AaZongYiYuan-2.woff2" as="font" type="font/woff2" crossorigin />
+    )}
     <FontManager />
   </head>
   <body
@@ -450,6 +461,7 @@ const siteLang = lang.replace("_", "-");
     ]}
   >
 
+    <PageLoader />
     <div id="progress-bar"></div>
 
     <!-- 页面顶部渐变高光效果 - 只在full和semifull模式下显示 -->
@@ -747,9 +759,63 @@ function disableAnimation() {
 
       if (isHome) {
         bodyElement!.classList.add("lg:is-home");
+        document.documentElement.classList.add("lg:is-home");
       } else {
         bodyElement!.classList.remove("lg:is-home");
+        document.documentElement.classList.remove("lg:is-home");
       }
+
+      // ===== 首页布局动态切换 =====
+      const mainGrid = document.getElementById("main-grid");
+      if (mainGrid) {
+        const gridCarrier = document.getElementById("grid-class-carrier");
+        const defaultGridClass = gridCarrier?.getAttribute("data-grid-class") || "grid-cols-1 md:grid-cols-[17.5rem_1fr]";
+
+        // 1. 更新网格列（侧边栏显隐由 CSS .lg\:is-home 控制）
+        ["grid-cols-1", "md:grid-cols-[17.5rem_1fr]", "md:grid-cols-[1fr_17.5rem]", "xl:grid-cols-[17.5rem_1fr_17.5rem]"].forEach(cls => mainGrid.classList.remove(cls));
+        if (isHome) {
+          mainGrid.classList.add("grid-cols-1");
+        } else {
+          defaultGridClass.split(" ").forEach(cls => cls && mainGrid.classList.add(cls));
+        }
+
+        // 2. 首页去除 max-width 和 padding 限制
+        const parentWrapper = mainGrid.parentElement;
+        if (parentWrapper) {
+          if (isHome) {
+            parentWrapper.style.maxWidth = "none";
+            mainGrid.style.paddingLeft = "0";
+            mainGrid.style.paddingRight = "0";
+          } else {
+            parentWrapper.style.maxWidth = "";
+            mainGrid.style.paddingLeft = "";
+            mainGrid.style.paddingRight = "";
+          }
+        }
+
+        // 3. 更新主内容区定位
+        const mainContentWrapper = document.getElementById("main-content-wrapper");
+        if (mainContentWrapper) {
+          mainContentWrapper.classList.remove("col-span-1", "xl:col-start-2", "xl:col-end-3", "md:col-span-2");
+          if (isHome) {
+            mainContentWrapper.classList.add("col-span-1");
+          } else {
+            mainContentWrapper.classList.add("xl:col-start-2", "xl:col-end-3");
+          }
+        }
+
+        // 4. 更新页脚
+        const footer = mainGrid.querySelector('.footer');
+        if (footer) {
+          footer.classList.remove("col-span-1", "md:col-span-2", "xl:col-start-2", "xl:col-span-1");
+          if (isHome) {
+            footer.classList.add("col-span-1");
+          } else {
+            footer.classList.add("md:col-span-2", "xl:col-start-2", "xl:col-span-1");
+          }
+        }
+      }
+      // ===== 首页布局切换结束 =====
 
       // 同步 banner 文字覆盖层可见性
       const bannerTextOverlay = document.querySelector(".banner-home-text-overlay");
@@ -765,16 +831,6 @@ function disableAnimation() {
       const navEl = document.getElementById("navbar");
       if (navEl) {
         navEl.setAttribute("data-is-home", isHome.toString());
-      }
-
-      // 同步门户区可见性
-      const portalZone = document.getElementById("portal-zone");
-      if (portalZone) {
-        if (isHome) {
-          portalZone.style.display = "";
-        } else {
-          portalZone.style.display = "none";
-        }
       }
 
       // 更新侧边栏组件的可见性（根据新页面的 URL）
@@ -1214,6 +1270,22 @@ function disableAnimation() {
   // Initialize wallpaper mode
   import { initWallpaperMode, initThemeListener } from "@/utils/setting-utils";
   import { initIconLoader } from "@/utils/icon-loader";
+  import { initPageLoader } from "@/utils/page-loader-controller.js";
+
+  // 首页初始布局约束移除
+  function applyHomeLayoutOnLoad() {
+    const mainGrid = document.getElementById("main-grid");
+    if (!mainGrid) return;
+    const isHome = document.body.classList.contains("lg:is-home");
+    if (!isHome) return;
+    const parentWrapper = mainGrid.parentElement;
+    if (parentWrapper) {
+      parentWrapper.style.maxWidth = "none";
+      mainGrid.style.paddingLeft = "0";
+      mainGrid.style.paddingRight = "0";
+    }
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       updateMainGridCols();
@@ -1221,6 +1293,8 @@ function disableAnimation() {
       initWallpaperMode();
       initThemeListener();
       initIconLoader();
+      initPageLoader();
+      applyHomeLayoutOnLoad();
     });
   } else {
     updateMainGridCols();
@@ -1228,6 +1302,8 @@ function disableAnimation() {
     initWallpaperMode();
     initThemeListener();
     initIconLoader();
+    initPageLoader();
+    applyHomeLayoutOnLoad();
   }
 
   // 动态修改网页标题（标签页标题互动）

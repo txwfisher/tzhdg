@@ -67,7 +67,8 @@ export const zh_CN: Translation = {
 	[Key.friends]: "友链",
 	[Key.friendsDescription]: "这里是我的朋友们，欢迎互相访问交流",
 	[Key.guestbook]: "留言",
-	[Key.guestbookDescription]: "欢迎在这里留下你的足迹，分享你的想法和建议，但是请不要发布任何违规内容。",
+	[Key.guestbookDescription]:
+		"欢迎在这里留下你的足迹，分享你的想法和建议，但是请不要发布任何违规内容。",
 	[Key.untitled]: "无标题",
 	[Key.uncategorized]: "未分类",
 	[Key.noTags]: "无标签",
@@ -96,6 +97,12 @@ export const zh_CN: Translation = {
 	[Key.moments]: "动态",
 
 	[Key.recentMoments]: "最新动态",
+	[Key.portalRecentPosts]: "最近文章",
+	[Key.portalRecentMoments]: "最近动态",
+	[Key.portalViewAll]: "查看全部",
+	[Key.portalViewMore]: "查看更多",
+	[Key.portalRunningDays]: "已运行",
+	[Key.portalDays]: "天",
 	[Key.recentLife]: "最新记录",
 	[Key.recentItems]: "最近更新",
 	// 番组计划筛选和状态文本

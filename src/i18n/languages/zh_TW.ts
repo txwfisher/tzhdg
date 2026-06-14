@@ -84,6 +84,14 @@ export const zh_TW: Translation = {
 	[Key.license]: "許可協議",
 	[Key.bangumi]: "番組計劃",
 
+	[Key.recentMoments]: "最近動態",
+	[Key.portalRecentPosts]: "最近文章",
+	[Key.portalRecentMoments]: "最近動態",
+	[Key.portalViewAll]: "查看全部",
+	[Key.portalViewMore]: "查看更多",
+	[Key.portalRunningDays]: "已運行",
+	[Key.portalDays]: "天",
+
 	// 番組計劃
 	[Key.bangumiTitle]: "我的番組計劃",
 	[Key.bangumiSubtitle]: "記錄我的二次元之旅",

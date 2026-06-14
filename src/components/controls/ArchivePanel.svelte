@@ -1,178 +1,343 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import I18nKey from "@/i18n/i18nKey";
-  import { i18n } from "@/i18n/translation";
-  import { getPostUrlBySlug } from "@/utils/url-utils";
+import { onMount, tick } from "svelte";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import { getPostUrlBySlug } from "@/utils/url-utils";
 
-  interface Post { id: string; type?: string; data: { title: string; tags: string[]; category?: string | null; published: Date } }
-  interface MonthGroup { month: number; posts: Post[] }
-  interface YearGroup { year: number; months: MonthGroup[]; totalCount: number }
-  interface ActiveFilter { labelKey: I18nKey; values: string[] }
+interface Post {
+	id: string;
+	type?: string;
+	data: {
+		title: string;
+		tags: string[];
+		category?: string | null;
+		published: Date;
+	};
+}
+interface MonthGroup {
+	month: number;
+	posts: Post[];
+}
+interface YearGroup {
+	year: number;
+	months: MonthGroup[];
+	totalCount: number;
+}
+interface ActiveFilter {
+	labelKey: I18nKey;
+	values: string[];
+}
 
-  export let tags: string[] = [];
-  export let categories: string[] = [];
-  export let sortedPosts: Post[] = [];
-  export let extConfig: { gistId: string; fileName: string } | null = null;
+export let tags: string[] = [];
+export let categories: string[] = [];
+export let sortedPosts: Post[] = [];
+export let extConfig: { gistId: string; fileName: string } | null = null;
 
-  const typeLabels: Record<string, string> = { post: "文章", moment: "说说", bangumi: "记录", life: "生活" };
-  function getTypeLabel(t: string | undefined): string { return t ? (typeLabels[t] || t) : ""; }
+const typeLabels: Record<string, string> = {
+	post: "文章",
+	moment: "说说",
+	bangumi: "记录",
+	life: "生活",
+};
+function getTypeLabel(t: string | undefined): string {
+	return t ? typeLabels[t] || t : "";
+}
 
-  let yearGroups: YearGroup[] = [];
-  let activeFilters: ActiveFilter[] = [];
-  let primaryFilter: ActiveFilter | null = null;
-  let secondaryFilters: ActiveFilter[] = [];
-  let filteredPostCount = 0;
-  let categoryColors = new Map<string, string>();
-  let hoveredPostId: string | null = null;
-  let highlightedYear: number | null = null;
-  let highlightedMonth: string | null = null;
+let yearGroups: YearGroup[] = [];
+let activeFilters: ActiveFilter[] = [];
+let primaryFilter: ActiveFilter | null = null;
+let secondaryFilters: ActiveFilter[] = [];
+let filteredPostCount = 0;
+let categoryColors = new Map<string, string>();
+let hoveredPostId: string | null = null;
+let highlightedYear: number | null = null;
+let highlightedMonth: string | null = null;
 
-  interface HighlightSeg { x: number; top: number; height: number }
-  interface HighlightHLine { x: number; y: number; width: number }
-  let highlightSegs: HighlightSeg[] = [];
-  let highlightHLines: HighlightHLine[] = [];
+interface HighlightSeg {
+	x: number;
+	top: number;
+	height: number;
+}
+interface HighlightHLine {
+	x: number;
+	y: number;
+	width: number;
+}
+let highlightSegs: HighlightSeg[] = [];
+let highlightHLines: HighlightHLine[] = [];
 
-  let panelEl: HTMLElement;
-  let yearBlockRefs = new Map<number, HTMLElement>();
-  let monthBlockRefs = new Map<string, HTMLElement>();
-  let postRowRefs = new Map<string, HTMLElement>();
+let panelEl: HTMLElement;
+let yearBlockRefs = new Map<number, HTMLElement>();
+let monthBlockRefs = new Map<string, HTMLElement>();
+let postRowRefs = new Map<string, HTMLElement>();
 
-  function registerYearBlock(node: HTMLElement, year: number) { yearBlockRefs.set(year, node); return { destroy() { yearBlockRefs.delete(year); } }; }
-  function registerMonthBlock(node: HTMLElement, key: { year: number; month: number }) { monthBlockRefs.set(`${key.year}-${key.month}`, node); return { destroy() { monthBlockRefs.delete(`${key.year}-${key.month}`); } }; }
-  function registerPostRow(node: HTMLElement, postId: string) { postRowRefs.set(postId, node); return { destroy() { postRowRefs.delete(postId); } }; }
+function registerYearBlock(node: HTMLElement, year: number) {
+	yearBlockRefs.set(year, node);
+	return {
+		destroy() {
+			yearBlockRefs.delete(year);
+		},
+	};
+}
+function registerMonthBlock(
+	node: HTMLElement,
+	key: { year: number; month: number },
+) {
+	monthBlockRefs.set(`${key.year}-${key.month}`, node);
+	return {
+		destroy() {
+			monthBlockRefs.delete(`${key.year}-${key.month}`);
+		},
+	};
+}
+function registerPostRow(node: HTMLElement, postId: string) {
+	postRowRefs.set(postId, node);
+	return {
+		destroy() {
+			postRowRefs.delete(postId);
+		},
+	};
+}
 
-  const palette = ["text-amber-400","text-rose-400","text-emerald-400","text-blue-400","text-purple-400","text-pink-400","text-teal-400","text-orange-400","text-cyan-400","text-indigo-400","text-fuchsia-400","text-lime-400","text-red-400","text-violet-400"];
+const palette = [
+	"text-amber-400",
+	"text-rose-400",
+	"text-emerald-400",
+	"text-blue-400",
+	"text-purple-400",
+	"text-pink-400",
+	"text-teal-400",
+	"text-orange-400",
+	"text-cyan-400",
+	"text-indigo-400",
+	"text-fuchsia-400",
+	"text-lime-400",
+	"text-red-400",
+	"text-violet-400",
+];
 
-  function formatDate(d: Date): string { return `${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}` }
-  function formatMonth(m: number): string { return `${m}${i18n(I18nKey.month)}` }
-  function getCatColor(name: string): string { return categoryColors.get(name) || "text-[var(--meta-divider)]" }
-  function normCategory(name: string | null | undefined): string { return (name || "").trim() }
+function formatDate(d: Date): string {
+	return `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function formatMonth(m: number): string {
+	return `${m}${i18n(I18nKey.month)}`;
+}
+function getCatColor(name: string): string {
+	return categoryColors.get(name) || "text-[var(--meta-divider)]";
+}
+function normCategory(name: string | null | undefined): string {
+	return (name || "").trim();
+}
 
-  function initCategoryColors(ps: Post[]) {
-    const set = new Set<string>();
-    for (const p of ps) set.add(normCategory(p.data.category) || i18n(I18nKey.uncategorized));
-    const sorted = Array.from(set).sort((a, b) => a.localeCompare(b, "zh-CN"));
-    for (let i = 0; i < sorted.length; i++) categoryColors.set(sorted[i], palette[i % palette.length]);
-  }
+function initCategoryColors(ps: Post[]) {
+	const set = new Set<string>();
+	for (const p of ps)
+		set.add(normCategory(p.data.category) || i18n(I18nKey.uncategorized));
+	const sorted = Array.from(set).sort((a, b) => a.localeCompare(b, "zh-CN"));
+	for (let i = 0; i < sorted.length; i++)
+		categoryColors.set(sorted[i], palette[i % palette.length]);
+}
 
-  function groupByYearMonth(ps: Post[]): YearGroup[] {
-    const ym = new Map<number, Map<number, Post[]>>();
-    for (const p of ps) {
-      const y = p.data.published.getFullYear(), mo = p.data.published.getMonth() + 1;
-      if (!ym.has(y)) ym.set(y, new Map());
-      const mm = ym.get(y)!;
-      if (!mm.has(mo)) mm.set(mo, []);
-      mm.get(mo)!.push(p);
-    }
-    return Array.from(ym.keys()).sort((a, b) => b - a).map(year => {
-      const mm = ym.get(year)!;
-      const months = Array.from(mm.keys()).sort((a, b) => b - a).map(month => ({ month, posts: mm.get(month)! }));
-      return { year, months, totalCount: months.reduce((s, m) => s + m.posts.length, 0) };
-    });
-  }
+function groupByYearMonth(ps: Post[]): YearGroup[] {
+	const ym = new Map<number, Map<number, Post[]>>();
+	for (const p of ps) {
+		const y = p.data.published.getFullYear(),
+			mo = p.data.published.getMonth() + 1;
+		if (!ym.has(y)) ym.set(y, new Map());
+		const mm = ym.get(y)!;
+		if (!mm.has(mo)) mm.set(mo, []);
+		mm.get(mo)!.push(p);
+	}
+	return Array.from(ym.keys())
+		.sort((a, b) => b - a)
+		.map((year) => {
+			const mm = ym.get(year)!;
+			const months = Array.from(mm.keys())
+				.sort((a, b) => b - a)
+				.map((month) => ({ month, posts: mm.get(month)! }));
+			return {
+				year,
+				months,
+				totalCount: months.reduce((s, m) => s + m.posts.length, 0),
+			};
+		});
+}
 
-  function getItemUrl(post: Post): string {
-    if (post.type === "moment" && typeof post.id === "string" && post.id.startsWith("ext-")) {
-      return "/moments/";
-    }
-    if (post.type && post.type !== "post") {
-      // @ts-ignore - data.link exists on ArchiveItem
-      return (post as any).data?.link || getPostUrlBySlug(post.id);
-    }
-    return getPostUrlBySlug(post.id);
-  }
-  function formatFilterValues(f: ActiveFilter): string {
-    return f.labelKey === I18nKey.tags ? f.values.map(v => `#${v}`).join(" / ") : f.values.join(" / ");
-  }
-  function resolvePrimary(f: ActiveFilter[]): ActiveFilter | null { return f.find(f => f.labelKey === I18nKey.tags) ?? f[0] ?? null }
-  function formatFilterSummary(fs: ActiveFilter[]): string { return fs.map(f => `${i18n(f.labelKey)}: ${formatFilterValues(f)}`).join("  ·  ") }
+function getItemUrl(post: Post): string {
+	if (
+		post.type === "moment" &&
+		typeof post.id === "string" &&
+		post.id.startsWith("ext-")
+	) {
+		return "/moments/";
+	}
+	if (post.type && post.type !== "post") {
+		// @ts-expect-error - data.link exists on ArchiveItem
+		return (post as any).data?.link || getPostUrlBySlug(post.id);
+	}
+	return getPostUrlBySlug(post.id);
+}
+function formatFilterValues(f: ActiveFilter): string {
+	return f.labelKey === I18nKey.tags
+		? f.values.map((v) => `#${v}`).join(" / ")
+		: f.values.join(" / ");
+}
+function resolvePrimary(f: ActiveFilter[]): ActiveFilter | null {
+	return f.find((f) => f.labelKey === I18nKey.tags) ?? f[0] ?? null;
+}
+function formatFilterSummary(fs: ActiveFilter[]): string {
+	return fs
+		.map((f) => `${i18n(f.labelKey)}: ${formatFilterValues(f)}`)
+		.join("  ·  ");
+}
 
-  async function computeHighlight(postId: string) {
-    await tick();
-    if (!panelEl) { highlightSegs = []; highlightHLines = []; return }
-    let ty: number | null = null, tm: number | null = null;
-    for (const yg of yearGroups) for (const mg of yg.months) if (mg.posts.some(p => p.id === postId)) { ty = yg.year; tm = mg.month; break }
-    if (ty === null || tm === null) { highlightSegs = []; highlightHLines = []; highlightedYear = null; highlightedMonth = null; return }
-    highlightedYear = ty; highlightedMonth = `${ty}-${tm}`;
+async function computeHighlight(postId: string) {
+	await tick();
+	if (!panelEl) {
+		highlightSegs = [];
+		highlightHLines = [];
+		return;
+	}
+	let ty: number | null = null,
+		tm: number | null = null;
+	for (const yg of yearGroups)
+		for (const mg of yg.months)
+			if (mg.posts.some((p) => p.id === postId)) {
+				ty = yg.year;
+				tm = mg.month;
+				break;
+			}
+	if (ty === null || tm === null) {
+		highlightSegs = [];
+		highlightHLines = [];
+		highlightedYear = null;
+		highlightedMonth = null;
+		return;
+	}
+	highlightedYear = ty;
+	highlightedMonth = `${ty}-${tm}`;
 
-    const pr = panelEl.getBoundingClientRect();
-    const tw = Number.parseFloat(getComputedStyle(panelEl).getPropertyValue("--tw")) * 16;
-    const yb = yearBlockRefs.get(ty), mb = monthBlockRefs.get(`${ty}-${tm}`), prow = postRowRefs.get(postId);
-    if (!yb || !mb || !prow) { highlightSegs = []; highlightHLines = []; return }
+	const pr = panelEl.getBoundingClientRect();
+	const tw =
+		Number.parseFloat(getComputedStyle(panelEl).getPropertyValue("--tw")) * 16;
+	const yb = yearBlockRefs.get(ty),
+		mb = monthBlockRefs.get(`${ty}-${tm}`),
+		prow = postRowRefs.get(postId);
+	if (!yb || !mb || !prow) {
+		highlightSegs = [];
+		highlightHLines = [];
+		return;
+	}
 
-    const yr = yb.getBoundingClientRect(), mr = mb.getBoundingClientRect(), por = prow.getBoundingClientRect();
-    const ylx = yr.left - pr.left + tw / 2, mlx = mr.left - pr.left + tw / 2, plx = por.left - pr.left + tw / 2;
-    const yncy = yr.top - pr.top + tw / 2, mncy = mr.top - pr.top + tw / 2, pncy = por.top - pr.top + por.height / 2;
+	const yr = yb.getBoundingClientRect(),
+		mr = mb.getBoundingClientRect(),
+		por = prow.getBoundingClientRect();
+	const ylx = yr.left - pr.left + tw / 2,
+		mlx = mr.left - pr.left + tw / 2,
+		plx = por.left - pr.left + tw / 2;
+	const yncy = yr.top - pr.top + tw / 2,
+		mncy = mr.top - pr.top + tw / 2,
+		pncy = por.top - pr.top + por.height / 2;
 
-    highlightSegs = [
-      { x: ylx, top: yncy, height: mncy - yncy },
-      { x: mlx, top: mncy, height: pncy - mncy },
-    ];
-    highlightHLines = [
-      { x: ylx, y: mncy, width: mlx - ylx },
-      { x: mlx, y: pncy, width: plx - mlx },
-    ];
-  }
+	highlightSegs = [
+		{ x: ylx, top: yncy, height: mncy - yncy },
+		{ x: mlx, top: mncy, height: pncy - mncy },
+	];
+	highlightHLines = [
+		{ x: ylx, y: mncy, width: mlx - ylx },
+		{ x: mlx, y: pncy, width: plx - mlx },
+	];
+}
 
-  async function onPostEnter(id: string) { hoveredPostId = id; await computeHighlight(id) }
-  function onPostLeave() { hoveredPostId = null; highlightedYear = null; highlightedMonth = null; highlightSegs = []; highlightHLines = [] }
+async function onPostEnter(id: string) {
+	hoveredPostId = id;
+	await computeHighlight(id);
+}
+function onPostLeave() {
+	hoveredPostId = null;
+	highlightedYear = null;
+	highlightedMonth = null;
+	highlightSegs = [];
+	highlightHLines = [];
+}
 
-  function applyFilters(allPosts: Post[]) {
-    const params = new URLSearchParams(window.location.search);
-    tags = params.has("tag") ? params.getAll("tag") : [];
-    categories = params.has("category") ? params.getAll("category") : [];
-    const uncategorized = params.get("uncategorized");
-    let filtered = allPosts;
-    const cf: ActiveFilter[] = [];
-    if (categories.length > 0) cf.push({ labelKey: I18nKey.categories, values: categories });
-    if (uncategorized) cf.push({ labelKey: I18nKey.categories, values: [i18n(I18nKey.uncategorized)] });
-    if (tags.length > 0) cf.push({ labelKey: I18nKey.tags, values: tags });
-    activeFilters = cf;
-    primaryFilter = resolvePrimary(cf);
-    secondaryFilters = primaryFilter ? cf.filter(f => f !== primaryFilter) : [];
-    if (tags.length > 0) filtered = filtered.filter(p => Array.isArray(p.data.tags) && p.data.tags.some(t => tags.includes(t)));
-    if (categories.length > 0) filtered = filtered.filter(p => p.data.category && categories.includes(p.data.category));
-    if (uncategorized) filtered = filtered.filter(p => !p.data.category);
-    filtered = filtered.slice().sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
-    filteredPostCount = filtered.length;
-    initCategoryColors(filtered);
-    yearGroups = groupByYearMonth(filtered);
-  }
+function applyFilters(allPosts: Post[]) {
+	const params = new URLSearchParams(window.location.search);
+	tags = params.has("tag") ? params.getAll("tag") : [];
+	categories = params.has("category") ? params.getAll("category") : [];
+	const uncategorized = params.get("uncategorized");
+	let filtered = allPosts;
+	const cf: ActiveFilter[] = [];
+	if (categories.length > 0)
+		cf.push({ labelKey: I18nKey.categories, values: categories });
+	if (uncategorized)
+		cf.push({
+			labelKey: I18nKey.categories,
+			values: [i18n(I18nKey.uncategorized)],
+		});
+	if (tags.length > 0) cf.push({ labelKey: I18nKey.tags, values: tags });
+	activeFilters = cf;
+	primaryFilter = resolvePrimary(cf);
+	secondaryFilters = primaryFilter ? cf.filter((f) => f !== primaryFilter) : [];
+	if (tags.length > 0)
+		filtered = filtered.filter(
+			(p) =>
+				Array.isArray(p.data.tags) && p.data.tags.some((t) => tags.includes(t)),
+		);
+	if (categories.length > 0)
+		filtered = filtered.filter(
+			(p) => p.data.category && categories.includes(p.data.category),
+		);
+	if (uncategorized) filtered = filtered.filter((p) => !p.data.category);
+	filtered = filtered
+		.slice()
+		.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+	filteredPostCount = filtered.length;
+	initCategoryColors(filtered);
+	yearGroups = groupByYearMonth(filtered);
+}
 
-  onMount(async () => {
-    let allPosts = [...sortedPosts];
+onMount(async () => {
+	let allPosts = [...sortedPosts];
 
-    // 加载外部说说
-    if (extConfig && extConfig.gistId) {
-      try {
-        const token = localStorage.getItem("gh_moments_token") || "";
-        const headers: Record<string, string> = { "Accept": "application/vnd.github+json" };
-        if (token) headers["Authorization"] = "Bearer " + token;
-        const res = await fetch(`https://api.github.com/gists/${extConfig.gistId}`, { headers });
-        if (res.ok) {
-          const gist = await res.json();
-          const file = gist.files[extConfig.fileName];
-          if (file) {
-            const moments = JSON.parse(file.content || "[]");
-            for (const m of moments) {
-              allPosts.push({
-                id: m.id || `ext-${Date.now()}`,
-                type: "moment",
-                data: {
-                  title: (m.content || "").slice(0, 50) || "说说",
-                  tags: m.tags || [],
-                  category: "说说",
-                  published: new Date(m.published),
-                }
-              } as any);
-            }
-          }
-        }
-      } catch (e) { /* ignore */ }
-    }
+	// 加载外部说说
+	if (extConfig && extConfig.gistId) {
+		try {
+			const token = localStorage.getItem("gh_moments_token") || "";
+			const headers: Record<string, string> = {
+				Accept: "application/vnd.github+json",
+			};
+			if (token) headers["Authorization"] = "Bearer " + token;
+			const res = await fetch(
+				`https://api.github.com/gists/${extConfig.gistId}`,
+				{ headers },
+			);
+			if (res.ok) {
+				const gist = await res.json();
+				const file = gist.files[extConfig.fileName];
+				if (file) {
+					const moments = JSON.parse(file.content || "[]");
+					for (const m of moments) {
+						allPosts.push({
+							id: m.id || `ext-${Date.now()}`,
+							type: "moment",
+							data: {
+								title: (m.content || "").slice(0, 50) || "说说",
+								tags: m.tags || [],
+								category: "说说",
+								published: new Date(m.published),
+							},
+						} as any);
+					}
+				}
+			}
+		} catch (e) {
+			/* ignore */
+		}
+	}
 
-    applyFilters(allPosts);
-  });
+	applyFilters(allPosts);
+});
 </script>
 
 <div class="archive-panel card-base px-3 py-6 md:px-10 md:py-8" bind:this={panelEl}>

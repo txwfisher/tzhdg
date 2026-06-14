@@ -1,57 +1,53 @@
 ---
 interface HeatmapData {
-  date: string;
-  count: number;
+	date: string;
+	count: number;
 }
 
 interface Props {
-  data: HeatmapData[];
-  label: string;
-  weeks?: number;
+	data: HeatmapData[];
+	label: string;
+	weeks?: number;
 }
 
-const {
-  data,
-  label,
-  weeks = 20
-} = Astro.props;
+const { data, label, weeks = 20 } = Astro.props;
 
 // 构建日期到次数的映射
 const countMap = new Map<string, number>();
-data.forEach(item => {
-  countMap.set(item.date, item.count);
+data.forEach((item) => {
+	countMap.set(item.date, item.count);
 });
 
 // 计算最大次数（用于颜色计算）
-const maxCount = Math.max(...data.map(d => d.count), 1);
+const maxCount = Math.max(...data.map((d) => d.count), 1);
 
 // 生成最近 N 周的日期数据
 const getDateRange = () => {
-  const result: { date: string; dayOfWeek: number; count: number }[] = [];
-  const today = new Date();
-  
-  // 计算起始日期：从今天往前 weeks 周
-  const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - (weeks * 7 - 1));
-  
-  // 调整到周日
-  const startDay = startDate.getDay();
-  startDate.setDate(startDate.getDate() - startDay);
-  
-  const current = new Date(startDate);
-  const endDate = new Date(today);
-  
-  while (current <= endDate) {
-    const dateStr = current.toISOString().split('T')[0];
-    result.push({
-      date: dateStr,
-      dayOfWeek: current.getDay(),
-      count: countMap.get(dateStr) || 0
-    });
-    current.setDate(current.getDate() + 1);
-  }
-  
-  return result;
+	const result: { date: string; dayOfWeek: number; count: number }[] = [];
+	const today = new Date();
+
+	// 计算起始日期：从今天往前 weeks 周
+	const startDate = new Date(today);
+	startDate.setDate(startDate.getDate() - (weeks * 7 - 1));
+
+	// 调整到周日
+	const startDay = startDate.getDay();
+	startDate.setDate(startDate.getDate() - startDay);
+
+	const current = new Date(startDate);
+	const endDate = new Date(today);
+
+	while (current <= endDate) {
+		const dateStr = current.toISOString().split("T")[0];
+		result.push({
+			date: dateStr,
+			dayOfWeek: current.getDay(),
+			count: countMap.get(dateStr) || 0,
+		});
+		current.setDate(current.getDate() + 1);
+	}
+
+	return result;
 };
 
 const dateRange = getDateRange();
@@ -59,23 +55,23 @@ const dateRange = getDateRange();
 // 按周分组
 const weekGroups: { date: string; dayOfWeek: number; count: number }[][] = [];
 for (let i = 0; i < dateRange.length; i += 7) {
-  weekGroups.push(dateRange.slice(i, i + 7));
+	weekGroups.push(dateRange.slice(i, i + 7));
 }
 
 // 获取颜色等级
 const getColorLevel = (count: number): number => {
-  if (count === 0) return 0;
-  const ratio = count / maxCount;
-  if (ratio <= 0.25) return 1;
-  if (ratio <= 0.5) return 2;
-  if (ratio <= 0.75) return 3;
-  return 4;
+	if (count === 0) return 0;
+	const ratio = count / maxCount;
+	if (ratio <= 0.25) return 1;
+	if (ratio <= 0.5) return 2;
+	if (ratio <= 0.75) return 3;
+	return 4;
 };
 
 // 统计数据
-const totalDays = dateRange.filter(d => d.count > 0).length;
+const totalDays = dateRange.filter((d) => d.count > 0).length;
 const totalCheckins = data.reduce((acc, d) => acc + d.count, 0);
-const avgPerDay = totalDays > 0 ? (totalCheckins / totalDays).toFixed(1) : '0';
+const avgPerDay = totalDays > 0 ? (totalCheckins / totalDays).toFixed(1) : "0";
 ---
 
 <div class="activity-heatmap">

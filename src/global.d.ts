@@ -11,7 +11,7 @@ declare global {
 		live2dModelInitialized?: boolean;
 		spineModelInitialized?: boolean;
 		floatingTOCListenersInitialized?: boolean;
-			__navMenuListenersReady?: boolean;
+		__navMenuListenersReady?: boolean;
 		// biome-ignore lint/suspicious/noExplicitAny: External library
 		spinePlayerInstance?: any;
 		pagefind: {

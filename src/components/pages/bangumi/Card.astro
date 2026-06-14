@@ -14,12 +14,18 @@ const link = item.link || `${subject_base_url}${item.subject.id}`;
 
 const getStatusColor = (type: number) => {
 	switch (type) {
-		case 1: return "bg-sky-500/80";
-		case 2: return "bg-emerald-500/80";
-		case 3: return "bg-amber-500/80";
-		case 4: return "bg-violet-500/80";
-		case 5: return "bg-rose-400/80";
-		default: return "bg-gray-500/80";
+		case 1:
+			return "bg-sky-500/80";
+		case 2:
+			return "bg-emerald-500/80";
+		case 3:
+			return "bg-amber-500/80";
+		case 4:
+			return "bg-violet-500/80";
+		case 5:
+			return "bg-rose-400/80";
+		default:
+			return "bg-gray-500/80";
 	}
 };
 
@@ -41,16 +47,21 @@ const getStatusText = (type: number) => {
 			if (subjectType === 3) return i18n(I18nKey.bangumiStatusMusicListening);
 			if (subjectType === 4) return i18n(I18nKey.bangumiStatusGamePlaying);
 			return i18n(I18nKey.bangumiStatusWatching);
-		case 4: return i18n(I18nKey.bangumiStatusOnHold);
-		case 5: return i18n(I18nKey.bangumiStatusDropped);
-		default: return i18n(I18nKey.bangumiStatusUnknown);
+		case 4:
+			return i18n(I18nKey.bangumiStatusOnHold);
+		case 5:
+			return i18n(I18nKey.bangumiStatusDropped);
+		default:
+			return i18n(I18nKey.bangumiStatusUnknown);
 	}
 };
 
 const displayTags =
 	item.tags && item.tags.length > 0
 		? item.tags.slice(0, 3)
-		: (item.subject.tags || []).map((t: { name: string }) => t.name).slice(0, 3);
+		: (item.subject.tags || [])
+				.map((t: { name: string }) => t.name)
+				.slice(0, 3);
 
 const rawScore = item.subject.score ?? 0;
 const score = Math.max(0, Math.min(10, rawScore));

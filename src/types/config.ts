@@ -37,9 +37,27 @@ export type SiteConfig = {
 	// 站点开始日期，用于计算运行天数
 	siteStartDate?: string; // 格式: "YYYY-MM-DD"
 
+	// 门户区配置
+	portal?: {
+		// 公告跑马灯
+		announcement?: {
+			enable: boolean;
+			text: string;
+		};
+		// 每日一言
+		dailyQuote?: {
+			enable: boolean;
+			quotes: { text: string; source: string }[];
+		};
+		// 最近文章预览数量
+		recentPostsCount?: number;
+		// 最近说说预览数量
+		recentMomentsCount?: number;
+	};
+
 	// 可选：站点时区，使用 IANA 时区标识，例如 "Asia/Shanghai"、"UTC"
 	timezone?: string;
-workHours?: { start: number; end: number; workDays: number[]; };
+	workHours?: { start: number; end: number; workDays: number[] };
 
 	// 提醒框配置
 	rehypeCallouts: {
@@ -115,6 +133,10 @@ workHours?: { start: number; end: number; workDays: number[]; };
 	analytics?: {
 		googleAnalyticsId?: string; // Google Analytics ID
 		microsoftClarityId?: string; // Microsoft Clarity ID
+		umamiAnalytics?: {
+			websiteId: string; // Umami Website ID
+			scriptUrl?: string; // Umami 脚本地址，默认 https://cloud.umami.is/script.js
+		};
 	};
 
 	// 说说页面封面配置
@@ -193,6 +215,7 @@ export enum LinkPreset {
 	MoviesGames = 8,
 	MusicPage = 9,
 	Changelog = 10,
+	Posts = 11,
 }
 
 export type NavBarLink = {
@@ -219,8 +242,8 @@ export type ProfileConfig = {
 	avatar?: string;
 	name: string;
 	displayName?: string;
-		occupation?: string;
-		avatarOffWork?: string;
+	occupation?: string;
+	avatarOffWork?: string;
 	bio?: string | string[];
 	links: {
 		name: string;

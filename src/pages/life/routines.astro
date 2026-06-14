@@ -1,33 +1,35 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getCollection, render } from "astro:content";
 import { Icon } from "astro-icon/components";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 const routinesEntries = await getCollection("routines");
 
-const filteredEntries = routinesEntries.filter((entry) => !entry.id.toLowerCase().includes("readme"));
+const filteredEntries = routinesEntries.filter(
+	(entry) => !entry.id.toLowerCase().includes("readme"),
+);
 
 const sortedEntries = [...filteredEntries].sort((a, b) => {
-  const aTime = a.data.updatedAt?.getTime() || 0;
-  const bTime = b.data.updatedAt?.getTime() || 0;
-  return bTime - aTime;
+	const aTime = a.data.updatedAt?.getTime() || 0;
+	const bTime = b.data.updatedAt?.getTime() || 0;
+	return bTime - aTime;
 });
 
-const lastUpdated = sortedEntries.find(e => e.data.updatedAt)?.data.updatedAt;
+const lastUpdated = sortedEntries.find((e) => e.data.updatedAt)?.data.updatedAt;
 
 const entriesWithContent = await Promise.all(
-  sortedEntries.map(async (entry) => {
-    const { Content } = await render(entry);
-    return {
-      ...entry,
-      Content,
-      name: entry.data.name || "未命名",
-      time: entry.data.time || "",
-      description: entry.data.description || "",
-      icon: entry.data.icon || "📋",
-      color: entry.data.color || "var(--primary)",
-    };
-  })
+	sortedEntries.map(async (entry) => {
+		const { Content } = await render(entry);
+		return {
+			...entry,
+			Content,
+			name: entry.data.name || "未命名",
+			time: entry.data.time || "",
+			description: entry.data.description || "",
+			icon: entry.data.icon || "📋",
+			color: entry.data.color || "var(--primary)",
+		};
+	}),
 );
 
 const totalEntries = entriesWithContent.length;

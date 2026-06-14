@@ -86,6 +86,14 @@ export const ja: Translation = {
 	[Key.license]: "ライセンス",
 	[Key.bangumi]: "バングミ",
 
+	[Key.recentMoments]: "最近の更新",
+	[Key.portalRecentPosts]: "最近の記事",
+	[Key.portalRecentMoments]: "最近の更新",
+	[Key.portalViewAll]: "すべて見る",
+	[Key.portalViewMore]: "もっと見る",
+	[Key.portalRunningDays]: "運営",
+	[Key.portalDays]: "日目",
+
 	// バングミフィルターと状態文本
 	[Key.bangumiTitle]: "私のバングミ",
 	[Key.bangumiSubtitle]: "私の二次元の旅を記録する",

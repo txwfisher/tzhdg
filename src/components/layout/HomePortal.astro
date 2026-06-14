@@ -1,9 +1,15 @@
 ---
 import type { ImageMetadata } from "astro";
+import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import TypewriterText from "@/components/features/TypewriterText.astro";
+import AnnouncementMarquee from "@/components/widget/AnnouncementMarquee.astro";
+import DailyQuote from "@/components/widget/DailyQuote.astro";
 import PortalStats from "@/components/widget/PortalStats.astro";
+import QuickNav from "@/components/widget/QuickNav.astro";
 import { profileConfig, siteConfig } from "@/config";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
 import { url } from "@/utils/url-utils";
 
 // 上班头像：从 avatar_sb 文件夹加载所有动态 WebP
@@ -20,9 +26,17 @@ for (const [, loader] of Object.entries(workAvatarModules)) {
 if (workAvatarUrls.length === 0 && profileConfig.avatar) {
 	workAvatarUrls.push(profileConfig.avatar);
 }
+
+// 运行天数
+const startDate = siteConfig.siteStartDate ? new Date(siteConfig.siteStartDate) : null;
+const now = new Date();
+const runningDays = startDate
+	? Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+	: 0;
 ---
 
 <div class="home-portal">
+	{/* PROFILE */}
 	<section class="section onload-animation flex flex-col items-center gap-8 mt-2 magic-rings-container">
 		<div
 			class="avatar-ripple-wrapper" id="avatar-ripple-wrapper"
@@ -73,43 +87,43 @@ if (workAvatarUrls.length === 0 && profileConfig.avatar) {
 			{profileConfig.occupation && (
 				<span class="profile-occupation">{profileConfig.occupation}</span>
 			)}
-			<TypewriterText text={profileConfig.bio || ""} speed={80} pauseTime={3000} class="text-base text-(--content-meta) mt-3" />
+			<TypewriterText text={Array.isArray(profileConfig.bio) ? profileConfig.bio[1] || profileConfig.bio[0] || "" : profileConfig.bio || ""} speed={80} pauseTime={3000} class="text-base text-(--content-meta) mt-3" />
+			{runningDays > 0 && (
+				<div class="running-days">
+					<Icon name="material-symbols:calendar-month-outline" class="running-days-icon" />
+					<span>{i18n(I18nKey.portalRunningDays)} {runningDays} {i18n(I18nKey.portalDays)}</span>
+				</div>
+			)}
 		</div>
 	</section>
 
-	<div class="onload-animation section-title-wrapper mt-4">
-		<div class="section-title-container">
-			<span class="section-title">站点统计</span>
+	{/* 公告 */}
+	<div class="onload-animation" style="animation-delay: calc(var(--content-delay) + 50ms);">
+		<AnnouncementMarquee />
+	</div>
+
+	{/* 网格区 */}
+	<div class="onload-animation" style="animation-delay: calc(var(--content-delay) + 100ms);">
+		<div class="portal-grid">
+			<div class="portal-card">
+				<QuickNav />
+			</div>
+			<div class="portal-card">
+				<PortalStats />
+			</div>
 		</div>
 	</div>
 
-	<PortalStats class="onload-animation mt-1 mb-4 stats-container" />
-
-	<div class="onload-animation section-title-wrapper">
-		<div class="section-title-container">
-			<span class="section-title">博客文章</span>
-		</div>
+	{/* 每日一言 */}
+	<div class="onload-animation" style="animation-delay: calc(var(--content-delay) + 150ms);">
+		<DailyQuote />
 	</div>
 </div>
 
-<style>
+<style is:global>
 	.home-portal {
-		padding-top: 0.5rem;
+		padding-top: 1rem;
 		padding-bottom: 0;
-		margin-top: -0.5rem;
-	}
-
-	.stats-container {
-		border: 2px solid #000;
-		border-radius: 1rem;
-		padding: 0;
-		max-width: 24rem;
-		margin-left: auto;
-		margin-right: auto;
-		overflow: hidden;
-	}
-	:root.dark .stats-container {
-		border-color: #fff;
 	}
 
 	/* === Avatar Magic Rings === */
@@ -142,9 +156,6 @@ if (workAvatarUrls.length === 0 && profileConfig.avatar) {
 			right: -20rem;
 		}
 	}
-	[data-time-mode="off"] .magic-rings-bg {
-		display: none;
-	}
 	.avatar-core {
 		position: relative;
 		z-index: 2;
@@ -165,13 +176,10 @@ if (workAvatarUrls.length === 0 && profileConfig.avatar) {
 		height: 100%;
 	}
 	.avatar-img.avatar-work {
-		display: none;
+		display: block;
 	}
 	.avatar-img.avatar-off {
 		display: none;
-	}
-	[data-time-mode="work"] .avatar-img.avatar-work {
-		display: block;
 	}
 	[data-time-mode="off"] .avatar-img.avatar-off {
 		display: block;
@@ -249,27 +257,39 @@ if (workAvatarUrls.length === 0 && profileConfig.avatar) {
 		letter-spacing: 0.05em;
 	}
 
-	/* === Section Title === */
-	.section-title-wrapper {
-		width: 100%;
-		max-width: 24rem;
-		margin-left: auto;
-		margin-right: auto;
+	/* === 运行天数 === */
+	.running-days {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		margin-top: 0.5rem;
+		padding: 0.25rem 0.75rem;
+		border-radius: 9999px;
+		border: 1px solid var(--line-divider);
+		font-size: 0.75rem;
+		color: var(--content-meta);
 	}
-	.section-title-container {
-		text-align: center;
-		padding-top: 1.5rem;
-		padding-bottom: 0.25rem;
+	.running-days-icon {
+		font-size: 0.875rem;
 	}
-	.section-title {
-		font-size: 1.75rem;
-		font-weight: 600;
-		letter-spacing: 0.1em;
-		color: #000;
-		text-transform: uppercase;
+
+	/* === Portal Grid === */
+	.portal-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+		margin-top: 1.5rem;
 	}
-	:root.dark .section-title {
-		color: #fff;
+	@media (min-width: 768px) {
+		.portal-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	.portal-card {
+		border: 1px solid var(--line-divider);
+		border-radius: 0.75rem;
+		padding: 1rem;
+		overflow: hidden;
 	}
 </style>
 
@@ -318,8 +338,8 @@ import { initMagicRings } from '@components/features/MagicRings.ts';
 		if (statusText) statusText.textContent = isWork ? '上班中' : '下班';
 
 		if (isWork) {
-			var avatarUrl = pickNextWorkAvatar(wrapper);
-			applyWorkAvatar(avatarUrl, function() {
+			var url = pickNextWorkAvatar(wrapper);
+			applyWorkAvatar(url, function() {
 				if (wrapper) wrapper.setAttribute('data-time-mode', 'work');
 			});
 		} else {
@@ -335,31 +355,28 @@ import { initMagicRings } from '@components/features/MagicRings.ts';
 			ringsInstance.destroy();
 			ringsInstance = null;
 		}
-		var isWork = getIsWork(wrapper);
-		if (isWork) {
-			ringsInstance = initMagicRings(container, {
-				color: '#E24EA0',
-				colorTwo: '#F97316',
-				ringCount: 6,
-				speed: 1,
-				attenuation: 10,
-				lineThickness: 2,
-				baseRadius: 0.35,
-				radiusStep: 0.1,
-				scaleRate: 0.1,
-				opacity: 1,
-				noiseAmount: 0,
-				rotation: 0,
-				ringGap: 1.5,
-				fadeIn: 0.7,
-				fadeOut: 0.5,
-				followMouse: true,
-				mouseInfluence: 0.2,
-				hoverScale: 1.2,
-				parallax: 0.05,
-				clickBurst: true,
-			});
-		}
+		ringsInstance = initMagicRings(container, {
+			color: '#E24EA0',
+			colorTwo: '#F97316',
+			ringCount: 6,
+			speed: 1,
+			attenuation: 10,
+			lineThickness: 2,
+			baseRadius: 0.35,
+			radiusStep: 0.1,
+			scaleRate: 0.1,
+			opacity: 1,
+			noiseAmount: 0,
+			rotation: 0,
+			ringGap: 1.5,
+			fadeIn: 0.7,
+			fadeOut: 0.5,
+			followMouse: true,
+			mouseInfluence: 0.2,
+			hoverScale: 1.2,
+			parallax: 0.05,
+			clickBurst: true,
+		});
 	}
 
 	setTimeMode();

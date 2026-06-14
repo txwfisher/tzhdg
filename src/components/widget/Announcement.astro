@@ -1,7 +1,7 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
-import { getCollection } from "astro:content";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 
@@ -12,10 +12,10 @@ const announcementData = announcementEntry?.data as any;
 
 // 兼容旧配置：如果没有数据则使用默认值
 const config = {
-  title: announcementData?.title || "公告",
-  content: announcementData?.content || "默认内容",
-  closable: announcementData?.closable ?? true,
-  link: announcementData?.link,
+	title: announcementData?.title || "公告",
+	content: announcementData?.content || "默认内容",
+	closable: announcementData?.closable ?? true,
+	link: announcementData?.link,
 };
 
 interface Props {

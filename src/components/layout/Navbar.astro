@@ -120,7 +120,8 @@ if (isLocalSrcLogo) {
                 <span class="navbar-logo-text">{navbarTitle}</span>
             </div>
         </a>
-        <div class="hidden lg:flex items-center space-x-1">
+        <div class="hidden lg:flex items-center space-x-1 relative" data-navbar-nav>
+            <div class="navbar-hover-border" data-hover-border></div>
             {links.map((l) => {
                 return <DropdownMenu link={l} />;
             })}
@@ -175,9 +176,139 @@ if (isLocalSrcLogo) {
   :root.dark .sun-icon { opacity: 0; transform: rotate(90deg) scale(0.5); }
   :root.dark .moon-icon { opacity: 1; transform: rotate(0deg) scale(1); }
 
+  /* ============ hover 滑动边框指示器 ============ */
+  .navbar-hover-border {
+    position: absolute;
+    height: 2.5rem;
+    border-radius: 9999px;
+    border: 1.5px solid oklch(0.35 0 0);
+    background-color: transparent;
+    opacity: 0;
+    transition:
+      left 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      width 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      height 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      top 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      border-color 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  :root.dark .navbar-hover-border {
+    border-color: oklch(0.6 0 0);
+  }
+
+  [data-navbar-nav]:hover .navbar-hover-border,
+  [data-navbar-nav].nav-has-active .navbar-hover-border {
+    opacity: 1;
+  }
+
+  /* 禁用各 item 自身的悬浮背景 */
+  [data-navbar-nav] .dropdown-container > .btn-plain:hover,
+  [data-navbar-nav] .dropdown-container > .btn-plain:active,
+  [data-navbar-nav] .dropdown-container > .btn-plain:focus-visible {
+    background-color: transparent !important;
+  }
+
 </style>
 
 <script>
+// ============ hover 滑动边框指示器 ============
+let _hoverSliderAbortController: AbortController | null = null;
+let _hoverSliderMouseEnterHandlers: Array<[Element, (e: Event) => void]> = [];
+
+function cleanupHoverSlider() {
+    if (_hoverSliderAbortController) {
+        _hoverSliderAbortController.abort();
+        _hoverSliderAbortController = null;
+    }
+    _hoverSliderMouseEnterHandlers.forEach(([item, handler]) => {
+        item.removeEventListener('mouseenter', handler);
+    });
+    _hoverSliderMouseEnterHandlers = [];
+}
+
+function initHoverSlider() {
+    cleanupHoverSlider();
+
+    const navContainer = document.querySelector('[data-navbar-nav]') as HTMLElement | null;
+    const hoverBorder = document.querySelector('[data-hover-border]') as HTMLElement | null;
+
+    if (!navContainer || !hoverBorder) return;
+
+    _hoverSliderAbortController = new AbortController();
+
+    const _navContainer = navContainer;
+    const _hoverBorder = hoverBorder;
+    const navItems = _navContainer.querySelectorAll(':scope > .dropdown-container');
+
+    function detectActiveItem() {
+        const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+        let hasActive = false;
+        navItems.forEach((item) => {
+            const link = item.querySelector('a') as HTMLAnchorElement | null;
+            if (!link) return;
+            const href = link.getAttribute('href')?.replace(/\/$/, '') || '/';
+            if (href === currentPath || (currentPath !== '/' && currentPath.startsWith(href + '/')) || (href !== '/' && currentPath.startsWith(href))) {
+                item.classList.add('nav-item-active');
+                hasActive = true;
+                const rect = item.getBoundingClientRect();
+                const containerRect = _navContainer.getBoundingClientRect();
+                _hoverBorder.style.width = `${rect.width}px`;
+                _hoverBorder.style.height = `${rect.height}px`;
+                _hoverBorder.style.left = `${rect.left - containerRect.left}px`;
+                _hoverBorder.style.top = `${(containerRect.height - rect.height) / 2}px`;
+            } else {
+                item.classList.remove('nav-item-active');
+            }
+        });
+        if (hasActive) {
+            _navContainer.classList.add('nav-has-active');
+        } else {
+            _navContainer.classList.remove('nav-has-active');
+        }
+    }
+
+    navItems.forEach((item) => {
+        const handler = () => {
+            const rect = item.getBoundingClientRect();
+            const containerRect = _navContainer.getBoundingClientRect();
+
+            _hoverBorder.style.width = `${rect.width}px`;
+            _hoverBorder.style.height = `${rect.height}px`;
+            _hoverBorder.style.left = `${rect.left - containerRect.left}px`;
+            _hoverBorder.style.top = `${(containerRect.height - rect.height) / 2}px`;
+        };
+        item.addEventListener('mouseenter', handler);
+        _hoverSliderMouseEnterHandlers.push([item, handler]);
+    });
+
+    _navContainer.addEventListener('mouseleave', () => {
+        const activeItem = _navContainer.querySelector('.nav-item-active') as HTMLElement | null;
+        if (activeItem) {
+            const rect = activeItem.getBoundingClientRect();
+            const containerRect = _navContainer.getBoundingClientRect();
+            _hoverBorder.style.width = `${rect.width}px`;
+            _hoverBorder.style.height = `${rect.height}px`;
+            _hoverBorder.style.left = `${rect.left - containerRect.left}px`;
+            _hoverBorder.style.top = `${(containerRect.height - rect.height) / 2}px`;
+        } else {
+            _hoverBorder.style.opacity = '0';
+        }
+    }, { signal: _hoverSliderAbortController.signal });
+
+    _navContainer.addEventListener('mouseenter', () => {
+        _hoverBorder.style.opacity = '1';
+    }, { signal: _hoverSliderAbortController.signal });
+
+    detectActiveItem();
+    document.addEventListener('astro:page-load', detectActiveItem, { signal: _hoverSliderAbortController.signal });
+}
+
+initHoverSlider();
+document.addEventListener('astro:page-load', initHoverSlider);
+
 function loadButtonScript() {
     document.addEventListener("click", function(event) {
         const panel = document.getElementById("display-setting");

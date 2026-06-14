@@ -2,7 +2,7 @@
 import { profileConfig, siteConfig } from "@/config";
 
 interface Props {
-  class?: string;
+	class?: string;
 }
 
 const { class: className = "" } = Astro.props;
@@ -12,7 +12,7 @@ if (!coverConfig?.enable) return null;
 
 const avatar = profileConfig.avatar || "/avatar.png";
 const name = profileConfig.name || "";
-const bio = profileConfig.bio || "";
+const bio = Array.isArray(profileConfig.bio) ? profileConfig.bio[1] || profileConfig.bio[0] || "" : profileConfig.bio || "";
 ---
 
 <div class:list={["wx-cover", className]}>

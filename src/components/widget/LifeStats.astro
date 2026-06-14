@@ -1,7 +1,7 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
-import { getCollection } from "astro:content";
 
 interface Props {
 	class?: string;
@@ -20,7 +20,9 @@ const isIn = (entryId: string, folder: string) =>
 	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
 
 // 统计地点
-const places = lifeEntries.filter((entry) => isIn(entry.id, "places")).map((e) => e.data);
+const places = lifeEntries
+	.filter((entry) => isIn(entry.id, "places"))
+	.map((e) => e.data);
 const placesCount = places.length;
 const visitedCities = new Set(places.map((p) => p.city).filter(Boolean)).size;
 
@@ -32,7 +34,7 @@ const notebookFolders = new Set(
 			const match = id.match(/^([^/]+)\//);
 			return match ? match[1] : null;
 		})
-		.filter(Boolean)
+		.filter(Boolean),
 );
 const notebooksCount = notebookFolders.size;
 

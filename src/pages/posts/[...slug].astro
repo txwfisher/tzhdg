@@ -18,10 +18,11 @@ import {
 import { Icon } from "astro-icon/components";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import AiSummary from "@/components/widget/AiSummary.astro";
 import CoverImage from "@/components/common/CoverImage.astro";
+import MobilePostToolbar from "@/components/layout/MobilePostToolbar.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
 import SharePoster from "@/components/misc/SharePoster.svelte";
+import AiSummary from "@/components/widget/AiSummary.astro";
 import { coverImageConfig } from "@/config/coverImageConfig";
 import { licenseConfig } from "@/config/licenseConfig";
 import { profileConfig } from "@/config/profileConfig";
@@ -30,7 +31,6 @@ import { sponsorConfig } from "@/config/sponsorConfig";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getApiUrlList, processCoverImageSync } from "@/utils/image-utils";
 import { url } from "@/utils/url-utils";
-import MobilePostToolbar from "@/components/layout/MobilePostToolbar.astro";
 
 export async function getStaticPaths() {
 	const blogEntries = await getSortedPosts();

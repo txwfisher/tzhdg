@@ -14,15 +14,26 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		// 主页
 		LinkPreset.Home,
 
-		// 文章分类
+		// 文章（带下拉子菜单）
 		{
-			name: "分类",
-			url: "/categories/",
-			icon: "material-symbols:folder-open",
-		},
+			name: "文章",
+			url: "/posts/",
+			icon: "material-symbols:article",
+			children: [
+				// 文章列表
+				LinkPreset.Posts,
 
-		// 归档
-		LinkPreset.Archive,
+				// 文章分类
+				{
+					name: "分类",
+					url: "/categories/",
+					icon: "material-symbols:folder-open",
+				},
+
+				// 归档
+				LinkPreset.Archive,
+			],
+		},
 
 		// 网站导航
 		{
@@ -88,9 +99,11 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	});
 
 	if (recordChildren.length > 0) {
-		const defaultUrl = siteConfig.pages.books ? "/books/"
-			: siteConfig.pages.moviesGames ? "/movies-games/"
-			: "/music/";
+		const defaultUrl = siteConfig.pages.books
+			? "/books/"
+			: siteConfig.pages.moviesGames
+				? "/movies-games/"
+				: "/music/";
 
 		links.push({
 			name: "记录",

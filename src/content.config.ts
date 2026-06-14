@@ -66,22 +66,20 @@ const bangumiCollection = defineCollection({
 			category: z
 				.enum(["book", "anime", "music", "game", "real"])
 				.default("anime"),
-			subcategory: z
-				.enum(["movie", "tv", "anime", "documentary"])
-				.optional(),
+			subcategory: z.enum(["movie", "tv", "anime", "documentary"]).optional(),
 			status: z.number().min(1).max(5).default(2), // 1: 想看, 2: 看过, 3: 在看, 4: 搁置, 5: 抛弃
 			image: image().or(z.string()),
 			link: z.string().optional(), // 对应文章的链接；为空时自动从文件路径推导
 			score: z.number().min(0).max(10).optional(),
 			comment: z.string().optional(),
 			tags: z.array(z.string()).optional().default([]),
-				published: z.date().optional(),
-				// Music-specific fields
-				artist: z.string().optional(),
-				audioUrl: z.string().optional(),
-				lrcUrl: z.string().optional(),
-				metingServer: z.string().optional(),
-				metingId: z.string().optional(),
+			published: z.date().optional(),
+			// Music-specific fields
+			artist: z.string().optional(),
+			audioUrl: z.string().optional(),
+			lrcUrl: z.string().optional(),
+			metingServer: z.string().optional(),
+			metingId: z.string().optional(),
 		}),
 });
 
@@ -133,19 +131,28 @@ const lifeCollection = defineCollection({
 });
 
 const notebooksCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,json}", base: "./src/content/life/notebooks" }),
+	loader: glob({
+		pattern: "**/*.{md,json}",
+		base: "./src/content/life/notebooks",
+	}),
 	schema: z.object({
 		name: z.string().optional().default("未命名日记本"),
 		cover: z.string().optional().default(""),
 		summary: z.string().optional().default(""),
-		image: z.union([z.string(), z.array(z.string())]).optional().default(""),
+		image: z
+			.union([z.string(), z.array(z.string())])
+			.optional()
+			.default(""),
 		tags: z.array(z.string()).optional().default([]),
 		date: z.coerce.date().optional(),
 	}),
 });
 
 const routinesCollection = defineCollection({
-	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/life/routines" }),
+	loader: glob({
+		pattern: "**/*.{md,mdx}",
+		base: "./src/content/life/routines",
+	}),
 	schema: z.object({
 		name: z.string(),
 		time: z.string().optional().default(""),
@@ -166,14 +173,23 @@ const albumCollection = defineCollection({
 			date: z.coerce.date(),
 			location: z.string().optional().default(""),
 			photos: z
-				.array(image().or(z.string()).or(z.object({ src: z.string(), alt: z.string().optional(), caption: z.string().optional() })))
+				.array(
+					image()
+						.or(z.string())
+						.or(
+							z.object({
+								src: z.string(),
+								alt: z.string().optional(),
+								caption: z.string().optional(),
+							}),
+						),
+				)
 				.optional()
 				.default([]),
 			tags: z.array(z.string()).optional().default([]),
 			draft: z.boolean().optional().default(false),
 		}),
 });
-
 
 const ziyuanCollection = defineCollection({
 	loader: glob({ pattern: "**/*.md", base: "./src/content/ziyuan" }),
@@ -198,7 +214,7 @@ const ziyuanCollection = defineCollection({
 				z.object({
 					text: z.string(),
 					author: z.string(),
-				})
+				}),
 			),
 			content: z.undefined().optional(),
 			closable: z.undefined().optional(),
@@ -247,6 +263,14 @@ const changelogCollection = defineCollection({
 	}),
 });
 
+const danmuCollection = defineCollection({
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/danmu" }),
+	schema: z.object({
+		nickname: z.string(),
+		time: z.string().optional().default(""),
+	}),
+});
+
 export const collections = {
 	posts: postsCollection,
 	spec: specCollection,
@@ -260,4 +284,5 @@ export const collections = {
 	ziyuan: ziyuanCollection,
 	friends: friendsCollection,
 	changelog: changelogCollection,
+	danmu: danmuCollection,
 };

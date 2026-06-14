@@ -1,4 +1,5 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import { siteConfig } from "@/config";
@@ -9,7 +10,6 @@ import {
 	getSortedPosts,
 	getTagList,
 } from "@/utils/content-utils";
-import { getCollection } from "astro:content";
 
 interface Props {
 	class?: string;
@@ -49,11 +49,14 @@ const routinesEntries = await getCollection("routines");
 // 足迹记录
 const isIn = (entryId: string, folder: string) =>
 	entryId.replace(/\\/g, "/").startsWith(`${folder}/`);
-const placesCount = lifeEntries.filter((entry) => isIn(entry.id, "places")).length;
+const placesCount = lifeEntries.filter((entry) =>
+	isIn(entry.id, "places"),
+).length;
 const routinesCount = routinesEntries.length;
 
 // 记录次数 = 影视 + 书籍 + 游戏 + 音乐 + 足迹 + 日常规划
-const recordCount = animeCount + bookCount + gameCount + musicCount + placesCount + routinesCount;
+const recordCount =
+	animeCount + bookCount + gameCount + musicCount + placesCount + routinesCount;
 
 // 计算总字数
 let totalWords = 0;

@@ -5,7 +5,7 @@ export const fontConfig = {
 	// 是否预加载字体文件
 	preload: true,
 	// 当前选择的字体，支持多个字体组合
-	selected: ["stdongguanti"],
+	selected: ["aazongyiyuan"],
 
 	// 字体列表
 	// 推荐使用可靠的 CDN 服务商提供的字体链接，它天然做了按需分片加载，且性能较好
@@ -20,6 +20,16 @@ export const fontConfig = {
 			src: "", // 系统字体无需 src
 			family:
 				"system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
+		},
+
+		// Aa综艺圆
+		aazongyiyuan: {
+			id: "aazongyiyuan",
+			name: "Aa综艺圆",
+			src: "/fonts/AaZongYiYuan/AaZongYiYuan-2.woff2",
+			family: "AaZongYiYuan",
+			format: "woff2" as const,
+			display: "swap" as const,
 		},
 
 		// Google Fonts - Zen Maru Gothic
@@ -61,7 +71,7 @@ export const fontConfig = {
 		},
 
 		// ===== 添加 STDongGuanTi 字体 =====
-		"stdongguanti": {
+		stdongguanti: {
 			id: "stdongguanti",
 			name: "STDongGuanTi",
 			src: "https://fontsapi.zeoseven.com/488/main/result.css",

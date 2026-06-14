@@ -1,11 +1,11 @@
 ---
+import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import { render } from "astro:content";
 import { Icon } from "astro-icon/components";
+import Markdown from "@/components/common/Markdown.astro";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getTagUrl } from "@/utils/url-utils";
-import Markdown from "@/components/common/Markdown.astro";
-import { Image } from "astro:assets";
 
 interface Props {
 	moment: CollectionEntry<"moments">;

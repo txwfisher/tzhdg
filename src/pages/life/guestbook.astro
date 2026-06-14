@@ -1,11 +1,11 @@
 ---
-import { getEntry, render, getCollection } from "astro:content";
+import { getCollection, getEntry, render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
+import Danmaku from "@/components/guestbook/Danmaku.astro";
 import { commentConfig } from "@/config";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
-import Danmaku from "@/components/guestbook/Danmaku.astro";
 
 const guestbookPost = await getEntry("spec", "guestbook");
 
@@ -21,9 +21,9 @@ const isCommentEnabled = commentConfig?.type && commentConfig.type !== "none";
 // 获取弹幕数据
 const danmuEntries = await getCollection("danmu");
 const danmuComments = danmuEntries.map((entry) => ({
-  nickname: entry.data.nickname,
-  content: entry.body.trim(),
-  time: entry.data.time,
+	nickname: entry.data.nickname,
+	content: entry.body.trim(),
+	time: entry.data.time,
 }));
 ---
 

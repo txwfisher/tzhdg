@@ -1,9 +1,9 @@
 ---
-import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import { getCollection } from "astro:content";
-import { getSortedPosts } from "@/utils/content-utils";
+import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
+import { getSortedPosts } from "@/utils/content-utils";
 
 interface Props {
 	class?: string;

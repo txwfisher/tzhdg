@@ -1,70 +1,70 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
-import { Image } from "astro:assets";
+import Comment from "@/components/comment/index.astro";
 import MomentCard from "@/components/moments/MomentCard.astro";
 import MomentsCover from "@/components/moments/MomentsCover.astro";
-import Comment from "@/components/comment/index.astro";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 const moments = await getCollection("moments");
 const sortedMoments = moments
-  .filter((m) => !m.data.pinned)
-  .sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+	.filter((m) => !m.data.pinned)
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
 
 // 置顶说说
 const pinnedMoments = moments
-  .filter((m) => m.data.pinned)
-  .sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
+	.filter((m) => m.data.pinned)
+	.sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
 
 // 获取 moments 资产目录下的所有图片
 const momentAssets = import.meta.glob<{ default: ImageMetadata }>(
-  "../content/moments/assets/*.{jpeg,jpg,png,gif,webp,avif}",
-  { eager: true },
+	"../content/moments/assets/*.{jpeg,jpg,png,gif,webp,avif}",
+	{ eager: true },
 );
 
 // 解析图片路径
 const parseImages = (imagesData: any): (string | ImageMetadata)[] => {
-  let rawPaths: string[] = [];
-  if (Array.isArray(imagesData)) {
-    rawPaths = imagesData.map((img) =>
-      typeof img === "string" ? img : img.src || img,
-    );
-  } else if (typeof imagesData === "string" && imagesData.trim()) {
-    rawPaths = imagesData
-      .split(/[,;]/)
-      .map((img) => img.trim())
-      .filter((img) => img);
-  }
+	let rawPaths: string[] = [];
+	if (Array.isArray(imagesData)) {
+		rawPaths = imagesData.map((img) =>
+			typeof img === "string" ? img : img.src || img,
+		);
+	} else if (typeof imagesData === "string" && imagesData.trim()) {
+		rawPaths = imagesData
+			.split(/[,;]/)
+			.map((img) => img.trim())
+			.filter((img) => img);
+	}
 
-  return Array.from(new Set(rawPaths))
-    .map((img) => {
-      if (
-        img.startsWith("http://") ||
-        img.startsWith("https://") ||
-        img.startsWith("/")
-      ) {
-        return img;
-      }
-      const cleanPath = img.replace(/^\.\//, "");
-      if (cleanPath.startsWith("assets/")) {
-        const fileName = cleanPath.replace("assets/", "");
-        for (const path in momentAssets) {
-          if (path.endsWith(fileName)) {
-            return momentAssets[path].default;
-          }
-        }
-      }
-      return img;
-    })
-    .filter((img) => img);
+	return Array.from(new Set(rawPaths))
+		.map((img) => {
+			if (
+				img.startsWith("http://") ||
+				img.startsWith("https://") ||
+				img.startsWith("/")
+			) {
+				return img;
+			}
+			const cleanPath = img.replace(/^\.\//, "");
+			if (cleanPath.startsWith("assets/")) {
+				const fileName = cleanPath.replace("assets/", "");
+				for (const path in momentAssets) {
+					if (path.endsWith(fileName)) {
+						return momentAssets[path].default;
+					}
+				}
+			}
+			return img;
+		})
+		.filter((img) => img);
 };
 
 // 预处理置顶说说
 const pinnedData = pinnedMoments.map((m) => ({
-  images: parseImages(m.data.images),
-  body: m.body || "",
-  date: m.data.published,
+	images: parseImages(m.data.images),
+	body: m.body || "",
+	date: m.data.published,
 }));
 
 const albums = await getCollection("album");

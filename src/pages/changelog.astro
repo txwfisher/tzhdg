@@ -1,41 +1,42 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
-import { getCollection } from "astro:content";
 
 if (!siteConfig.pages.changelog) {
-  return Astro.redirect("/404/");
+	return Astro.redirect("/404/");
 }
 
 const entries = await getCollection("changelog");
 
-const sorted = entries
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const sorted = entries.sort(
+	(a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
 
 const typeConfig = {
-  feature: {
-    label: i18n(I18nKey.changelogFeature),
-    icon: "material-symbols:rocket-launch",
-    cls: "cl-feature",
-  },
-  improvement: {
-    label: i18n(I18nKey.changelogImprovement),
-    icon: "material-symbols:build",
-    cls: "cl-improvement",
-  },
-  fix: {
-    label: i18n(I18nKey.changelogFix),
-    icon: "material-symbols:bug-report",
-    cls: "cl-fix",
-  },
-  removal: {
-    label: i18n(I18nKey.changelogRemoval),
-    icon: "material-symbols:delete",
-    cls: "cl-removal",
-  },
+	feature: {
+		label: i18n(I18nKey.changelogFeature),
+		icon: "material-symbols:rocket-launch",
+		cls: "cl-feature",
+	},
+	improvement: {
+		label: i18n(I18nKey.changelogImprovement),
+		icon: "material-symbols:build",
+		cls: "cl-improvement",
+	},
+	fix: {
+		label: i18n(I18nKey.changelogFix),
+		icon: "material-symbols:bug-report",
+		cls: "cl-fix",
+	},
+	removal: {
+		label: i18n(I18nKey.changelogRemoval),
+		icon: "material-symbols:delete",
+		cls: "cl-removal",
+	},
 };
 
 const displayTitle = i18n(I18nKey.changelogTitle);

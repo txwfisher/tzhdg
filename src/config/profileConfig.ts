@@ -15,16 +15,13 @@ export const profileConfig: ProfileConfig = {
 	name: "团子和蛋糕",
 
 	// 首页展示名字（留空则使用 name）
-	displayName: "团子",
+	displayName: "Dumpling",
 
 	// 职业/身份标签
 	occupation: "[技术博主 / 生活记录者]",
 
 	// 个人签名（支持多条，会循环打字+删除效果）
-	bio: [
-		"海棠花未眠，老陈总在我身边",
-		"记录更多，言语更少",
-	],
+	bio: ["如果你喜欢，那么欢迎来到我的世界！", "海棠花未眠，老陈总在我身边"],
 
 	// 链接配置
 	// 已经预装的图标集：fa7-brands，fa7-regular，fa7-solid，material-symbols，simple-icons

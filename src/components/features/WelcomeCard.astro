@@ -4,35 +4,160 @@
  * Lanyard 风格悬挂卡片 — 符合 Firefly 极简无色风格
  */
 import { getCollection } from "astro:content";
-import { getPostUrlBySlug } from "@/utils/url-utils";
 import { externalMomentsConfig } from "@/config/externalMomentsConfig";
 import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
+import { getPostUrlBySlug } from "@/utils/url-utils";
 
-interface RawItem { type: string; title: string; date: Date; url: string; }
+interface RawItem {
+	type: string;
+	title: string;
+	date: Date;
+	url: string;
+}
 const allItems: RawItem[] = [];
 
-try { const posts = await getCollection("posts", ({ data }) => import.meta.env.PROD ? data.draft !== true : true); for (const p of posts) allItems.push({ type: "post", title: p.data.title, date: new Date(p.data.published), url: getPostUrlBySlug(p.id) }); } catch {}
-try { const moments = await getCollection("moments"); for (const m of moments) { let t = (m.body||"").replace(/[#*`]/g,"").trim(); if(t.length>40) t=t.substring(0,40)+"..."; if(!t) t="日常动态"; allItems.push({ type:"moment", title:t, date:new Date(m.data.published), url:"/moments/" }); } } catch {}
-try { const bangumi = await getCollection("bangumi"); for (const b of bangumi) { let u = b.data.link||""; if(!u){const s=b.id.replace(/\\/g,"/").replace(/\.(md|mdx|markdown)$/i,""); u=b.data.category==="book"?`/books/${s}/`:b.data.category==="music"?"/music/":"/movies-games/";} allItems.push({ type:b.data.category==="music"?"music":"bangumi", title:b.data.title, date:b.data.published?new Date(b.data.published):new Date(0), url:u }); } } catch {}
-try { const notebooks = await getCollection("notebooks"); const nn:Record<string,string>={}; for(const n of notebooks){if(n.id.includes("_index")){const f=n.id.replace(/\\/g,"/").replace(/\/_index(\.md|\.json)?$/,"");nn[f]=n.data.name||f;}} for(const n of notebooks){if(n.id.includes("_index"))continue;const f=n.id.replace(/\\/g,"/").split("/")[0];const nm=nn[f]||f;const s=n.id.replace(/\\/g,"/").split("/").pop()?.replace(/\.md$/,"")||"";allItems.push({type:"notebook",title:`${nm} · ${n.data.name||"未命名"}`,date:n.data.date?new Date(n.data.date):new Date(),url:`/life/notebooks/${f}/${s}/`});} } catch {}
-try { const routines = await getCollection("routines"); for(const r of routines){const d=r.data.updatedAt instanceof Date?r.data.updatedAt:new Date();allItems.push({type:"routine",title:`规划: ${r.data.name}`,date:d,url:"/life/routines/"});} } catch {}
-try { const changelog = await getCollection("changelog"); for(const c of changelog) allItems.push({type:"changelog",title:c.data.description,date:new Date(c.data.date),url:"/changelog/"}); } catch {}
-try { const album = await getCollection("album",({data})=>import.meta.env.PROD?data.draft!==true:true); for(const a of album){const s=a.id.replace(/\\/g,"/").replace(/\.(md|mdx|markdown)$/i,"");allItems.push({type:"album",title:a.data.title,date:new Date(a.data.date),url:`/album/${s}/`});} } catch {}
+try {
+	const posts = await getCollection("posts", ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : true,
+	);
+	for (const p of posts)
+		allItems.push({
+			type: "post",
+			title: p.data.title,
+			date: new Date(p.data.published),
+			url: getPostUrlBySlug(p.id),
+		});
+} catch {}
+try {
+	const moments = await getCollection("moments");
+	for (const m of moments) {
+		let t = (m.body || "").replace(/[#*`]/g, "").trim();
+		if (t.length > 40) t = t.substring(0, 40) + "...";
+		if (!t) t = "日常动态";
+		allItems.push({
+			type: "moment",
+			title: t,
+			date: new Date(m.data.published),
+			url: "/moments/",
+		});
+	}
+} catch {}
+try {
+	const bangumi = await getCollection("bangumi");
+	for (const b of bangumi) {
+		let u = b.data.link || "";
+		if (!u) {
+			const s = b.id.replace(/\\/g, "/").replace(/\.(md|mdx|markdown)$/i, "");
+			u =
+				b.data.category === "book"
+					? `/books/${s}/`
+					: b.data.category === "music"
+						? "/music/"
+						: "/movies-games/";
+		}
+		allItems.push({
+			type: b.data.category === "music" ? "music" : "bangumi",
+			title: b.data.title,
+			date: b.data.published ? new Date(b.data.published) : new Date(0),
+			url: u,
+		});
+	}
+} catch {}
+try {
+	const notebooks = await getCollection("notebooks");
+	const nn: Record<string, string> = {};
+	for (const n of notebooks) {
+		if (n.id.includes("_index")) {
+			const f = n.id.replace(/\\/g, "/").replace(/\/_index(\.md|\.json)?$/, "");
+			nn[f] = n.data.name || f;
+		}
+	}
+	for (const n of notebooks) {
+		if (n.id.includes("_index")) continue;
+		const f = n.id.replace(/\\/g, "/").split("/")[0];
+		const nm = nn[f] || f;
+		const s =
+			n.id.replace(/\\/g, "/").split("/").pop()?.replace(/\.md$/, "") || "";
+		allItems.push({
+			type: "notebook",
+			title: `${nm} · ${n.data.name || "未命名"}`,
+			date: n.data.date ? new Date(n.data.date) : new Date(),
+			url: `/life/notebooks/${f}/${s}/`,
+		});
+	}
+} catch {}
+try {
+	const routines = await getCollection("routines");
+	for (const r of routines) {
+		const d = r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date();
+		allItems.push({
+			type: "routine",
+			title: `规划: ${r.data.name}`,
+			date: d,
+			url: "/life/routines/",
+		});
+	}
+} catch {}
+try {
+	const changelog = await getCollection("changelog");
+	for (const c of changelog)
+		allItems.push({
+			type: "changelog",
+			title: c.data.description,
+			date: new Date(c.data.date),
+			url: "/changelog/",
+		});
+} catch {}
+try {
+	const album = await getCollection("album", ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : true,
+	);
+	for (const a of album) {
+		const s = a.id.replace(/\\/g, "/").replace(/\.(md|mdx|markdown)$/i, "");
+		allItems.push({
+			type: "album",
+			title: a.data.title,
+			date: new Date(a.data.date),
+			url: `/album/${s}/`,
+		});
+	}
+} catch {}
 
 allItems.sort((a, b) => b.date.getTime() - a.date.getTime());
-const recentBrief = allItems.slice(0, 3).map(i => ({ type: i.type, title: i.title, date: i.date.toISOString().substring(0, 10), url: i.url }));
-const recentDetail = allItems.slice(0, 8).map(i => ({ type: i.type, title: i.title, date: i.date.toISOString().substring(0, 10), url: i.url }));
+const recentBrief = allItems
+	.slice(0, 3)
+	.map((i) => ({
+		type: i.type,
+		title: i.title,
+		date: i.date.toISOString().substring(0, 10),
+		url: i.url,
+	}));
+const recentDetail = allItems
+	.slice(0, 8)
+	.map((i) => ({
+		type: i.type,
+		title: i.title,
+		date: i.date.toISOString().substring(0, 10),
+		url: i.url,
+	}));
 const totalUpdates = allItems.length;
 // 内联 SVG 图标（Material Symbols 风格，24x24 viewBox）
 const typeIconSVG: Record<string, string> = {
-  post: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
-  moment: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  bangumi: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
-  notebook: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
-  routine: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
-  changelog: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-  album: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
-  music: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+	post: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+	moment:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+	bangumi:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
+	notebook:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+	routine:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+	changelog:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+	album:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+	music:
+		'<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
 };
 ---
 

@@ -118,7 +118,9 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 	const bangumiItems: ArchiveItem[] = bangumi.map((b) => {
 		let link = b.data.link || "";
 		if (!link) {
-			const slug = b.id.replace(/\\/g, "/").replace(/\.(md|mdx|markdown)$/i, "");
+			const slug = b.id
+				.replace(/\\/g, "/")
+				.replace(/\.(md|mdx|markdown)$/i, "");
 			if (b.data.category === "book") {
 				link = `/books/${slug}/`;
 			} else if (b.data.category === "music") {
@@ -135,7 +137,10 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 				published: b.data.published || new Date(0),
 				tags: [],
 				category: null,
-				image: typeof b.data.image === "string" ? b.data.image : (b.data.image as any)?.src,
+				image:
+					typeof b.data.image === "string"
+						? b.data.image
+						: (b.data.image as any)?.src,
 				link,
 			},
 		};
@@ -145,19 +150,21 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 	const lifeItems: ArchiveItem[] = [];
 
 	// 足迹记录
-	lifeEntries.filter((entry) => isIn(entry.id, "places")).forEach((p) => {
-		const parts = [p.data.province, p.data.city].filter(Boolean);
-		lifeItems.push({
-			id: p.id,
-			type: "life",
-			data: {
-				title: parts.length > 0 ? parts.join(" ") : "足迹记录",
-				published: p.data.date || new Date(),
-				tags: ["足迹"],
-				link: "/life/places/",
-			},
+	lifeEntries
+		.filter((entry) => isIn(entry.id, "places"))
+		.forEach((p) => {
+			const parts = [p.data.province, p.data.city].filter(Boolean);
+			lifeItems.push({
+				id: p.id,
+				type: "life",
+				data: {
+					title: parts.length > 0 ? parts.join(" ") : "足迹记录",
+					published: p.data.date || new Date(),
+					tags: ["足迹"],
+					link: "/life/places/",
+				},
+			});
 		});
-	});
 
 	// 笔记本记录（排除 _index 元数据条目）
 	notebooksEntries
@@ -182,21 +189,24 @@ export async function getArchiveList(): Promise<ArchiveItem[]> {
 			type: "life",
 			data: {
 				title: `规划: ${r.data.name}`,
-				published: r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(),
+				published:
+					r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(),
 				tags: ["规划"],
 				link: "/life/routines/",
 			},
 		});
 	});
 
-	return [...postItems, ...momentItems, ...bangumiItems, ...lifeItems].sort((a, b) => {
-		const timeA = a.data.published.getTime();
-		const timeB = b.data.published.getTime();
-		if (timeA === timeB) {
-			return (a.data.order ?? 0) - (b.data.order ?? 0);
-		}
-		return timeB - timeA;
-	});
+	return [...postItems, ...momentItems, ...bangumiItems, ...lifeItems].sort(
+		(a, b) => {
+			const timeA = a.data.published.getTime();
+			const timeB = b.data.published.getTime();
+			if (timeA === timeB) {
+				return (a.data.order ?? 0) - (b.data.order ?? 0);
+			}
+			return timeB - timeA;
+		},
+	);
 }
 export type Tag = {
 	name: string;

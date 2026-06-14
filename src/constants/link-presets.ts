@@ -58,4 +58,9 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		url: "/changelog/",
 		icon: "material-symbols:history",
 	},
+	[LinkPreset.Posts]: {
+		name: i18n(I18nKey.postList),
+		url: "/posts/",
+		icon: "material-symbols:article-outline",
+	},
 };

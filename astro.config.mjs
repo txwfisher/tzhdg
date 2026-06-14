@@ -5,6 +5,7 @@ import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-s
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import swup from "@swup/astro";
 import { defineConfig } from "astro/config";
+import { unified } from "@astrojs/markdown-remark";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -160,58 +161,116 @@ export default defineConfig({
 				return true;
 			},
 		}),
-		mdx(),
+		mdx({
+			processor: unified({
+				gfm: true,
+				smartypants: true,
+				remarkPlugins: [
+					remarkMath,
+					remarkReadingTime,
+					remarkExcerpt,
+					remarkDirective,
+					remarkSectionize,
+					parseDirectiveNode,
+					remarkMermaid,
+				],
+				rehypePlugins: [
+					[rehypeKatex, { katex }],
+					[rehypeCallouts, { theme: siteConfig.rehypeCallouts.theme }],
+					rehypeSlug,
+					rehypeMermaid,
+					rehypeFigure,
+					[rehypeExternalLinks, { siteUrl: siteConfig.site_url }],
+					[rehypeEmailProtection, { method: "base64" }],
+					[
+						rehypeComponents,
+						{
+							components: {
+								github: GithubCardComponent,
+							},
+						},
+					],
+					[
+						rehypeAutolinkHeadings,
+						{
+							behavior: "append",
+							properties: {
+								className: ["anchor"],
+							},
+							content: {
+								type: "element",
+								tagName: "span",
+								properties: {
+									className: ["anchor-icon"],
+									"data-pagefind-ignore": true,
+								},
+								children: [
+									{
+										type: "text",
+										value: "#",
+									},
+								],
+							},
+						},
+					],
+				],
+			}),
+		}),
 	],
 	markdown: {
-		remarkPlugins: [
-			remarkMath,
-			remarkReadingTime,
-			remarkExcerpt,
-			remarkDirective,
-			remarkSectionize,
-			parseDirectiveNode,
-			remarkMermaid,
-		],
-		rehypePlugins: [
-			[rehypeKatex, { katex }],
-			[rehypeCallouts, { theme: siteConfig.rehypeCallouts.theme }],
-			rehypeSlug,
-			rehypeMermaid,
-			rehypeFigure,
-			[rehypeExternalLinks, { siteUrl: siteConfig.site_url }],
-			[rehypeEmailProtection, { method: "base64" }], // 邮箱保护插件，支持 'base64' 或 'rot13'
-			[
-				rehypeComponents,
-				{
-					components: {
-						github: GithubCardComponent,
-					},
-				},
+		processor: unified({
+			gfm: true,
+			smartypants: true,
+			remarkPlugins: [
+				remarkMath,
+				remarkReadingTime,
+				remarkExcerpt,
+				remarkDirective,
+				remarkSectionize,
+				parseDirectiveNode,
+				remarkMermaid,
 			],
-			[
-				rehypeAutolinkHeadings,
-				{
-					behavior: "append",
-					properties: {
-						className: ["anchor"],
-					},
-					content: {
-						type: "element",
-						tagName: "span",
-						properties: {
-							className: ["anchor-icon"],
-							"data-pagefind-ignore": true,
+			rehypePlugins: [
+				[rehypeKatex, { katex }],
+				[rehypeCallouts, { theme: siteConfig.rehypeCallouts.theme }],
+				rehypeSlug,
+				rehypeMermaid,
+				rehypeFigure,
+				[rehypeExternalLinks, { siteUrl: siteConfig.site_url }],
+				[rehypeEmailProtection, { method: "base64" }], // 邮箱保护插件，支持 'base64' 或 'rot13'
+				[
+					rehypeComponents,
+					{
+						components: {
+							github: GithubCardComponent,
 						},
-						children: [
-							{
-								type: "text",
-								value: "#",
-							},
-						],
 					},
-				},
+				],
+				[
+					rehypeAutolinkHeadings,
+					{
+						behavior: "append",
+						properties: {
+							className: ["anchor"],
+						},
+						content: {
+							type: "element",
+							tagName: "span",
+							properties: {
+								className: ["anchor-icon"],
+								"data-pagefind-ignore": true,
+							},
+							children: [
+								{
+									type: "text",
+									value: "#",
+								},
+							],
+						},
+					},
+				],
 			],
-		],
+		}),
 	},
 	vite: {
 		plugins: [

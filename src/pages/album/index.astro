@@ -1,33 +1,37 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import BounceCards from "@/components/features/BounceCards.astro";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 const albums = await getCollection("album", ({ data }) => {
-  return import.meta.env.PROD ? data.draft !== true : true;
+	return import.meta.env.PROD ? data.draft !== true : true;
 });
 
 const sortedAlbums = albums.sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+	(a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
 
-const totalPhotos = sortedAlbums.reduce((sum, album) => sum + (album.data.photos?.length || 0), 0);
-const earliestDate = sortedAlbums.length > 0
-  ? sortedAlbums[sortedAlbums.length - 1].data.date
-  : new Date();
-const latestDate = sortedAlbums.length > 0
-  ? sortedAlbums[0].data.date
-  : new Date();
+const totalPhotos = sortedAlbums.reduce(
+	(sum, album) => sum + (album.data.photos?.length || 0),
+	0,
+);
+const earliestDate =
+	sortedAlbums.length > 0
+		? sortedAlbums[sortedAlbums.length - 1].data.date
+		: new Date();
+const latestDate =
+	sortedAlbums.length > 0 ? sortedAlbums[0].data.date : new Date();
 
 const formatDateRange = (start: Date, end: Date) => {
-  const format = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-  return `${format(start)} - ${format(end)}`;
+	const format = (d: Date) =>
+		`${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+	return `${format(start)} - ${format(end)}`;
 };
 
 function getPreviewPhotos(album: any) {
-  const photos = album.data.photos || [];
-  return photos.slice(0, 5);
+	const photos = album.data.photos || [];
+	return photos.slice(0, 5);
 }
 ---
 

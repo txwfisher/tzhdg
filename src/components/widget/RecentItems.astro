@@ -1,19 +1,23 @@
 ---
-import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import { getCollection } from "astro:content";
-import { getPostUrlBySlug } from "@/utils/url-utils";
-import { processCoverImageSync } from "@/utils/image-utils";
-import { i18n } from "@/i18n/translation";
-import I18nKey from "@/i18n/i18nKey";
 import { Icon } from "astro-icon/components";
+import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import { externalMomentsConfig } from "@/config/externalMomentsConfig";
 import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
+import I18nKey from "@/i18n/i18nKey";
+import { i18n } from "@/i18n/translation";
+import { processCoverImageSync } from "@/utils/image-utils";
+import { getPostUrlBySlug } from "@/utils/url-utils";
 
-const momentsGistId = externalMomentsConfig.enable ? externalMomentsConfig.gistId : "";
-const notebookGists = externalNotebooksConfig.enable ? externalNotebooksConfig.notebookGists : {};
+const momentsGistId = externalMomentsConfig.enable
+	? externalMomentsConfig.gistId
+	: "";
+const notebookGists = externalNotebooksConfig.enable
+	? externalNotebooksConfig.notebookGists
+	: {};
 
 const posts = await getCollection("posts", ({ data }) => {
-  return import.meta.env.PROD ? data.draft !== true : true;
+	return import.meta.env.PROD ? data.draft !== true : true;
 });
 const moments = await getCollection("moments");
 const bangumi = await getCollection("bangumi");
@@ -22,68 +26,123 @@ const routinesEntries = await getCollection("routines");
 
 const notebookNames: Record<string, string> = {};
 for (const n of notebooksEntries) {
-  if (n.id.includes("_index")) {
-    const folder = n.id.replace(/\\/g, "/").replace(/\/_index(\.md|\.json)?$/, "");
-    notebookNames[folder] = n.data.name || folder;
-  }
+	if (n.id.includes("_index")) {
+		const folder = n.id
+			.replace(/\\/g, "/")
+			.replace(/\/_index(\.md|\.json)?$/, "");
+		notebookNames[folder] = n.data.name || folder;
+	}
 }
 
 const allItems = [
-  ...posts.map((p) => ({
-    type: "post",
-    title: p.data.title,
-    date: p.data.published,
-    url: getPostUrlBySlug(p.id),
-    image: processCoverImageSync(p.data.image || "api", p.id),
-    id: p.id,
-  })),
-  ...moments.slice(0, 2).map((m) => {
-    let title = m.body || "";
-    title = title.replace(/[#*`]/g, "").trim();
-    if (title.length > 40) title = `${title.substring(0, 40)}...`;
-    if (!title) title = i18n(I18nKey.moments) || "日常动态";
-    let image = "";
-    if (Array.isArray(m.data.images) && m.data.images.length > 0) {
-      image = typeof m.data.images[0] === "string" ? m.data.images[0] : (m.data.images[0] as any).src;
-    } else if (typeof m.data.images === "string") {
-      image = m.data.images;
-    }
-    return { type: "moment", title, date: m.data.published, url: `/moments/#${m.id}`, image, id: m.id };
-  }),
-  ...bangumi.map((b) => {
-    let url = b.data.link || "";
-    if (!url) {
-      const slug = b.id.replace(/\\/g, "/").replace(/\.(md|mdx|markdown)$/i, "");
-      url = b.data.category === "book" ? `/books/${slug}/` : b.data.category === "music" ? "/music/" : "/movies-games/";
-    }
-    return { type: "bangumi", title: b.data.title, date: b.data.published || new Date(0), url, image: typeof b.data.image === "string" ? b.data.image : (b.data.image as any).src, id: b.id };
-  }),
-  ...notebooksEntries.filter((n) => !n.id.includes("_index"))
-    .sort((a, b) => (b.data.date ? new Date(b.data.date).getTime() : 0) - (a.data.date ? new Date(a.data.date).getTime() : 0))
-    .slice(0, 2).map((n) => ({
-      type: "life-notebook", title: `${notebookNames[n.id.split("/")[0]] || n.id.split("/")[0]} · ${n.data.name || "未命名"}`,
-      date: n.data.date || new Date(), url: `/life/notebooks/${n.id.replace(/\\/g, "/").split("/")[0]}/${n.id.split("/").pop()?.replace(/\.md$/, "") || ""}/`,
-      image: "https://re.tsh520.cn/zl/life-notebook.webp", id: n.id,
-    })),
-  ...routinesEntries.sort((a, b) => {
-    const dateA = a.data.updatedAt instanceof Date ? a.data.updatedAt.getTime() : 0;
-    const dateB = b.data.updatedAt instanceof Date ? b.data.updatedAt.getTime() : 0;
-    return dateB - dateA;
-  }).slice(0, 2).map((r) => ({
-    type: "life-routine", title: `规划: ${r.data.name}`, date: r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(), url: "/life/routines/",
-    image: "https://re.tsh520.cn/zl/life-routine.webp", id: r.id,
-  })),
+	...posts.map((p) => ({
+		type: "post",
+		title: p.data.title,
+		date: p.data.published,
+		url: getPostUrlBySlug(p.id),
+		image: processCoverImageSync(p.data.image || "api", p.id),
+		id: p.id,
+	})),
+	...moments.slice(0, 2).map((m) => {
+		let title = m.body || "";
+		title = title.replace(/[#*`]/g, "").trim();
+		if (title.length > 40) title = `${title.substring(0, 40)}...`;
+		if (!title) title = i18n(I18nKey.moments) || "日常动态";
+		let image = "";
+		if (Array.isArray(m.data.images) && m.data.images.length > 0) {
+			image =
+				typeof m.data.images[0] === "string"
+					? m.data.images[0]
+					: (m.data.images[0] as any).src;
+		} else if (typeof m.data.images === "string") {
+			image = m.data.images;
+		}
+		return {
+			type: "moment",
+			title,
+			date: m.data.published,
+			url: `/moments/#${m.id}`,
+			image,
+			id: m.id,
+		};
+	}),
+	...bangumi.map((b) => {
+		let url = b.data.link || "";
+		if (!url) {
+			const slug = b.id
+				.replace(/\\/g, "/")
+				.replace(/\.(md|mdx|markdown)$/i, "");
+			url =
+				b.data.category === "book"
+					? `/books/${slug}/`
+					: b.data.category === "music"
+						? "/music/"
+						: "/movies-games/";
+		}
+		return {
+			type: "bangumi",
+			title: b.data.title,
+			date: b.data.published || new Date(0),
+			url,
+			image:
+				typeof b.data.image === "string"
+					? b.data.image
+					: (b.data.image as any).src,
+			id: b.id,
+		};
+	}),
+	...notebooksEntries
+		.filter((n) => !n.id.includes("_index"))
+		.sort(
+			(a, b) =>
+				(b.data.date ? new Date(b.data.date).getTime() : 0) -
+				(a.data.date ? new Date(a.data.date).getTime() : 0),
+		)
+		.slice(0, 2)
+		.map((n) => ({
+			type: "life-notebook",
+			title: `${notebookNames[n.id.split("/")[0]] || n.id.split("/")[0]} · ${n.data.name || "未命名"}`,
+			date: n.data.date || new Date(),
+			url: `/life/notebooks/${n.id.replace(/\\/g, "/").split("/")[0]}/${n.id.split("/").pop()?.replace(/\.md$/, "") || ""}/`,
+			image: "https://re.tsh520.cn/zl/life-notebook.webp",
+			id: n.id,
+		})),
+	...routinesEntries
+		.sort((a, b) => {
+			const dateA =
+				a.data.updatedAt instanceof Date ? a.data.updatedAt.getTime() : 0;
+			const dateB =
+				b.data.updatedAt instanceof Date ? b.data.updatedAt.getTime() : 0;
+			return dateB - dateA;
+		})
+		.slice(0, 2)
+		.map((r) => ({
+			type: "life-routine",
+			title: `规划: ${r.data.name}`,
+			date: r.data.updatedAt instanceof Date ? r.data.updatedAt : new Date(),
+			url: "/life/routines/",
+			image: "https://re.tsh520.cn/zl/life-routine.webp",
+			id: r.id,
+		})),
 ];
 
-const recentItems = allItems.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
+const recentItems = allItems
+	.sort((a, b) => b.date.getTime() - a.date.getTime())
+	.slice(0, 10);
 const defaultImage = "https://re.0824.uk/zl/tx.webp";
 
 const typeLabel: Record<string, () => string> = {
-  post: () => i18n(I18nKey.recentPosts), moment: () => i18n(I18nKey.recentMoments),
-  bangumi: () => i18n(I18nKey.recentLife), "life-notebook": () => "笔记", "life-routine": () => "规划",
+	post: () => i18n(I18nKey.recentPosts),
+	moment: () => i18n(I18nKey.recentMoments),
+	bangumi: () => i18n(I18nKey.recentLife),
+	"life-notebook": () => "笔记",
+	"life-routine": () => "规划",
 };
 
-interface Props { class?: string; style?: string; }
+interface Props {
+	class?: string;
+	style?: string;
+}
 const className = Astro.props.class;
 const style = Astro.props.style;
 ---

@@ -11,7 +11,13 @@ interface Props {
 	externalPlaylist?: string;
 	metingApiBase?: string;
 }
-const { class: className, style, id, externalPlaylist, metingApiBase } = Astro.props;
+const {
+	class: className,
+	style,
+	id,
+	externalPlaylist,
+	metingApiBase,
+} = Astro.props;
 
 const config = musicPlayerConfig;
 

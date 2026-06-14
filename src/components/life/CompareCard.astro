@@ -1,37 +1,38 @@
 ---
 interface Props {
-  title: string;
-  current: number;
-  previous?: number;
-  unit?: string;
-  format?: "number" | "percent" | "duration";
-  trendLabel?: string;
+	title: string;
+	current: number;
+	previous?: number;
+	unit?: string;
+	format?: "number" | "percent" | "duration";
+	trendLabel?: string;
 }
 
 const {
-  title,
-  current,
-  previous,
-  unit = "",
-  format = "number",
-  trendLabel
+	title,
+	current,
+	previous,
+	unit = "",
+	format = "number",
+	trendLabel,
 } = Astro.props;
 
 const formatValue = (val: number) => {
-  switch (format) {
-    case "percent":
-      return val.toFixed(1) + "%";
-    case "duration":
-      return val.toFixed(1) + unit;
-    default:
-      return val.toLocaleString() + unit;
-  }
+	switch (format) {
+		case "percent":
+			return val.toFixed(1) + "%";
+		case "duration":
+			return val.toFixed(1) + unit;
+		default:
+			return val.toLocaleString() + unit;
+	}
 };
 
 const change = previous !== undefined ? current - previous : 0;
-const changePercent = previous !== undefined && previous !== 0
-  ? ((change / previous) * 100).toFixed(1)
-  : null;
+const changePercent =
+	previous !== undefined && previous !== 0
+		? ((change / previous) * 100).toFixed(1)
+		: null;
 const isPositive = change > 0;
 const isNegative = change < 0;
 ---

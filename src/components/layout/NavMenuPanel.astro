@@ -1,12 +1,12 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import { profileConfig } from "@/config/profileConfig";
 import { LinkPresets } from "@/constants/link-presets";
 import { LinkPreset, type NavBarLink } from "@/types/config";
-import { url } from "@/utils/url-utils";
-import { getCollection } from "astro:content";
 import { getTagList } from "@/utils/content-utils";
+import { url } from "@/utils/url-utils";
 
 interface Props {
 	links: NavBarLink[];
@@ -24,10 +24,12 @@ const processedLinks = Astro.props.links
 	})
 	.map((link: NavBarLink) => ({
 		...link,
-		children: link.children?.map((child: NavBarLink | LinkPreset): NavBarLink => {
-			if (typeof child === "number") return LinkPresets[child];
-			return child;
-		}),
+		children: link.children?.map(
+			(child: NavBarLink | LinkPreset): NavBarLink => {
+				if (typeof child === "number") return LinkPresets[child];
+				return child;
+			},
+		),
 	}));
 
 // Profile stats
@@ -43,7 +45,8 @@ const stats = [
 	{ label: "动态", count: moments.length },
 ];
 
-const githubLink = profileConfig.links.find((item) => item.name === "GitHub")?.url || "#";
+const githubLink =
+	profileConfig.links.find((item) => item.name === "GitHub")?.url || "#";
 ---
 
 <div id="nav-menu-overlay" class="menu-overlay"></div>
@@ -86,7 +89,7 @@ const githubLink = profileConfig.links.find((item) => item.name === "GitHub")?.u
 					{profileConfig.name}
 				</div>
 				<div class="text-xs text-neutral-500 dark:text-neutral-400">
-					{profileConfig.bio}
+					{Array.isArray(profileConfig.bio) ? profileConfig.bio[1] || profileConfig.bio[0] : profileConfig.bio}
 				</div>
 			</div>
 

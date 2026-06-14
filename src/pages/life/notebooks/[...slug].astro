@@ -1,13 +1,13 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getCollection, render } from "astro:content";
-import { Icon } from "astro-icon/components";
-import Markdown from "@components/common/Markdown.astro";
-import Comment from "@components/comment/index.astro";
-import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
-import { marked } from "marked";
-import type { ImageMetadata } from "astro";
 import * as path from "node:path";
+import Comment from "@components/comment/index.astro";
+import Markdown from "@components/common/Markdown.astro";
+import type { ImageMetadata } from "astro";
+import { Icon } from "astro-icon/components";
+import { marked } from "marked";
+import { externalNotebooksConfig } from "@/config/externalNotebooksConfig";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 const notebookImageFiles = import.meta.glob<ImageMetadata>(
 	"../../content/life/notebooks/**/*.{jpg,jpeg,png,webp,avif,gif,svg}",
@@ -21,16 +21,24 @@ export async function getStaticPaths() {
 	for (const entry of allEntries) {
 		const normalizedId = entry.id.replace(/\\/g, "/");
 		if (normalizedId === "readme" || normalizedId === "readme.md") continue;
-		const isIndexFile = /\/(_index|_index\.md|_index\.json)?$/.test(normalizedId) && (normalizedId.endsWith("_index") || normalizedId.includes("/_index."));
-		const isNotebookRoot = normalizedId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/) || normalizedId.match(/^([^/]+)\/_index$/);
+		const isIndexFile =
+			/\/(_index|_index\.md|_index\.json)?$/.test(normalizedId) &&
+			(normalizedId.endsWith("_index") || normalizedId.includes("/_index."));
+		const isNotebookRoot =
+			normalizedId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/) ||
+			normalizedId.match(/^([^/]+)\/_index$/);
 		if (!isIndexFile || !isNotebookRoot) continue;
 
 		const folderName = isNotebookRoot[1];
 		const folderEntries = allEntries.filter((item) => {
 			const itemId = item.id.replace(/\\/g, "/");
-			return itemId.startsWith(`${folderName}/`) &&
+			return (
+				itemId.startsWith(`${folderName}/`) &&
 				!/^([^/]+)\/(_index|_index\.md|_index\.json)$/.test(itemId) &&
-				itemId !== `${folderName}/_index` && itemId !== `${folderName}/_index.md` && itemId !== `${folderName}/_index.json`;
+				itemId !== `${folderName}/_index` &&
+				itemId !== `${folderName}/_index.md` &&
+				itemId !== `${folderName}/_index.json`
+			);
 		});
 		const sortedEntries = [...folderEntries].sort((a, b) => {
 			const aT = a.data.date instanceof Date ? a.data.date.getTime() : 0;
@@ -38,11 +46,22 @@ export async function getStaticPaths() {
 			return bT - aT;
 		});
 
-		paths.push({ params: { slug: folderName }, props: { entry, entries: folderEntries, sortedEntries, isNotebookIndex: true } });
+		paths.push({
+			params: { slug: folderName },
+			props: {
+				entry,
+				entries: folderEntries,
+				sortedEntries,
+				isNotebookIndex: true,
+			},
+		});
 		for (const item of folderEntries) {
 			const itemId = item.id.replace(/\\/g, "/");
 			const itemSlug = itemId.split("/").pop()?.replace(/\.md$/, "") || "";
-			paths.push({ params: { slug: `${folderName}/${itemSlug}` }, props: { entry, item, isNotebookIndex: false } });
+			paths.push({
+				params: { slug: `${folderName}/${itemSlug}` },
+				props: { entry, item, isNotebookIndex: false },
+			});
 		}
 	}
 	return paths;
@@ -51,8 +70,12 @@ export async function getStaticPaths() {
 const { entry, entries, sortedEntries, item, isNotebookIndex } = Astro.props;
 const notebookContent = !isNotebookIndex ? await render(item) : null;
 const normalizedEntryId = entry.id.replace(/\\/g, "/");
-const isNotebookRootMatch = normalizedEntryId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/) || normalizedEntryId.match(/^([^/]+)\/_index$/);
-const folderName = isNotebookRootMatch ? isNotebookRootMatch[1] : normalizedEntryId.split("/")[0];
+const isNotebookRootMatch =
+	normalizedEntryId.match(/^([^/]+)\/(_index|_index\.md|_index\.json)$/) ||
+	normalizedEntryId.match(/^([^/]+)\/_index$/);
+const folderName = isNotebookRootMatch
+	? isNotebookRootMatch[1]
+	: normalizedEntryId.split("/")[0];
 
 let coverSrc: string | null = null;
 const rawCover = entry.data.cover as string | undefined;
@@ -60,9 +83,20 @@ if (rawCover) {
 	if (rawCover.startsWith("http://") || rawCover.startsWith("https://")) {
 		coverSrc = rawCover;
 	} else {
-		const imageKey = path.normalize(path.join("../../content/life/notebooks", folderName, rawCover)).replace(/\\/g, "/");
+		const imageKey = path
+			.normalize(
+				path.join("../../content/life/notebooks", folderName, rawCover),
+			)
+			.replace(/\\/g, "/");
 		const loader = notebookImageFiles[imageKey];
-		if (loader) { try { const img = await loader(); coverSrc = img.src; } catch { coverSrc = null; } }
+		if (loader) {
+			try {
+				const img = await loader();
+				coverSrc = img.src;
+			} catch {
+				coverSrc = null;
+			}
+		}
 	}
 }
 
@@ -70,27 +104,40 @@ const notebookCommentPath = !isNotebookIndex
 	? `/life/notebooks/${item.id.replace(/\\/g, "/").replace(/\.md$/, "")}/`
 	: "";
 
-const sortedEntriesWithImages = isNotebookIndex ? await Promise.all(
-	(sortedEntries || []).map(async (noteItem) => {
-		const rawImage = noteItem.data.image as string | string[] | undefined;
-		const imageList: string[] = [];
-		if (rawImage && rawImage !== "") {
-			const rawImages = Array.isArray(rawImage) ? rawImage : [rawImage];
-			const noteItemId = noteItem.id.replace(/\\/g, "/");
-			const noteDir = noteItemId.replace(/\/[^/]+$/, "");
-			for (const ri of rawImages) {
-				if (ri.startsWith("http://") || ri.startsWith("https://")) {
-					imageList.push(ri);
-				} else {
-					const imageKey = path.normalize(path.join("../../content/life/notebooks", noteDir, ri)).replace(/\\/g, "/");
-					const loader = notebookImageFiles[imageKey];
-					if (loader) { try { const img = await loader(); imageList.push(img.src); } catch { /* skip */ } }
+const sortedEntriesWithImages = isNotebookIndex
+	? await Promise.all(
+			(sortedEntries || []).map(async (noteItem) => {
+				const rawImage = noteItem.data.image as string | string[] | undefined;
+				const imageList: string[] = [];
+				if (rawImage && rawImage !== "") {
+					const rawImages = Array.isArray(rawImage) ? rawImage : [rawImage];
+					const noteItemId = noteItem.id.replace(/\\/g, "/");
+					const noteDir = noteItemId.replace(/\/[^/]+$/, "");
+					for (const ri of rawImages) {
+						if (ri.startsWith("http://") || ri.startsWith("https://")) {
+							imageList.push(ri);
+						} else {
+							const imageKey = path
+								.normalize(
+									path.join("../../content/life/notebooks", noteDir, ri),
+								)
+								.replace(/\\/g, "/");
+							const loader = notebookImageFiles[imageKey];
+							if (loader) {
+								try {
+									const img = await loader();
+									imageList.push(img.src);
+								} catch {
+									/* skip */
+								}
+							}
+						}
+					}
 				}
-			}
-		}
-		return { ...noteItem, images: imageList };
-	}),
-) : [];
+				return { ...noteItem, images: imageList };
+			}),
+		)
+	: [];
 ---
 
 {isNotebookIndex ? (

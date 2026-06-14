@@ -1,49 +1,49 @@
 ---
-import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import Comment from "@/components/comment/index.astro";
 import DomeGallery from "@/components/features/DomeGallery.astro";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
 
 export async function getStaticPaths() {
-  const albums = await getCollection("album");
-  return albums.map((album) => ({
-    params: { slug: album.id },
-    props: { album },
-  }));
+	const albums = await getCollection("album");
+	return albums.map((album) => ({
+		params: { slug: album.id },
+		props: { album },
+	}));
 }
 
 const { album } = Astro.props;
 
 const photos = (album.data.photos || []).map((photo: any, index: number) => {
-  let src, alt, caption, width, height;
+	let src, alt, caption, width, height;
 
-  if (typeof photo === 'string') {
-    src = photo;
-    alt = '';
-    caption = '';
-    width = 1920;
-    height = 1080;
-  } else {
-    src = photo.src || photo;
-    alt = photo.alt || `${album.data.title} - 照片 ${index + 1}`;
-    caption = photo.caption || '';
-    width = photo.width || 1920;
-    height = photo.height || 1080;
-  }
+	if (typeof photo === "string") {
+		src = photo;
+		alt = "";
+		caption = "";
+		width = 1920;
+		height = 1080;
+	} else {
+		src = photo.src || photo;
+		alt = photo.alt || `${album.data.title} - 照片 ${index + 1}`;
+		caption = photo.caption || "";
+		width = photo.width || 1920;
+		height = photo.height || 1080;
+	}
 
-  return { src, alt, caption, width, height, index };
+	return { src, alt, caption, width, height, index };
 });
 
 function getTimeAgo(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
-  if (months < 1) return '创建不到1个月前';
-  if (months === 1) return '创建1个月前';
-  if (months < 12) return `创建${months}个月前`;
-  const years = Math.floor(months / 12);
-  return years === 1 ? '创建1年前' : `创建${years}年前`;
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+	if (months < 1) return "创建不到1个月前";
+	if (months === 1) return "创建1个月前";
+	if (months < 12) return `创建${months}个月前`;
+	const years = Math.floor(months / 12);
+	return years === 1 ? "创建1年前" : `创建${years}年前`;
 }
 ---
 

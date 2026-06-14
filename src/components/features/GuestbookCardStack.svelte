@@ -1,138 +1,201 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+import { onDestroy, onMount } from "svelte";
 
-  interface Msg { id: string; author: string; content: string; time: string }
+interface Msg {
+	id: string;
+	author: string;
+	content: string;
+	time: string;
+}
 
-  const WALINE = "https://co.tsh520.cn";
-  const PATH = "/guestbook/";
-  const PER_PAGE = 50;
+const WALINE = "https://co.tsh520.cn";
+const PATH = "/guestbook/";
+const PER_PAGE = 50;
 
-  let allMessages: Msg[] = $state([]);
-  let currentIndex: number = $state(0);
-  let isDragging: boolean = $state(false);
-  let startX = 0, startY = 0, currentX = $state(0), currentY = $state(0);
-  let flyOutTransform: string | null = $state(null);
-  let flyDirection: "left" | "right" | "up" | null = $state(null);
-  let enteringId: string | null = $state(null);
-  let enterTransform: string | null = $state(null);
-  let rafId: number | null = null;
-  let timers: ReturnType<typeof setTimeout>[] = [];
-  let page = 1;
-  let hasMore = $state(true);
-  let fetching = false;
-  let visibleCards = $derived(allMessages.slice(currentIndex, currentIndex + 5).map((m, i) => ({ ...m, si: i })));
-  let topCard = $derived(visibleCards[0]);
+let allMessages: Msg[] = $state([]);
+let currentIndex: number = $state(0);
+let isDragging: boolean = $state(false);
+let startX = 0,
+	startY = 0,
+	currentX = $state(0),
+	currentY = $state(0);
+let flyOutTransform: string | null = $state(null);
+let flyDirection: "left" | "right" | "up" | null = $state(null);
+let enteringId: string | null = $state(null);
+let enterTransform: string | null = $state(null);
+let rafId: number | null = null;
+let timers: ReturnType<typeof setTimeout>[] = [];
+let page = 1;
+let hasMore = $state(true);
+let fetching = false;
+let visibleCards = $derived(
+	allMessages
+		.slice(currentIndex, currentIndex + 5)
+		.map((m, i) => ({ ...m, si: i })),
+);
+let topCard = $derived(visibleCards[0]);
 
-  onDestroy(() => {
-    if (rafId) cancelAnimationFrame(rafId);
-    timers.forEach(t => clearTimeout(t));
-    timers = [];
-  });
+onDestroy(() => {
+	if (rafId) cancelAnimationFrame(rafId);
+	timers.forEach((t) => clearTimeout(t));
+	timers = [];
+});
 
-  onMount(() => {
-    fetchComments();
-  });
+onMount(() => {
+	fetchComments();
+});
 
-  function st(fn: () => void, ms: number) {
-    const id = setTimeout(() => { fn(); timers = timers.filter(t => t !== id); }, ms);
-    timers.push(id);
-  }
+function st(fn: () => void, ms: number) {
+	const id = setTimeout(() => {
+		fn();
+		timers = timers.filter((t) => t !== id);
+	}, ms);
+	timers.push(id);
+}
 
-  function cardStyle(si: number, cx: number, cy: number, cardId?: string) {
-    if (si === 0 && flyOutTransform) return flyOutTransform;
-    if (si === 0 && isDragging) return `transform: translate3d(${cx}px, ${cy}px, 0) rotate(${cx * 0.05}deg) scale(1.02); z-index: 100; opacity: 1;`;
-    if (si === 0) return "transform: translate3d(0,0,0) scale(1) rotate(0deg); z-index: 100; opacity: 1;";
-    if (cardId && enteringId === cardId && enterTransform) return `${enterTransform} z-index: ${100 - si}; pointer-events: none;`;
-    const o = si * 3;
-    return `transform: translate3d(${o}px, ${o * 5}px, 0) scale(${1 - si * 0.03}) rotate(${si * -1.8}deg); z-index: ${100 - si}; opacity: ${Math.max(0.5, 1 - si * 0.12)}; pointer-events: none;`;
-  }
+function cardStyle(si: number, cx: number, cy: number, cardId?: string) {
+	if (si === 0 && flyOutTransform) return flyOutTransform;
+	if (si === 0 && isDragging)
+		return `transform: translate3d(${cx}px, ${cy}px, 0) rotate(${cx * 0.05}deg) scale(1.02); z-index: 100; opacity: 1;`;
+	if (si === 0)
+		return "transform: translate3d(0,0,0) scale(1) rotate(0deg); z-index: 100; opacity: 1;";
+	if (cardId && enteringId === cardId && enterTransform)
+		return `${enterTransform} z-index: ${100 - si}; pointer-events: none;`;
+	const o = si * 3;
+	return `transform: translate3d(${o}px, ${o * 5}px, 0) scale(${1 - si * 0.03}) rotate(${si * -1.8}deg); z-index: ${100 - si}; opacity: ${Math.max(0.5, 1 - si * 0.12)}; pointer-events: none;`;
+}
 
-  function onDown(e: PointerEvent) {
-    if ((e.target as HTMLElement).closest("button")) return;
-    isDragging = true; startX = e.clientX; startY = e.clientY; currentX = 0; currentY = 0; flyDirection = null;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  }
-  function onMove(e: PointerEvent) {
-    if (!isDragging) return;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(() => { currentX = e.clientX - startX; currentY = e.clientY - startY; rafId = null; });
-  }
-  function onUp() {
-    if (!isDragging) return;
-    isDragging = false; if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    if (!topCard) return;
-    const ax = Math.abs(currentX), ay = Math.abs(currentY);
-    if (ax > 60 || ay > 60) {
-      const d = currentX > 0 ? "right" : currentX < 0 ? "left" : "up";
-      flyDirection = d;
-      const fx = d === "right" ? 700 : d === "left" ? -700 : currentX * 0.3;
-      const fy = d === "up" ? -600 : currentY * 0.3;
-      flyOutTransform = `transform: translate3d(${fx}px, ${fy}px, 0) rotate(${currentX * 0.06}deg) scale(0.85); transition: transform 0.45s cubic-bezier(0.22,0.68,0.25,1), opacity 0.45s; opacity: 0;`;
-      st(() => { currentIndex++; currentX = 0; currentY = 0; flyOutTransform = null; flyDirection = null; checkLoadMore(); }, 450);
-    } else { currentX = 0; currentY = 0; flyDirection = null; }
-  }
+function onDown(e: PointerEvent) {
+	if ((e.target as HTMLElement).closest("button")) return;
+	isDragging = true;
+	startX = e.clientX;
+	startY = e.clientY;
+	currentX = 0;
+	currentY = 0;
+	flyDirection = null;
+	(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+}
+function onMove(e: PointerEvent) {
+	if (!isDragging) return;
+	if (rafId) cancelAnimationFrame(rafId);
+	rafId = requestAnimationFrame(() => {
+		currentX = e.clientX - startX;
+		currentY = e.clientY - startY;
+		rafId = null;
+	});
+}
+function onUp() {
+	if (!isDragging) return;
+	isDragging = false;
+	if (rafId) {
+		cancelAnimationFrame(rafId);
+		rafId = null;
+	}
+	if (!topCard) return;
+	const ax = Math.abs(currentX),
+		ay = Math.abs(currentY);
+	if (ax > 60 || ay > 60) {
+		const d = currentX > 0 ? "right" : currentX < 0 ? "left" : "up";
+		flyDirection = d;
+		const fx = d === "right" ? 700 : d === "left" ? -700 : currentX * 0.3;
+		const fy = d === "up" ? -600 : currentY * 0.3;
+		flyOutTransform = `transform: translate3d(${fx}px, ${fy}px, 0) rotate(${currentX * 0.06}deg) scale(0.85); transition: transform 0.45s cubic-bezier(0.22,0.68,0.25,1), opacity 0.45s; opacity: 0;`;
+		st(() => {
+			currentIndex++;
+			currentX = 0;
+			currentY = 0;
+			flyOutTransform = null;
+			flyDirection = null;
+			checkLoadMore();
+		}, 450);
+	} else {
+		currentX = 0;
+		currentY = 0;
+		flyDirection = null;
+	}
+}
 
-  function playDeal(batch: Msg[]) {
-    enteringId = null; enterTransform = null;
-    const traj = [{ x: -600, y: 50, rot: -25 },{ x: 600, y: -30, rot: 20 },{ x: 0, y: -500, rot: -10 },{ x: -450, y: -350, rot: 30 },{ x: 500, y: 300, rot: -18 }];
-    for (let i = 0; i < batch.length; i++) {
-      st(() => { const t = traj[i % traj.length]; enteringId = batch[i].id; enterTransform = `transform: translate3d(${t.x}px, ${t.y}px, 0) rotate(${t.rot}deg) scale(0.6); opacity: 0;`; requestAnimationFrame(() => { enteringId = null; enterTransform = null; }); }, i * 220);
-    }
-  }
+function playDeal(batch: Msg[]) {
+	enteringId = null;
+	enterTransform = null;
+	const traj = [
+		{ x: -600, y: 50, rot: -25 },
+		{ x: 600, y: -30, rot: 20 },
+		{ x: 0, y: -500, rot: -10 },
+		{ x: -450, y: -350, rot: 30 },
+		{ x: 500, y: 300, rot: -18 },
+	];
+	for (let i = 0; i < batch.length; i++) {
+		st(() => {
+			const t = traj[i % traj.length];
+			enteringId = batch[i].id;
+			enterTransform = `transform: translate3d(${t.x}px, ${t.y}px, 0) rotate(${t.rot}deg) scale(0.6); opacity: 0;`;
+			requestAnimationFrame(() => {
+				enteringId = null;
+				enterTransform = null;
+			});
+		}, i * 220);
+	}
+}
 
-  function openDetail(card: Msg, e: Event) { e.stopPropagation(); window.dispatchEvent(new CustomEvent("guestbook:open-detail", { detail: card })); }
+function openDetail(card: Msg, e: Event) {
+	e.stopPropagation();
+	window.dispatchEvent(
+		new CustomEvent("guestbook:open-detail", { detail: card }),
+	);
+}
 
-  function checkLoadMore() {
-    if (!fetching && hasMore && currentIndex + 5 >= allMessages.length) {
-      fetchComments();
-    }
-  }
+function checkLoadMore() {
+	if (!fetching && hasMore && currentIndex + 5 >= allMessages.length) {
+		fetchComments();
+	}
+}
 
-  async function fetchComments() {
-    if (fetching || !hasMore) return;
-    fetching = true;
-    try {
-      const url = `${WALINE}/api/comment?path=${encodeURIComponent(PATH)}&pageSize=${PER_PAGE}&page=${page}`;
-      const res = await fetch(url);
-      const json = await res.json();
-      const result = json.data;
-      const comments = result?.data || result || [];
-      if (comments.length > 0) {
-        const mapped: Msg[] = comments.map((c: any) => ({
-          id: String(c.objectId),
-          author: c.nick || "匿名",
-          content: c.comment?.replace(/<[^>]*>/g, "") || "",
-          time: c.time ? new Date(c.time).toLocaleDateString("zh-CN") : "",
-        }));
-        const isFirst = allMessages.length === 0;
-        allMessages = [...allMessages, ...mapped];
-        page++;
-        hasMore = page <= (result?.totalPages || 1);
-        if (isFirst) playDeal(allMessages.slice(0, 5));
-      } else {
-        hasMore = false;
-      }
-    } catch (err) {
-      console.error("Guestbook fetch error:", err);
-    } finally {
-      fetching = false;
-    }
-  }
+async function fetchComments() {
+	if (fetching || !hasMore) return;
+	fetching = true;
+	try {
+		const url = `${WALINE}/api/comment?path=${encodeURIComponent(PATH)}&pageSize=${PER_PAGE}&page=${page}`;
+		const res = await fetch(url);
+		const json = await res.json();
+		const result = json.data;
+		const comments = result?.data || result || [];
+		if (comments.length > 0) {
+			const mapped: Msg[] = comments.map((c: any) => ({
+				id: String(c.objectId),
+				author: c.nick || "匿名",
+				content: c.comment?.replace(/<[^>]*>/g, "") || "",
+				time: c.time ? new Date(c.time).toLocaleDateString("zh-CN") : "",
+			}));
+			const isFirst = allMessages.length === 0;
+			allMessages = [...allMessages, ...mapped];
+			page++;
+			hasMore = page <= (result?.totalPages || 1);
+			if (isFirst) playDeal(allMessages.slice(0, 5));
+		} else {
+			hasMore = false;
+		}
+	} catch (err) {
+		console.error("Guestbook fetch error:", err);
+	} finally {
+		fetching = false;
+	}
+}
 
-  onMount(() => {
-    // 防止 Swup 导航留下旧组件残留 DOM
-    const container = document.querySelector(".guestbook-card-stack");
-    if (container) {
-      const selfEl = container.closest(".svelte-scope") || container;
-      document.querySelectorAll(".guestbook-card-stack").forEach(el => {
-        if (el !== container && el.closest(".svelte-scope") !== selfEl) {
-          el.classList.add("stale-gb");
-          (el as HTMLElement).style.display = "none";
-        }
-      });
-    }
-    fetchComments();
-  });
+onMount(() => {
+	// 防止 Swup 导航留下旧组件残留 DOM
+	const container = document.querySelector(".guestbook-card-stack");
+	if (container) {
+		const selfEl = container.closest(".svelte-scope") || container;
+		document.querySelectorAll(".guestbook-card-stack").forEach((el) => {
+			if (el !== container && el.closest(".svelte-scope") !== selfEl) {
+				el.classList.add("stale-gb");
+				(el as HTMLElement).style.display = "none";
+			}
+		});
+	}
+	fetchComments();
+});
 </script>
 
 <div class="guestbook-card-stack">

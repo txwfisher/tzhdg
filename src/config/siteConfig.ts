@@ -88,6 +88,33 @@ export const siteConfig: SiteConfig = {
 	// 站点开始日期，用于统计运行天数
 	siteStartDate: "2025-9-1",
 
+	// 门户区配置
+	portal: {
+		announcement: {
+			enable: true,
+			text: "欢迎来到团子和蛋糕的博客！这里有技术分享、生活记录和更多有趣内容。",
+		},
+		dailyQuote: {
+			enable: true,
+			quotes: [
+				{ text: "人生到处知何似，应似飞鸿踏雪泥。", source: "苏轼" },
+				{ text: "海棠花未眠，老陈总在我身边。", source: "团子" },
+				{
+					text: "世界上只有一种真正的英雄主义，那就是在认识生活的真相后依然热爱生活。",
+					source: "罗曼·罗兰",
+				},
+				{
+					text: "愿你一生努力，一生被爱。想要的都拥有，得不到的都释怀。",
+					source: "八月长安",
+				},
+				{ text: "凡是过去，皆为序章。", source: "莎士比亚" },
+				{ text: "温柔半两，从容一生。", source: "三毛" },
+			],
+		},
+		recentPostsCount: 3,
+		recentMomentsCount: 3,
+	},
+
 	// 上下班时间配置（24小时制），用于首页头像涟漪动效和状态按钮
 	workHours: {
 		start: 9, // 上班时间 9:00
@@ -144,14 +171,15 @@ export const siteConfig: SiteConfig = {
 		moviesGames: true,
 		// 音乐页面开关
 		musicPage: true,
-			// 更新日志页面开关
-			changelog: true,
+		// 更新日志页面开关
+		changelog: true,
 	},
 
 	// 说说页面封面配置（微信朋友圈风格）
 	momentsCover: {
 		enable: true,
-		image: "https://ph.0824.uk/file/博客横屏封面/1780635498430_mmexport1774845895097.jpg",
+		image:
+			"https://ph.0824.uk/file/博客横屏封面/1780635498430_mmexport1774845895097.jpg",
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航
@@ -186,6 +214,11 @@ export const siteConfig: SiteConfig = {
 		googleAnalyticsId: "",
 		// Microsoft Clarity ID
 		microsoftClarityId: "",
+		// Umami Analytics
+		umamiAnalytics: {
+			websiteId: "cea54104-ebb9-4237-911d-67043d2dae74",
+			scriptUrl: "https://umami.tsh520.cn/script.js",
+		},
 	},
 
 	// 图像优化及响应式配置

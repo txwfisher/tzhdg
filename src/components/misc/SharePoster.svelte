@@ -173,19 +173,22 @@ async function generatePoster() {
 		// Footer (Author + QR)
 		// Footer top border + padding
 		currentY += 24 * scale;
-		
+
 		// Calculate author text area width for wrapping
 		const avatarWidth = avatar ? 64 * scale + 16 * scale : 0;
 		const qrSize = 64 * scale;
 		const qrX = width - padding - qrSize;
-		const authorTextAreaWidth = width - padding * 2 - avatarWidth - qrSize - 16 * scale;
-		
+		const authorTextAreaWidth =
+			width - padding * 2 - avatarWidth - qrSize - 16 * scale;
+
 		// Measure author text height
 		ctx.font = `700 ${20 * scale}px 'Roboto', sans-serif`;
-		const authorLines = author ? getLines(ctx, author, authorTextAreaWidth) : [];
+		const authorLines = author
+			? getLines(ctx, author, authorTextAreaWidth)
+			: [];
 		const authorLineHeight = 24 * scale;
 		const authorHeight = authorLines.length * authorLineHeight + 24 * scale; // +24 for "作者" label
-		
+
 		// Footer includes QR code (64*scale) + scan text below (20*scale) + spacing
 		const qrWithTextHeight = qrSize + 32 * scale;
 		const footerHeight = Math.max(qrWithTextHeight, authorHeight);
@@ -403,10 +406,10 @@ async function generatePoster() {
 		}
 
 		const authorTextX = padding + (avatar ? 64 * scale + 16 * scale : 0);
-		
+
 		// authorLines, authorLineHeight already calculated in layout phase
 		const authorStartY = footerY + 12 * scale;
-		
+
 		ctx.fillStyle = "#9ca3af";
 		ctx.font = `${12 * scale}px 'Roboto', sans-serif`;
 		ctx.fillText(i18n(I18nKey.author), authorTextX, authorStartY);
@@ -449,12 +452,16 @@ async function generatePoster() {
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#9ca3af";
 		ctx.font = `${12 * scale}px 'Roboto', sans-serif`;
-		ctx.fillText("扫码阅读文章👆", qrX + qrSize / 2, footerY + qrSize + 20 * scale);
+		ctx.fillText(
+			"扫码阅读文章👆",
+			qrX + qrSize / 2,
+			footerY + qrSize + 20 * scale,
+		);
 
 		// Site branding below QR text
 		if (siteTitle) {
-			ctx.font = '700 ' + (10 * scale) + 'px Roboto, sans-serif';
-			ctx.fillStyle = '#9ca3af';
+			ctx.font = "700 " + 10 * scale + "px Roboto, sans-serif";
+			ctx.fillStyle = "#9ca3af";
 			ctx.fillText(siteTitle, width / 2, footerY + qrSize + 42 * scale);
 		}
 

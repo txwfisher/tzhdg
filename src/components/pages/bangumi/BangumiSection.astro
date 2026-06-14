@@ -14,7 +14,13 @@ interface Props {
 	itemsPerPageMobile?: number;
 }
 
-const { sectionId, items, isActive, itemsPerPage = 12, itemsPerPageMobile = 6 } = Astro.props;
+const {
+	sectionId,
+	items,
+	isActive,
+	itemsPerPage = 12,
+	itemsPerPageMobile = 6,
+} = Astro.props;
 
 const statusMap = {
 	1: "wish",

@@ -88,6 +88,12 @@ export const en: Translation = {
 	[Key.moments]: "Moments",
 
 	[Key.recentMoments]: "Recent Moments",
+	[Key.portalRecentPosts]: "Recent Posts",
+	[Key.portalRecentMoments]: "Recent Updates",
+	[Key.portalViewAll]: "View All",
+	[Key.portalViewMore]: "View More",
+	[Key.portalRunningDays]: "Running for",
+	[Key.portalDays]: "days",
 	[Key.recentLife]: "Recent Records",
 	[Key.recentItems]: "Recent Updates",
 	// Bangumi Filter and Status Text
@@ -153,7 +159,8 @@ export const en: Translation = {
 	// Bookshelf Page
 	[Key.books]: "Bookshelf",
 	[Key.booksTitle]: "My Bookshelf",
-	[Key.booksSubtitle]: "Tracking my reading journey, sharing the beauty of books.",
+	[Key.booksSubtitle]:
+		"Tracking my reading journey, sharing the beauty of books.",
 	[Key.bookshelfReading]: "Reading",
 	[Key.bookshelfRead]: "Read",
 	[Key.bookshelfWantRead]: "Want to Read",

@@ -16,110 +16,110 @@ let debounceTimer: NodeJS.Timeout;
 
 // --- Mocks for Dev Mode ---
 const fakeResult: SearchResult[] = [
-  {
-    url: formatUrl("/"),
-    meta: { title: "This Is a Fake Search Result" },
-    excerpt:
-      "Because Pagefind cannot work in the <mark>dev</mark> environment.",
-  },
-  {
-    url: formatUrl("/"),
-    meta: { title: "If You Want to Test the Search" },
-    excerpt: "Try running <mark>npm build && npm preview</mark> instead.",
-  },
+	{
+		url: formatUrl("/"),
+		meta: { title: "This Is a Fake Search Result" },
+		excerpt:
+			"Because Pagefind cannot work in the <mark>dev</mark> environment.",
+	},
+	{
+		url: formatUrl("/"),
+		meta: { title: "If You Want to Test the Search" },
+		excerpt: "Try running <mark>npm build && npm preview</mark> instead.",
+	},
 ];
 
 // --- UI Logic ---
 const setPanelVisibility = async (show: boolean): Promise<void> => {
-  const panel = document.getElementById("search-panel");
-  if (!panel || !keyword) return;
-  if (show) {
-    await tick();
-    panel.classList.remove("float-panel-closed");
-  } else {
-    panel.classList.add("float-panel-closed");
-  }
+	const panel = document.getElementById("search-panel");
+	if (!panel || !keyword) return;
+	if (show) {
+		await tick();
+		panel.classList.remove("float-panel-closed");
+	} else {
+		panel.classList.add("float-panel-closed");
+	}
 };
 
 const closeSearchPanel = (): void => {
-  document.getElementById("search-panel")?.classList.add("float-panel-closed");
-  keyword = "";
-  result = [];
+	document.getElementById("search-panel")?.classList.add("float-panel-closed");
+	keyword = "";
+	result = [];
 };
 
 const handleResultClick = (event: Event, url: string): void => {
-  event.preventDefault();
-  closeSearchPanel();
-  navigateToPage(url);
+	event.preventDefault();
+	closeSearchPanel();
+	navigateToPage(url);
 };
 
 // --- Core Search Logic ---
 const search = async (keyword: string): Promise<void> => {
-  if (!keyword) {
-    setPanelVisibility(false);
-    result = [];
-    return;
-  }
-  if (!initialized) return;
+	if (!keyword) {
+		setPanelVisibility(false);
+		result = [];
+		return;
+	}
+	if (!initialized) return;
 
-  isSearching = true;
+	isSearching = true;
 
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async () => {
-    try {
-      let searchResults: SearchResult[] = [];
+	clearTimeout(debounceTimer);
+	debounceTimer = setTimeout(async () => {
+		try {
+			let searchResults: SearchResult[] = [];
 
-      if (import.meta.env.PROD && window.pagefind) {
-        const response = await window.pagefind.search(keyword);
-        searchResults = await Promise.all(
-          response.results.map((item) => item.data()),
-        );
-      } else if (import.meta.env.DEV) {
-        searchResults = fakeResult;
-      }
+			if (import.meta.env.PROD && window.pagefind) {
+				const response = await window.pagefind.search(keyword);
+				searchResults = await Promise.all(
+					response.results.map((item) => item.data()),
+				);
+			} else if (import.meta.env.DEV) {
+				searchResults = fakeResult;
+			}
 
-      result = searchResults;
-      setPanelVisibility(true);
-    } catch (error) {
-      console.error("Search error:", error);
-      result = [];
-      setPanelVisibility(false);
-    } finally {
-      isSearching = false;
-    }
-  }, 300);
+			result = searchResults;
+			setPanelVisibility(true);
+		} catch (error) {
+			console.error("Search error:", error);
+			result = [];
+			setPanelVisibility(false);
+		} finally {
+			isSearching = false;
+		}
+	}, 300);
 };
 
 // --- Initialization onMount ---
 onMount(() => {
-  const initializePagefind = () => {
-    initialized = true;
-    if (keyword) search(keyword);
-  };
+	const initializePagefind = () => {
+		initialized = true;
+		if (keyword) search(keyword);
+	};
 
-  if (import.meta.env.DEV) {
-    initializePagefind();
-  } else {
-    if (window.pagefind) {
-      initializePagefind();
-    } else {
-      document.addEventListener("pagefindready", initializePagefind, {
-        once: true,
-      });
-      document.addEventListener("pagefindloaderror", initializePagefind, {
-        once: true,
-      });
-    }
-  }
+	if (import.meta.env.DEV) {
+		initializePagefind();
+	} else {
+		if (window.pagefind) {
+			initializePagefind();
+		} else {
+			document.addEventListener("pagefindready", initializePagefind, {
+				once: true,
+			});
+			document.addEventListener("pagefindloaderror", initializePagefind, {
+				once: true,
+			});
+		}
+	}
 });
 
 // --- Reactive Statements ---
-  $effect(() => {
-    // 只在客户端且初始化完成后执行搜索
-    if (initialized) {
-      search(keyword);
-    }
-  });
+$effect(() => {
+	// 只在客户端且初始化完成后执行搜索
+	if (initialized) {
+		search(keyword);
+	}
+});
 </script>
 
 <!-- 搜索面板 - 浮动坞触发 -->

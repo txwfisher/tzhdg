@@ -94,6 +94,12 @@ enum I18nKey {
 	moments = "moments",
 
 	recentMoments = "recentMoments",
+	portalRecentPosts = "portalRecentPosts",
+	portalRecentMoments = "portalRecentMoments",
+	portalViewAll = "portalViewAll",
+	portalViewMore = "portalViewMore",
+	portalRunningDays = "portalRunningDays",
+	portalDays = "portalDays",
 	recentLife = "recentLife",
 	recentItems = "recentItems",
 	// 番组计划筛选和状态文本

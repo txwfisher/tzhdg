@@ -1,17 +1,17 @@
 ---
 interface Post {
-  id: string;
-  data: { title: string; published: Date };
+	id: string;
+	data: { title: string; published: Date };
 }
 
 interface Props {
-  posts: Post[];
+	posts: Post[];
 }
 
 const { posts } = Astro.props;
 
 function formatYmd(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 const now = new Date();
@@ -19,70 +19,103 @@ const currentYear = now.getFullYear();
 const postCountByDate = new Map<string, number>();
 const yearsSet = new Set<number>();
 for (const p of posts) {
-  const key = formatYmd(p.data.published);
-  postCountByDate.set(key, (postCountByDate.get(key) || 0) + 1);
-  yearsSet.add(p.data.published.getFullYear());
+	const key = formatYmd(p.data.published);
+	postCountByDate.set(key, (postCountByDate.get(key) || 0) + 1);
+	yearsSet.add(p.data.published.getFullYear());
 }
 
 const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
 const defaultYear = availableYears[0] ?? currentYear;
 
 function getLevel(count: number, maxCount: number): number {
-  if (count === 0) return 0;
-  if (maxCount <= 1) return 1;
-  const r = count / maxCount;
-  if (r <= 0.25) return 1;
-  if (r <= 0.5) return 2;
-  if (r <= 0.75) return 3;
-  return 4;
+	if (count === 0) return 0;
+	if (maxCount <= 1) return 1;
+	const r = count / maxCount;
+	if (r <= 0.25) return 1;
+	if (r <= 0.5) return 2;
+	if (r <= 0.75) return 3;
+	return 4;
 }
 
-interface Cell { key: string; count: number; level: number; visible: boolean }
+interface Cell {
+	key: string;
+	count: number;
+	level: number;
+	visible: boolean;
+}
 
 function buildYearGrid(year: number): Cell[][] {
-  const startDate = new Date(year, 0, 1);
-  const endDate = new Date(year, 11, 31);
-  const startDay = startDate.getDay();
-  const startOffset = startDay === 0 ? -6 : 1 - startDay;
-  startDate.setDate(startDate.getDate() + startOffset);
-  const maxCount = Math.max(1, ...Array.from(postCountByDate.values()));
-  const weeks: Cell[][] = [];
-  let current = new Date(startDate);
-  while (current <= endDate) {
-    const week: Cell[] = [];
-    for (let i = 0; i < 7; i++) {
-      const key = formatYmd(current);
-      const count = postCountByDate.get(key) || 0;
-      week.push({ key, count, level: current.getFullYear() === year ? getLevel(count, maxCount) : 0, visible: current.getFullYear() === year });
-      current.setDate(current.getDate() + 1);
-    }
-    weeks.push(week);
-  }
-  return weeks;
+	const startDate = new Date(year, 0, 1);
+	const endDate = new Date(year, 11, 31);
+	const startDay = startDate.getDay();
+	const startOffset = startDay === 0 ? -6 : 1 - startDay;
+	startDate.setDate(startDate.getDate() + startOffset);
+	const maxCount = Math.max(1, ...Array.from(postCountByDate.values()));
+	const weeks: Cell[][] = [];
+	let current = new Date(startDate);
+	while (current <= endDate) {
+		const week: Cell[] = [];
+		for (let i = 0; i < 7; i++) {
+			const key = formatYmd(current);
+			const count = postCountByDate.get(key) || 0;
+			week.push({
+				key,
+				count,
+				level: current.getFullYear() === year ? getLevel(count, maxCount) : 0,
+				visible: current.getFullYear() === year,
+			});
+			current.setDate(current.getDate() + 1);
+		}
+		weeks.push(week);
+	}
+	return weeks;
 }
 
-const monthLabels = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const monthLabels = [
+	"1月",
+	"2月",
+	"3月",
+	"4月",
+	"5月",
+	"6月",
+	"7月",
+	"8月",
+	"9月",
+	"10月",
+	"11月",
+	"12月",
+];
 
 function getMonthBoundaries(year: number) {
-  const b: { label: string; weekIndex: number }[] = [];
-  for (let m = 0; m < 12; m++) {
-    const firstDay = new Date(year, m, 1);
-    const startDay = firstDay.getDay();
-    const startOffset = startDay === 0 ? -6 : 1 - startDay;
-    const weekStart = new Date(firstDay);
-    weekStart.setDate(firstDay.getDate() + startOffset);
-    const yearStart = new Date(year, 0, 1);
-    const yStartDay = yearStart.getDay();
-    const yStartOffset = yStartDay === 0 ? -6 : 1 - yStartDay;
-    yearStart.setDate(yearStart.getDate() + yStartOffset);
-    const weekIndex = Math.round((weekStart.getTime() - yearStart.getTime()) / (7 * 86400000));
-    b.push({ label: monthLabels[m], weekIndex });
-  }
-  return b;
+	const b: { label: string; weekIndex: number }[] = [];
+	for (let m = 0; m < 12; m++) {
+		const firstDay = new Date(year, m, 1);
+		const startDay = firstDay.getDay();
+		const startOffset = startDay === 0 ? -6 : 1 - startDay;
+		const weekStart = new Date(firstDay);
+		weekStart.setDate(firstDay.getDate() + startOffset);
+		const yearStart = new Date(year, 0, 1);
+		const yStartDay = yearStart.getDay();
+		const yStartOffset = yStartDay === 0 ? -6 : 1 - yStartDay;
+		yearStart.setDate(yearStart.getDate() + yStartOffset);
+		const weekIndex = Math.round(
+			(weekStart.getTime() - yearStart.getTime()) / (7 * 86400000),
+		);
+		b.push({ label: monthLabels[m], weekIndex });
+	}
+	return b;
 }
 
-interface YearData { year: number; weeks: Cell[][]; monthBoundaries: { label: string; weekIndex: number }[] }
-const allYearsData: YearData[] = availableYears.map(y => ({ year: y, weeks: buildYearGrid(y), monthBoundaries: getMonthBoundaries(y) }));
+interface YearData {
+	year: number;
+	weeks: Cell[][];
+	monthBoundaries: { label: string; weekIndex: number }[];
+}
+const allYearsData: YearData[] = availableYears.map((y) => ({
+	year: y,
+	weeks: buildYearGrid(y),
+	monthBoundaries: getMonthBoundaries(y),
+}));
 ---
 
 <div class="archive-heatmap mb-6" id="archive-heatmap">

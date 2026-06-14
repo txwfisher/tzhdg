@@ -9,7 +9,6 @@ import type { MarkdownHeading } from "astro";
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import FloatingDock from "@/components/controls/FloatingDock.astro";
-import WelcomeCard from "@/components/features/WelcomeCard.astro";
 import TypewriterText from "@/components/features/TypewriterText.astro";
 import {
 	backgroundWallpaper,
@@ -219,7 +218,7 @@ const updatedGridConfig: ResponsiveSidebarConfig = {
 	tabletSidebar: effectiveTabletSidebar,
 };
 
-const { gridCols } = generateGridClasses(updatedGridConfig);
+const { gridCols: baseGridCols } = generateGridClasses(updatedGridConfig);
 const sidebarClass = generateSidebarClasses(updatedGridConfig);
 const rightSidebarClass =
 	effectiveIsBothSidebars || sidebarLayoutConfig.position === "right"
@@ -227,6 +226,10 @@ const rightSidebarClass =
 		: "";
 const mainContentClass = generateMainContentClasses(updatedGridConfig);
 const staticBarClass = mainContentClass.replace("transition-main", "").trim();
+
+// grid-class-carrier 始终存储非首页的网格类，供 JS 恢复用
+const gridCols = baseGridCols;
+const showSidebars = !isHomePageCheck;
 
 const footerClass = ["footer", "col-span-1", "onload-animation"];
 
@@ -582,13 +585,9 @@ const mobileQuality = Math.round(configQuality * 0.9);
 )}
 
 <!-- Main content -->
-<div class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${!(isBannerMode && isBackgroundEnabled) ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${finalMainPanelTop}`}>
+<div class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${!(isBannerMode && isBackgroundEnabled) ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${isHomePageCheck ? '0' : finalMainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
     <div class="relative max-w-(--page-width) mx-auto pointer-events-auto">
-        {/* 门户区 - grid 外部，全宽 */}
-        <div id="portal-zone" class="portal-zone-wrapper">
-            <slot name="portal" />
-        </div>
         <div id="main-grid"
           class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto px-2 md:px-4 ${!sidebarConfig.mobileShowSidebar ? 'mobile-no-sidebar' : ''} ${isPostPage ? 'gap-0 is-post-layout' : 'gap-4'}`}
           data-sidebar-position={sidebarLayoutConfig.position}
@@ -605,12 +604,7 @@ const mobileQuality = Math.round(configQuality * 0.9);
             </div>}
 
 
-            {/* 渲染左侧边栏 - 根据position和tabletSidebar配置显示 */}
-            {/*
-                如果全局配置为双侧栏(position: both)或仅左侧栏(position: left)，则使用静态容器(不被swup替换)，避免闪烁。
-                如果全局配置为仅右侧栏(position: right)，则使用动态容器(被swup替换)，以便在文章页显示左侧栏。
-                注意：为了满足swup要求所有containers必须存在，我们在所有模式下都必须渲染 #left-sidebar-dynamic。
-            */}
+            {/* 渲染左侧边栏 - CSS .lg\:is-home 控制首页隐藏 */}
             {sidebarLayoutConfig.position !== "right" ? (
                 <>
                     <div id="left-sidebar-wrapper" class="contents" style="contain: layout style paint;">
@@ -633,7 +627,7 @@ const mobileQuality = Math.round(configQuality * 0.9);
             )}
                     
             {/* 主内容区包装器 - 包含静态栏位和swup容器，作为单个grid item */}
-            <div class={staticBarClass}>
+            <div id="main-content-wrapper" class={staticBarClass}>
                 {/* 主内容区 - 始终渲染，确保 Swup 容器存在 */}
                 <main id="swup-container" class="transition-main">
                 {/* 携带网格布局类名，用于JS更新父容器 */}
@@ -646,18 +640,11 @@ const mobileQuality = Math.round(configQuality * 0.9);
                     <slot></slot>
 
                 </div>
-                <WelcomeCard />
                 <FloatingDock headings={headings} />
             </main>
             </div>
 
-            {/* 右侧边栏 - 双侧边栏模式或仅右侧栏模式 */}
-            {/*
-                如果全局配置为双侧栏(position: both)或仅右侧栏(position: right)，则使用静态容器(不被swup替换)，避免闪烁。
-                如果全局配置为单侧栏(position: left)，则使用动态容器(被swup替换)，以便在文章页显示右侧栏。
-                注意：为了满足swup要求所有containers必须存在，我们在所有模式下都必须渲染 #right-sidebar-dynamic。
-                右侧边栏的显示由CSS类控制。
-            */}
+            {/* 右侧边栏 - CSS .lg\:is-home 控制首页隐藏 */}
             {(sidebarLayoutConfig.position === "both" || sidebarLayoutConfig.position === "right") ? (
                 <>
                     <div id="right-sidebar-static" class="contents">
@@ -675,7 +662,7 @@ const mobileQuality = Math.round(configQuality * 0.9);
                 </div>
             )}
 
-            {/* 移动端底部组件 - 768px及以下显示 */}
+            {/* 移动端底部组件 - CSS .lg\:is-home 控制首页隐藏 */}
             {sidebarLayoutConfig.mobileBottomComponents && sidebarLayoutConfig.mobileBottomComponents.length > 0 && (
                 <div id="mobile-bottom-sidebar" class="col-span-1 block md:hidden mt-4">
                     <SideBar side="bottom" class={`${transparentClass}`} headings={headings}></SideBar>
@@ -683,15 +670,6 @@ const mobileQuality = Math.round(configQuality * 0.9);
             )}
 
             <div class={footerClassName}>
-                {/* 页脚装饰图 */}
-                <div class="rounded-(--radius-large) overflow-hidden -mb-10">
-                    <img
-                        src="https://ph.0824.uk/file/博客横屏封面/animals.webp"
-                        alt=""
-                        class="w-full h-auto object-cover"
-                        loading="lazy"
-                    />
-                </div>
                 <Footer></Footer>
             </div>
         </div>
@@ -1029,11 +1007,6 @@ const mobileQuality = Math.round(configQuality * 0.9);
 </Layout>
 
 <style is:global>
-  /* 门户区容器 - 空时隐藏 */
-  .portal-zone-wrapper:empty {
-    display: none;
-  }
-
   /* 右侧栏平滑过渡 */
   #right-sidebar {
     transition: opacity 0.35s ease-in-out,

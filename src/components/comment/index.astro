@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { Icon } from "astro-icon/components";
 import { commentConfig } from "@/config/commentConfig";
 import Key from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
@@ -9,7 +10,6 @@ import Disqus from "./Disqus.astro";
 import Giscus from "./Giscus.astro";
 import Twikoo from "./Twikoo.astro";
 import Waline from "./Waline.astro";
-import { Icon } from "astro-icon/components";
 
 interface Props {
 	post?: CollectionEntry<"posts"> | CollectionEntry<"spec">;
@@ -26,7 +26,8 @@ let url: string;
 if (post) {
 	const { id } = post;
 	slug = removeFileExtension(id);
-	path = customPath || (post.collection === "posts" ? `/posts/${slug}` : `/${slug}`);
+	path =
+		customPath || (post.collection === "posts" ? `/posts/${slug}` : `/${slug}`);
 	url = `${Astro.site?.href}${path}`;
 } else if (customPath) {
 	path = customPath;

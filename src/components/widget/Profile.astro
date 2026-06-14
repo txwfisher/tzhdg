@@ -1,10 +1,10 @@
 ---
+import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import { profileConfig } from "@/config/profileConfig";
-import { url } from "@/utils/url-utils";
-import { getCollection } from "astro:content";
 import { getTagList } from "@/utils/content-utils";
+import { url } from "@/utils/url-utils";
 
 const posts = await getCollection("posts", ({ data }) => {
 	return import.meta.env.PROD ? data.draft !== true : true;
@@ -50,7 +50,7 @@ const githubLink =
         {profileConfig.name}
       </div>
       <div class="text-sm text-neutral-500 dark:text-neutral-400">
-        {profileConfig.bio}
+        {Array.isArray(profileConfig.bio) ? profileConfig.bio[1] || profileConfig.bio[0] : profileConfig.bio}
       </div>
     </div>
 

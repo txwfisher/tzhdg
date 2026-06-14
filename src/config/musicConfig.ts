@@ -13,9 +13,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 		type: "song",
 		id: "30254265974",
 		auth: "",
-		fallbackApis: [
-			"https://mu.tsh520.cn/api?server=:server&type=:type&id=:id",
-		],
+		fallbackApis: ["https://mu.tsh520.cn/api?server=:server&type=:type&id=:id"],
 	},
 
 	local: {
