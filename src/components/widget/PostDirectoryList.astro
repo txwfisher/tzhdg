@@ -161,7 +161,10 @@ const { rows } = walk(root);
 						{row.icon ? (
 						<Icon name={row.icon} class="pd-icon pd-icon-custom" />
 					) : (
-						<span class="pd-icon" aria-hidden="true">▸</span>
+						<span class="pd-icon pd-icon-folder" aria-hidden="true" data-state={row.hasCurrent ? "open" : "closed"}>
+							<Icon name="material-symbols:folder" class="pd-folder-icon-closed" />
+							<Icon name="material-symbols:folder-open" class="pd-folder-icon-open" />
+						</span>
 					)}
 						<span class="pd-name">{row.name}</span>
 					</li>
@@ -180,7 +183,7 @@ const { rows } = walk(root);
 							data-post-slug={row.slug}
 							title={`${row.title} · ${row.date}`}
 						>
-							<span class="pd-dot" aria-hidden="true">•</span>
+							<Icon name="material-symbols:description-outline" class="pd-icon pd-icon-article" aria-hidden="true" />
 							<span class="pd-title">{row.title}</span>
 							<span class="pd-date">{row.date}</span>
 						</a>
@@ -211,6 +214,55 @@ const { rows } = walk(root);
 		list-style: none;
 	}
 
+	/* ===== 树线 ===== */
+	.pd-folder,
+	.pd-row {
+		position: relative;
+	}
+
+	.pd-folder::before,
+	.pd-row::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		pointer-events: none;
+	}
+
+	/* 线条颜色 */
+	:root {
+		--tree-line: oklch(0.80 0 0);
+	}
+	:root.dark {
+		--tree-line: oklch(0.35 0 0);
+	}
+
+	/* depth-1 子项：0.5rem 处一条竖线 */
+	.pd-folder[style*="--depth: 1"]::before,
+	.pd-row[style*="--depth: 1"]::before {
+		background:
+			linear-gradient(var(--tree-line), var(--tree-line)) no-repeat
+			0.4rem 0 / 1px 100%;
+	}
+
+	/* depth-2 子项：0.5rem + 0.85rem = 1.35rem 处一条竖线 */
+	.pd-folder[style*="--depth: 2"]::before,
+	.pd-row[style*="--depth: 2"]::before {
+		background:
+			linear-gradient(var(--tree-line), var(--tree-line)) no-repeat
+			1.25rem 0 / 1px 100%;
+	}
+
+	/* depth-3 子项：0.5rem + 0.85rem*2 = 2.2rem 处一条竖线 */
+	.pd-folder[style*="--depth: 3"]::before,
+	.pd-row[style*="--depth: 3"]::before {
+		background:
+			linear-gradient(var(--tree-line), var(--tree-line)) no-repeat
+			2.1rem 0 / 1px 100%;
+	}
+
 	/* ===== 文件夹行 ===== */
 	.pd-folder {
 		--depth: 0;
@@ -224,7 +276,7 @@ const { rows } = walk(root);
 		color: var(--primary);
 		font-size: 0.78rem;
 		font-weight: 700;
-		opacity: 0.78;
+		opacity: 1;
 		cursor: pointer;
 		user-select: none;
 		transition: background-color 0.15s ease;
@@ -235,15 +287,28 @@ const { rows } = walk(root);
 	}
 
 	.pd-icon {
-		width: 0.9rem;
+		width: 1rem;
+		height: 1rem;
 		flex: 0 0 auto;
 		text-align: center;
-		font-size: 0.75rem;
-		transition: transform 0.2s ease;
+		font-size: 0.9rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.pd-folder.expanded .pd-icon:not(.pd-icon-custom) {
-		transform: rotate(90deg);
+	/* 文件夹图标：closed / open 切换 */
+	.pd-icon-folder .pd-folder-icon-open {
+		display: none;
+	}
+	.pd-icon-folder .pd-folder-icon-closed {
+		display: block;
+	}
+	.pd-icon-folder[data-state="open"] .pd-folder-icon-open {
+		display: block;
+	}
+	.pd-icon-folder[data-state="open"] .pd-folder-icon-closed {
+		display: none;
 	}
 
 	.pd-icon-custom {
@@ -251,6 +316,10 @@ const { rows } = walk(root);
 		height: 1rem;
 		flex: 0 0 auto;
 		opacity: 0.85;
+	}
+
+	.pd-icon-article {
+		opacity: 0.45;
 	}
 
 	.pd-name {
@@ -261,7 +330,8 @@ const { rows } = walk(root);
 	}
 
 	/* ===== 折叠项（由 JS 控制） ===== */
-	.pd-item.collapsed {
+	.pd-item.collapsed,
+	.pd-folder.collapsed {
 		display: none;
 	}
 
@@ -279,16 +349,19 @@ const { rows } = walk(root);
 
 	.pd-link {
 		color: var(--deep-text);
+		opacity: 0.55;
 		text-decoration: none;
 		transition:
 			background-color 0.15s ease,
 			color 0.15s ease,
+			opacity 0.15s ease,
 			transform 0.15s ease;
 	}
 
 	.pd-link:hover {
 		background: var(--toc-btn-hover);
 		color: var(--primary);
+		opacity: 1;
 	}
 
 	.pd-link:active {
@@ -299,14 +372,7 @@ const { rows } = walk(root);
 		background: var(--toc-btn-active);
 		color: var(--primary);
 		font-weight: 700;
-	}
-
-	.pd-dot {
-		width: 0.9rem;
-		flex: 0 0 auto;
-		text-align: center;
-		opacity: 0.65;
-		font-size: 0.75rem;
+		opacity: 1;
 	}
 
 	.pd-title {
@@ -343,9 +409,35 @@ const { rows } = walk(root);
 		}
 
 		/**
+		 * 递归收起文件夹及其所有后代
+		 * 用于展开父文件夹时，确保子文件夹的内容保持隐藏
+		 */
+		function collapseDescendants(folder) {
+			var depth = parseInt(folder.style.getPropertyValue("--depth")) || 0;
+			var el = folder.nextElementSibling;
+			while (el) {
+				if (el.classList.contains("pd-folder")) {
+					var elDepth = parseInt(el.style.getPropertyValue("--depth")) || 0;
+					if (elDepth <= depth) break;
+					if (elDepth === depth + 1) {
+						el.classList.add("collapsed");
+						el.classList.remove("expanded");
+						var childIcon = el.querySelector(".pd-icon-folder");
+						if (childIcon) childIcon.setAttribute("data-state", "closed");
+						collapseDescendants(el);
+					}
+				}
+				if (el.classList.contains("pd-item")) {
+					el.classList.add("collapsed");
+				}
+				el = el.nextElementSibling;
+			}
+		}
+
+		/**
 		 * 切换文件夹展开/收起
-		 * 扁平列表结构：folder 行后面跟着若干 pd-item，
-		 * 直到下一个 pd-folder（depth <= 当前）为止
+		 * 展开时：显示直接子项（文章 + 子文件夹头部），但递归收起子文件夹的后代
+		 * 收起时：隐藏所有后代（文章 + 子文件夹及其内容）
 		 */
 		function toggleFolder(folder, expand) {
 			var depth = parseInt(folder.style.getPropertyValue("--depth")) || 0;
@@ -353,14 +445,30 @@ const { rows } = walk(root);
 			while (el) {
 				if (el.classList.contains("pd-folder")) {
 					var elDepth = parseInt(el.style.getPropertyValue("--depth")) || 0;
-					if (elDepth <= depth) break; // 遇到同级或上级文件夹，停止
-				}
-				if (el.classList.contains("pd-item")) {
-					el.classList.toggle("collapsed", !expand);
+					if (elDepth <= depth) break;
+					if (elDepth === depth + 1) {
+						if (expand) {
+							el.classList.remove("collapsed");
+							collapseDescendants(el);
+						} else {
+							el.classList.add("collapsed");
+							el.classList.remove("expanded");
+						}
+					}
+				} else if (el.classList.contains("pd-item")) {
+					var itemDepth = parseInt(el.getAttribute("data-depth")) || 0;
+					if (itemDepth === depth + 1) {
+						el.classList.toggle("collapsed", !expand);
+					}
 				}
 				el = el.nextElementSibling;
 			}
 			folder.classList.toggle("expanded", expand);
+			// 切换文件夹图标状态
+			var iconEl = folder.querySelector(".pd-icon-folder");
+			if (iconEl) {
+				iconEl.setAttribute("data-state", expand ? "open" : "closed");
+			}
 		}
 
 		/* 手风琴：点击文件夹 */
@@ -411,18 +519,45 @@ const { rows } = walk(root);
 			});
 		}
 
-		/* 初始化文件夹状态：hasCurrent=true 的展开，其余收起 */
+		/* 初始化文件夹状态：默认收起所有文件夹，只展开当前文章的祖先链 */
 		function initFolderStates(root) {
-			// 先收起所有文件夹
 			root.querySelectorAll(".pd-folder").forEach(function (folder) {
-				var hasCurrent = folder.getAttribute("data-has-current") === "true";
-				if (!hasCurrent) {
-					toggleFolder(folder, false);
-				} else {
-					// 确保展开
-					folder.classList.add("expanded");
-				}
+				toggleFolder(folder, false);
 			});
+			var current = root.querySelector(".pd-link.current");
+			if (!current) return;
+			var item = current.closest(".pd-item");
+			if (!item) return;
+			expandAncestors(item);
+		}
+
+		/**
+		 * 展开当前文章的祖先文件夹链
+		 * 逐级向上查找：先找直接父文件夹（depth = itemDepth - 1），
+		 * 再从父文件夹位置向上找祖父文件夹（depth = itemDepth - 2），以此类推
+		 */
+		function expandAncestors(item) {
+			var itemDepth = parseInt(item.getAttribute("data-depth")) || 0;
+			if (itemDepth <= 0) return;
+			var targetDepth = itemDepth - 1;
+			var cursor = item.previousElementSibling;
+			while (cursor && targetDepth >= 0) {
+				if (cursor.classList.contains("pd-folder")) {
+					var d = parseInt(cursor.style.getPropertyValue("--depth")) || 0;
+					if (d < targetDepth) {
+						// 深度不够，说明这个层级没有文件夹，跳到更浅的层级
+						targetDepth = d - 1;
+						continue;
+					}
+					if (d === targetDepth) {
+						if (!cursor.classList.contains("expanded")) {
+							toggleFolder(cursor, true);
+						}
+						targetDepth--;
+					}
+				}
+				cursor = cursor.previousElementSibling;
+			}
 		}
 
 		/* 高亮当前文章 */
@@ -451,13 +586,7 @@ const { rows } = walk(root);
 				// 确保当前文章所在文件夹链全部展开
 				var item = current.closest(".pd-item");
 				if (item) {
-					var prev = item.previousElementSibling;
-					while (prev) {
-						if (prev.classList.contains("pd-folder") && !prev.classList.contains("expanded")) {
-							toggleFolder(prev, true);
-						}
-						prev = prev.previousElementSibling;
-					}
+					expandAncestors(item);
 				}
 
 				// 滚动到当前文章

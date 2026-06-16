@@ -149,6 +149,9 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
   </button>
 </div>
 
+<!-- 移动端抽屉遮罩 -->
+<div class="dock-drawer-overlay" id="dock-drawer-overlay"></div>
+
 <!-- 标签抽屉 -->
 <div class="dock-drawer dock-drawer-closed" id="dock-drawer-tags">
   <div class="dock-drawer-title">[ {i18n(I18nKey.tags)} ]</div>
@@ -239,6 +242,12 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
 
     function closeAllDrawers() {
       document.querySelectorAll(".dock-drawer").forEach((d) => d.classList.add("dock-drawer-closed"));
+      document.getElementById("dock-drawer-overlay")?.classList.remove("active");
+    }
+
+    function openDrawer(drawer: Element) {
+      drawer.classList.remove("dock-drawer-closed");
+      document.getElementById("dock-drawer-overlay")?.classList.add("active");
     }
 
     toggleBtn.addEventListener("click", (e) => {
@@ -274,8 +283,14 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
         e.stopPropagation();
         const isOpen = !drawer.classList.contains("dock-drawer-closed");
         closeAllDrawers();
-        if (!isOpen) drawer.classList.remove("dock-drawer-closed");
+        if (!isOpen) openDrawer(drawer);
       });
+    });
+
+    // 点击遮罩关闭
+    document.getElementById("dock-drawer-overlay")?.addEventListener("click", () => {
+      closeAllDrawers();
+      setExpanded(false);
     });
 
     // 点击外部关闭
@@ -365,9 +380,10 @@ const dockMusicPlaylist = JSON.stringify(musicEntries);
       document.getElementById("dock-posts-btn")?.classList.toggle("hide", !isPost);
       document.getElementById("dock-toc-btn")?.classList.toggle("hide", !isPost);
       // 评论按钮
+      const isPostDetail = /\/posts\/.+\//.test(window.location.pathname);
       const isMoments = /\/moments/.test(window.location.pathname);
       const isAlbum = /\/album\//.test(window.location.pathname) && !/\/album\/?$/.test(window.location.pathname);
-      const showComment = isPost || (isMoments && scrolled) || (isAlbum && scrolled);
+      const showComment = isPostDetail || (isMoments && scrolled) || (isAlbum && scrolled);
       document.getElementById("dock-comment-btn")?.classList.toggle("hide", !showComment);
       // 书籍详情页显示返回书架按钮
       const isBookDetail = /\/books\/book\//.test(window.location.pathname);

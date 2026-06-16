@@ -164,6 +164,7 @@ export class TOCManager {
           href="#${heading.id}" 
           class="px-2 flex gap-2 relative transition w-full min-h-9 rounded-xl hover:bg-(--toc-btn-hover) active:bg-(--toc-btn-active) py-2 ${depthClass}"
           data-heading-id="${heading.id}"
+          data-depth="${depth}"
           aria-label="${headingText}"
         >
           <div class="transition w-5 h-5 shrink-0 rounded-lg text-xs flex items-center justify-center font-bold ${depth === this.minDepth ? "bg-(--toc-badge-bg) text-(--btn-content)" : ""}">
@@ -247,12 +248,34 @@ export class TOCManager {
 		});
 
 		const visibleHeadingIds = this.getVisibleHeadingIds();
+		if (visibleHeadingIds.length === 0) {
+			this.updateActiveIndicator([]);
+			return;
+		}
 
-		// 找到对应的TOC项并添加活动状态
-		const activeItems = this.tocItems.filter((item) => {
-			const headingId = item.dataset.headingId;
-			return headingId && visibleHeadingIds.includes(headingId);
+		// 找到可见标题中在 TOC 里最靠前的那一个作为主标题
+		const primaryItem = this.tocItems.find((item) => {
+			const id = item.dataset.headingId;
+			return id && visibleHeadingIds.includes(id);
 		});
+		if (!primaryItem) {
+			this.updateActiveIndicator([]);
+			return;
+		}
+
+		const primaryIndex = this.tocItems.indexOf(primaryItem);
+		const primaryDepth = Number.parseInt(primaryItem.dataset.depth || "1", 10);
+
+		// 从主标题开始，收集它和所有更深级的子标题，直到遇到同级或上级标题
+		const activeItems: HTMLElement[] = [];
+		for (let i = primaryIndex; i < this.tocItems.length; i++) {
+			const item = this.tocItems[i];
+			if (i > primaryIndex) {
+				const d = Number.parseInt(item.dataset.depth || "1", 10);
+				if (d <= primaryDepth) break;
+			}
+			activeItems.push(item);
+		}
 
 		// 添加活动状态
 		activeItems.forEach((item) => {
