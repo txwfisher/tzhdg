@@ -54,22 +54,19 @@ const pinnedMoments = moments
   <div id="moments-comments">
     <Comment customPath="/moments/pinned/" />
   </div>
-</MainGridLayout>
 
-{externalMomentsConfig.enable && externalMomentsConfig.gistId && (
-<script is:inline
-  data-gist={externalMomentsConfig.gistId}
-  data-file={externalMomentsConfig.fileName}
-  data-author={externalMomentsConfig.defaultAuthor}
-  data-avatar={externalMomentsConfig.defaultAvatar}>
+  {externalMomentsConfig.enable && externalMomentsConfig.gistId && (
+  <script is:inline
+    data-gist={externalMomentsConfig.gistId}
+    data-file={externalMomentsConfig.fileName}
+    data-author={externalMomentsConfig.defaultAuthor}
+    data-avatar={externalMomentsConfig.defaultAvatar}>
 (function() {
   var _s = document.currentScript;
   var gistId = _s.getAttribute("data-gist");
   var fileName = _s.getAttribute("data-file");
   var defaultAuthor = _s.getAttribute("data-author");
   var defaultAvatar = _s.getAttribute("data-avatar");
-  var feed = document.getElementById("pinned-feed");
-  if (!feed) return;
 
   var cacheKey = "__externalMomentsCache";
   var MARKER = "data-ext-inserted";
@@ -232,12 +229,14 @@ const pinnedMoments = moments
     return wrapper;
   }
 
-  function hasExternalPinned() {
+  function hasExternalPinned(feed) {
+    if (!feed) return false;
     return feed.hasAttribute(MARKER) ||
       feed.querySelector("[" + MARKER + "]") !== null;
   }
 
-  function insertPinnedExternal(extMoments) {
+  function insertPinnedExternal(feed, extMoments) {
+    if (!feed) return;
     var pinned = extMoments.filter(function(m) { return m.pinned; });
     if (pinned.length === 0) return;
 
@@ -262,10 +261,12 @@ const pinnedMoments = moments
   }
 
   function fetchPinned() {
-    if (hasExternalPinned()) return;
+    var feed = document.getElementById("pinned-feed");
+    if (!feed) return;
+    if (hasExternalPinned(feed)) return;
 
     if (window[cacheKey] && window[cacheKey].time > Date.now() - 300000) {
-      insertPinnedExternal(window[cacheKey].data);
+      insertPinnedExternal(feed, window[cacheKey].data);
       return;
     }
 
@@ -284,7 +285,7 @@ const pinnedMoments = moments
         var moments = JSON.parse(file.content || "[]");
         if (!moments.length) return;
         window[cacheKey] = { data: moments, time: Date.now() };
-        insertPinnedExternal(moments);
+        insertPinnedExternal(feed, moments);
       })
       .catch(function(e) {
         console.warn("[外部置顶说说] 加载失败:", e.message);
@@ -293,13 +294,21 @@ const pinnedMoments = moments
 
   fetchPinned();
 
-  // Swup 页面切换后重新检查
+  // Swup 页面切换后重新检查（延迟确保新 DOM 已就绪）
   document.addEventListener("swup:content:replace", function() {
-    if (!hasExternalPinned()) fetchPinned();
+    setTimeout(function() {
+      try { fetchPinned(); } catch(e) { console.warn("[pinned] swup reload error:", e); }
+    }, 50);
+  });
+
+  // Astro 标准生命周期
+  document.addEventListener("astro:page-load", function() {
+    try { fetchPinned(); } catch(e) { console.warn("[pinned] astro:page-load error:", e); }
   });
 })();
 </script>
-)}
+  )}
+</MainGridLayout>
 
 <style>
   /* 页面头部 */
