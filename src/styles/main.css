@@ -55,6 +55,7 @@
 @import './features/custom-scrollbar.css';
 @import './features/widget-responsive.css';
 @import './features/portal.css';
+@import './features/moments.css';
 
 /* --- 布局样式 --- */
 @import './layout/layout-styles.css';

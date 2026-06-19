@@ -205,6 +205,69 @@ const sortedEntriesWithImages = isNotebookIndex
 					</div>
 				)}
 			</section>
+
+			{/* 远程笔记注入脚本 */}
+			{externalNotebooksConfig.enable && (
+				<script is:inline
+					data-gists={JSON.stringify(externalNotebooksConfig.notebookGists || {})}
+					data-notebook={folderName}>
+					(function() {
+						var _s = document.currentScript;
+						var GISTS = JSON.parse(_s.getAttribute("data-gists") || "{}");
+						var NOTEBOOK = _s.getAttribute("data-notebook");
+						var GIST_ID = GISTS[NOTEBOOK];
+						if (!GIST_ID || !NOTEBOOK) return;
+
+						var rawUrl = "https://gist.githubusercontent.com/raw/" + GIST_ID + "?t=" + Date.now();
+
+						fetch(rawUrl)
+							.then(function(r) { if (!r.ok) return null; return r.text(); })
+							.then(function(text) {
+								if (!text) return;
+								var entries = [];
+								try { entries = JSON.parse(text); } catch(e) { return; }
+								if (!Array.isArray(entries)) return;
+
+								var filtered = entries.filter(function(e) { return e.notebook === NOTEBOOK; });
+								if (!filtered.length) return;
+
+								filtered.sort(function(a, b) {
+									return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
+								});
+
+								var container = document.getElementById("remote-entries-container");
+								var list = document.getElementById("remote-entries-list");
+								if (!container || !list) return;
+
+								function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+
+								filtered.forEach(function(entry) {
+									var date = entry.date || "";
+									var contentBody = (entry.content || "").replace(/[#*`>\-\[\]!]/g, "").replace(/\n/g, " ");
+									var preview = contentBody.slice(0, 100) + (contentBody.length > 100 ? "..." : "");
+
+									var card = document.createElement("a");
+									card.href = "/life/notebooks/remote-entry/?nb=" + encodeURIComponent(NOTEBOOK) + "&id=" + encodeURIComponent(entry.id);
+									card.className = "diary-entry-card group";
+									card.innerHTML =
+										'<div class="entry-card-inner">' +
+										'<div class="entry-card-text">' +
+										'<span class="entry-card-date">' + esc(date) + '</span>' +
+										'<p class="entry-card-preview">' + esc(entry.title || preview) + '</p>' +
+										'</div>' +
+										'</div>';
+									list.appendChild(card);
+								});
+
+								container.style.display = "";
+
+								var localEmpty = document.getElementById("local-empty");
+								if (localEmpty) localEmpty.style.display = "none";
+							})
+							.catch(function() {});
+					})();
+				</script>
+			)}
 		</div>
 	</MainGridLayout>
 ) : (
@@ -398,68 +461,3 @@ const sortedEntriesWithImages = isNotebookIndex
 	}
 </style>
 
-{/* 远程笔记注入脚本 - 仅在笔记本索引页生效 */}
-{isNotebookIndex && externalNotebooksConfig.enable && (
-	<script is:inline
-		data-gists={JSON.stringify(externalNotebooksConfig.notebookGists || {})}
-		data-notebook={folderName}>
-		(function() {
-			var _s = document.currentScript;
-			var GISTS = JSON.parse(_s.getAttribute("data-gists") || "{}");
-			var NOTEBOOK = _s.getAttribute("data-notebook");
-			var GIST_ID = GISTS[NOTEBOOK];
-			if (!GIST_ID || !NOTEBOOK) return;
-
-			// 用 Raw URL 读取（Secret Gist 也能访问，不需要 API 认证）
-			var rawUrl = "https://gist.githubusercontent.com/raw/" + GIST_ID + "?t=" + Date.now();
-
-			fetch(rawUrl)
-				.then(function(r) { if (!r.ok) return null; return r.text(); })
-				.then(function(text) {
-					if (!text) return;
-					var entries = [];
-					try { entries = JSON.parse(text); } catch(e) { return; }
-					if (!Array.isArray(entries)) return;
-
-					var filtered = entries.filter(function(e) { return e.notebook === NOTEBOOK; });
-					if (!filtered.length) return;
-
-					filtered.sort(function(a, b) {
-						return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
-					});
-
-					var container = document.getElementById("remote-entries-container");
-					var list = document.getElementById("remote-entries-list");
-					if (!container || !list) return;
-
-					function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
-
-					filtered.forEach(function(entry) {
-						var date = entry.date || "";
-						var contentBody = (entry.content || "").replace(/[#*`>\-\[\]!]/g, "").replace(/\n/g, " ");
-						var preview = contentBody.slice(0, 100) + (contentBody.length > 100 ? "..." : "");
-
-						// 用和本地笔记完全一样的 HTML 结构
-						var card = document.createElement("a");
-						card.href = "/life/notebooks/remote-entry/?nb=" + encodeURIComponent(NOTEBOOK) + "&id=" + encodeURIComponent(entry.id);
-						card.className = "diary-entry-card group";
-						card.innerHTML =
-							'<div class="entry-card-inner">' +
-							'<div class="entry-card-text">' +
-							'<span class="entry-card-date">' + esc(date) + '</span>' +
-							'<p class="entry-card-preview">' + esc(entry.title || preview) + '</p>' +
-							'</div>' +
-							'</div>';
-						list.appendChild(card);
-					});
-
-					container.style.display = "";
-
-					// 如果本地没有笔记，隐藏空状态
-					var localEmpty = document.getElementById("local-empty");
-					if (localEmpty) localEmpty.style.display = "none";
-				})
-				.catch(function() {});
-		})();
-	</script>
-)}

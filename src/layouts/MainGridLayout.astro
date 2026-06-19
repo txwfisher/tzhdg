@@ -852,10 +852,11 @@ const mobileQuality = Math.round(configQuality * 0.9);
       var tagDiv = document.createElement("div");
       tagDiv.className = "card-tags";
       tags.forEach(function(t) {
-        var span = document.createElement("span");
-        span.className = "tag-item";
-        span.textContent = "#" + t;
-        tagDiv.appendChild(span);
+        var a = document.createElement("a");
+        a.href = "/archive/?tag=" + encodeURIComponent(t.trim());
+        a.className = "tag-item";
+        a.textContent = "#" + t.trim();
+        tagDiv.appendChild(a);
       });
       card.appendChild(tagDiv);
     }
