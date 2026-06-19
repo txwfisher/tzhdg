@@ -96,6 +96,8 @@ const pinnedMoments = moments
       .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;">$1</a>');
   }
 
+  var cardIdCounter = 0;
+
   function getGridCols(count) {
     if (count === 1) return 1;
     if (count === 2 || count === 4) return 2;
@@ -188,12 +190,13 @@ const pinnedMoments = moments
     contentDiv.className = "card-content";
     var markdownDiv = document.createElement("div");
     markdownDiv.className = "moment-markdown";
-    markdownDiv.style.cssText = "color:var(--text-color);font-size:0.9375rem;line-height:1.75;";
+    markdownDiv.style.cssText = "color:var(--deep-text);font-size:0.9375rem;line-height:1.75;";
     markdownDiv.innerHTML = content;
     contentDiv.appendChild(markdownDiv);
     card.appendChild(contentDiv);
 
     if (images.length > 0) {
+      var galleryId = "gallery-pinned-" + (++cardIdCounter);
       var cols = getGridCols(images.length);
       var imagesDiv = document.createElement("div");
       imagesDiv.className = "card-images image-cols-" + cols;
@@ -205,6 +208,8 @@ const pinnedMoments = moments
         img.alt = "";
         img.className = "image-img";
         img.loading = "lazy";
+        img.setAttribute("data-fancybox", galleryId);
+        img.setAttribute("data-src", url);
         img.onerror = function() { imgItem.style.display = "none"; };
         imgItem.appendChild(img);
         imagesDiv.appendChild(imgItem);
