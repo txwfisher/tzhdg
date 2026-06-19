@@ -196,7 +196,7 @@ const description = i18n(I18nKey.friendsDescription);
           const cards = container.querySelectorAll(".friend-card");
 
           filters.forEach((f) => {
-            f.classList.remove("bg-(--primary)", "text-white");
+            f.classList.remove("bg-(--primary)", "text-white", "dark:text-neutral-900");
             f.classList.remove("hover:bg-(--primary)");
             f.classList.add(
               "bg-(--btn-regular-bg)",
@@ -210,7 +210,7 @@ const description = i18n(I18nKey.friendsDescription);
                 "text-(--btn-content)"
               );
               f.classList.remove("hover:bg-(--btn-regular-bg-hover)");
-              f.classList.add("bg-(--primary)", "text-white");
+              f.classList.add("bg-(--primary)", "text-white", "dark:text-neutral-900");
               f.classList.add("hover:bg-(--primary)");
             }
           });
