@@ -80,7 +80,11 @@ def human_size(n):
 def download_file(url, filepath, label=""):
     """下载文件带进度条，返回是否成功"""
     try:
-        with urllib.request.urlopen(url, timeout=120) as resp:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": url,
+        })
+        with urllib.request.urlopen(req, timeout=120) as resp:
             total = int(resp.headers.get("Content-Length", 0))
             with open(filepath, "wb") as f:
                 downloaded = 0
@@ -117,8 +121,81 @@ def tmdb_request(endpoint, api_key, params=None):
         with urllib.request.urlopen(url, timeout=15) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except Exception as e:
-        print("  API 请求失败: {}".format(e))
+        print("  TMDB API 请求失败: {}".format(e))
         return None
+
+
+# ── 豆瓣搜索 ──────────────────────────────────────────
+
+def douban_search(query):
+    """豆瓣影视搜索，返回结果列表"""
+    url = "https://movie.douban.com/j/subject_suggest?q={}".format(urllib.parse.quote(query))
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://movie.douban.com/",
+        })
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        results = []
+        for item in data:
+            if item.get("type") in ("movie", "tv"):
+                results.append({
+                    "title": item.get("title", ""),
+                    "year": item.get("year", ""),
+                    "poster_url": item.get("img", ""),
+                    "id": item.get("id", ""),
+                    "sub_title": item.get("sub_title", ""),
+                    "source": "douban",
+                })
+        return results
+    except Exception as e:
+        print("  豆瓣搜索失败: {}".format(e))
+        return []
+
+
+def douban_get_detail(subject_id):
+    """获取豆瓣影视详情"""
+    url = "https://movie.douban.com/j/subject_abstract?subject_id={}".format(subject_id)
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://movie.douban.com/",
+        })
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return data.get("subject", {})
+    except Exception as e:
+        print("  豆瓣详情获取失败: {}".format(e))
+        return {}
+
+
+# ── Bangumi 搜索 ──────────────────────────────────────
+
+def bangumi_search(query):
+    """Bangumi 动漫搜索，返回结果列表"""
+    url = "https://api.bgm.tv/search/subject/{}?type=2&limit=10".format(urllib.parse.quote(query))
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        })
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        results = []
+        for item in data.get("data", []):
+            results.append({
+                "title": item.get("name", ""),
+                "original_title": item.get("name_cn", ""),
+                "year": (item.get("date", "") or "")[:4],
+                "poster_url": item.get("images", {}).get("large", ""),
+                "id": item.get("id", ""),
+                "summary": (item.get("summary", "") or "")[:120],
+                "source": "bangumi",
+            })
+        return results
+    except Exception as e:
+        print("  Bangumi 搜索失败: {}".format(e))
+        return []
 
 
 # ── 搜索与详情 ────────────────────────────────────────
@@ -249,15 +326,76 @@ published: {published}
 
 def process(query, api_key, user_type=None, fast_mode=False,
             preset_status=None, preset_score=None, cover_url=""):
-    """主流程：搜索 → 选择 → 下载封面 → 生成 md"""
+    """主流程：TMDB → 豆瓣 → Bangumi → 手动模式"""
 
-    # 1. 搜索
-    print("\n搜索: {}".format(query))
+    # 1. TMDB 搜索
+    print("\n[TMDB] 搜索: {}".format(query))
     results = search_multi(query, api_key)
 
+    # 2. TMDB 无结果 → 豆瓣搜索
     if not results:
-        print("  TMDB 未找到结果，切换到手动模式")
-        return process_manual(query, user_type, fast_mode, preset_status, preset_score, cover_url)
+        print("  TMDB 未找到结果")
+        print("\n[豆瓣] 搜索: {}".format(query))
+        douban_results = douban_search(query)
+        if douban_results:
+            print("\n搜索结果 (豆瓣):\n")
+            for i, item in enumerate(douban_results[:10]):
+                year_str = "({})".format(item["year"]) if item["year"] else ""
+                print("  [{:2d}] {} {}".format(i + 1, item["title"], year_str))
+                if item.get("sub_title"):
+                    print("       {}".format(item["sub_title"]))
+
+            if fast_mode:
+                pick = 1
+                print("\n快速模式: 自动选择第 1 个")
+            else:
+                try:
+                    choice = input("\n选择序号 (1-{}, 默认 1): ".format(min(len(douban_results), 10))).strip()
+                    pick = int(choice) if choice else 1
+                    if pick < 1 or pick > min(len(douban_results), 10):
+                        print("无效选择")
+                        return False
+                except (ValueError, KeyboardInterrupt, EOFError):
+                    print()
+                    pick = 1
+
+            selected = douban_results[pick - 1]
+            return process_douban(selected, user_type, fast_mode, preset_status, preset_score, cover_url)
+        else:
+            print("  豆瓣也未找到结果")
+
+    # 3. TMDB 和豆瓣都无结果 → Bangumi 搜索
+    if not results:
+        print("\n[Bangumi] 搜索: {}".format(query))
+        bangumi_results = bangumi_search(query)
+        if bangumi_results:
+            print("\n搜索结果 (Bangumi):\n")
+            for i, item in enumerate(bangumi_results[:10]):
+                year_str = "({})".format(item["year"]) if item["year"] else ""
+                title_display = item["original_title"] or item["title"]
+                print("  [{:2d}] {} {}".format(i + 1, title_display, year_str))
+                if item.get("summary"):
+                    print("       {}...".format(item["summary"][:80]))
+
+            if fast_mode:
+                pick = 1
+                print("\n快速模式: 自动选择第 1 个")
+            else:
+                try:
+                    choice = input("\n选择序号 (1-{}, 默认 1): ".format(min(len(bangumi_results), 10))).strip()
+                    pick = int(choice) if choice else 1
+                    if pick < 1 or pick > min(len(bangumi_results), 10):
+                        print("无效选择")
+                        return False
+                except (ValueError, KeyboardInterrupt, EOFError):
+                    print()
+                    pick = 1
+
+            selected = bangumi_results[pick - 1]
+            return process_bangumi(selected, user_type, fast_mode, preset_status, preset_score, cover_url)
+        else:
+            print("  Bangumi 也未找到结果，切换到手动模式")
+            return process_manual(query, user_type, fast_mode, preset_status, preset_score, cover_url)
 
     # 2. 展示结果
     print("\n搜索结果:\n")
@@ -405,6 +543,141 @@ def process(query, api_key, user_type=None, fast_mode=False,
     return True
 
 
+# ── 豆瓣模式 ────────────────────────────────────────────
+
+def process_douban(selected, user_type=None, fast_mode=False,
+                   preset_status=None, preset_score=None, cover_url=""):
+    """处理豆瓣搜索结果"""
+    title = selected["title"]
+    year = selected.get("year", "")
+    poster_url = selected.get("poster_url", "")
+
+    # 获取详情
+    detail = douban_get_detail(selected["id"]) if selected.get("id") else {}
+    genres = detail.get("genres", [])
+    genre_tags = genres if genres else ["电影"]
+
+    subcategory = user_type or "movie"
+    if any("纪录" in g for g in genre_tags):
+        subcategory = "documentary"
+    elif any("动画" in g for g in genre_tags):
+        subcategory = "anime"
+
+    print("\n" + "=" * 50)
+    print("  标题: {}".format(title))
+    print("  来源: 豆瓣")
+    if year:
+        print("  年份: {}".format(year))
+    print("  标签: {}".format(", ".join(genre_tags)))
+    print("=" * 50)
+
+    return finalize(title, title, subcategory, genre_tags, poster_url,
+                    fast_mode, preset_status, preset_score, cover_url)
+
+
+# ── Bangumi 模式 ────────────────────────────────────────
+
+def process_bangumi(selected, user_type=None, fast_mode=False,
+                    preset_status=None, preset_score=None, cover_url=""):
+    """处理 Bangumi 搜索结果"""
+    title = selected["original_title"] or selected["title"]
+    year = selected.get("year", "")
+    poster_url = selected.get("poster_url", "")
+
+    genre_tags = ["动漫"]
+    subcategory = user_type or "anime"
+
+    print("\n" + "=" * 50)
+    print("  标题: {}".format(title))
+    print("  来源: Bangumi")
+    if year:
+        print("  年份: {}".format(year))
+    print("  标签: {}".format(", ".join(genre_tags)))
+    print("=" * 50)
+
+    return finalize(title, title, subcategory, genre_tags, poster_url,
+                    fast_mode, preset_status, preset_score, cover_url)
+
+
+# ── 公共收尾逻辑 ─────────────────────────────────────────
+
+def finalize(title, name_cn, subcategory, genre_tags, poster_url,
+             fast_mode=False, preset_status=None, preset_score=None, cover_url=""):
+    """公共收尾：确认字段 → 下载封面 → 生成 md"""
+
+    if fast_mode:
+        status = preset_status or 2
+        score = preset_score or 0
+        tags = genre_tags
+        comment = ""
+        print("\n快速模式: status={}({}), score={}, tags={}".format(
+            status, STATUS_LABELS.get(status, "?"), score, tags))
+    else:
+        print("\n状态: 1:想看 2:看过 3:在看 4:搁置 5:抛弃")
+        if preset_status:
+            status = preset_status
+            print("  [预设] status = {} ({})".format(status, STATUS_LABELS.get(status, "?")))
+        else:
+            try:
+                s = input("  选择状态 (默认 2): ").strip()
+                status = int(s) if s else 2
+            except (ValueError, EOFError):
+                status = 2
+
+        if preset_score is not None:
+            score = preset_score
+            print("  [预设] score = {}".format(score))
+        else:
+            try:
+                s = input("  评分 0-10 (默认 0): ").strip()
+                score = int(s) if s else 0
+            except (ValueError, EOFError):
+                score = 0
+
+        print("  当前标签: {}".format(", ".join(genre_tags)))
+        t = input("  修改标签 (回车确认，逗号分隔): ").strip()
+        if t:
+            tags = [x.strip() for x in t.split(",") if x.strip()]
+        else:
+            tags = genre_tags
+
+        comment = input("  评价/备注 (可选): ").strip()
+
+    # 下载封面
+    download_url = cover_url or poster_url
+    if download_url:
+        os.makedirs(COVER_DIR, exist_ok=True)
+        ext = ".jpg"
+        if download_url.lower().endswith(".png"):
+            ext = ".png"
+        elif download_url.lower().endswith(".webp"):
+            ext = ".webp"
+        cover_file = os.path.join(COVER_DIR, "{}{}".format(title, ext))
+        if os.path.exists(cover_file):
+            print("\n  [跳过] 已有封面: {}{}".format(title, ext))
+        else:
+            print("\n  下载封面: {}{}".format(title, ext))
+            download_file(download_url, cover_file, "封面")
+    else:
+        print("\n  [无封面] 未获取到海报")
+
+    # 生成 md
+    image_path = "https://ph.0824.uk/file/anime/{}.jpg".format(title)
+    os.makedirs(BLOG_BANGUMI_DIR, exist_ok=True)
+    md_file = "{}.md".format(title)
+    md_path = os.path.join(BLOG_BANGUMI_DIR, md_file)
+
+    if os.path.exists(md_path):
+        print("  [跳过] 已有 md: {}".format(md_file))
+    else:
+        write_markdown(md_path, title, name_cn, "anime", subcategory, status,
+                       image_path, score, tags, date.today().isoformat(), comment)
+        print("  [MD] {}".format(md_file))
+
+    print("\n完成: {}".format(title))
+    return True
+
+
 # ── 手动模式 ────────────────────────────────────────────
 
 def process_manual(title, user_type=None, fast_mode=False,
@@ -496,9 +769,9 @@ def process_manual(title, user_type=None, fast_mode=False,
 # ── main ──────────────────────────────────────────────
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         print(__doc__.strip())
-        sys.exit(1)
+        sys.exit(0)
 
     query = sys.argv[1]
     api_key = None
