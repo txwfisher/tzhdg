@@ -337,7 +337,7 @@ const mobileQuality = Math.round(configQuality * 0.9);
         ))}
         <!-- Desktop: 默认渲染第一张，其余放入 template -->
         {backgroundImages.desktop.length > 0 && (
-            <div class="banner-image-slot-desktop absolute inset-0 hidden lg:block">
+            <div class="banner-image-slot-desktop absolute inset-0 hidden md:block">
                 <ImageWrapper
                     id="banner"
                     alt="Desktop background image of the blog"
