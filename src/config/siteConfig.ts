@@ -118,7 +118,7 @@ export const siteConfig: SiteConfig = {
 		start: 9, // 上班时间 9:00
 		end: 18, // 下班时间 18:00
 		// 工作日范围，0=周日 1=周一 ... 6=周六，默认周一到周五
-		workDays: [1, 2, 3, 4, 5，6],
+		workDays: [1, 2, 3, 4, 5, 6],
 	},
 
 	// 站点时区（IANA 时区字符串），用于格式化bangumi、rss里的构建日期时间等等..
