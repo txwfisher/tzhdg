@@ -12,16 +12,16 @@ export const profileConfig: ProfileConfig = {
 	avatarOffWork: "",
 
 	// 名字
-	name: "团子和蛋糕",
+	name: "荼丛",
 
 	// 首页展示名字（留空则使用 name）
-	displayName: "Dumpling",
+	displayName: "TuCong",
 
 	// 职业/身份标签
-	occupation: "[技术博主 / 生活记录者]",
+	occupation: "[野生程序员 & 街头摄影师]",
 
 	// 个人签名（支持多条，会循环打字+删除效果）
-	bio: ["如果你喜欢，那么欢迎来到我的世界！", "海棠花未眠，老陈总在我身边"],
+	bio: ["如果你喜欢，那么欢迎来到我的世界！", "偶尔认真，经常摆烂，但总归在学点东西。"],
 
 	// 链接配置
 	// 已经预装的图标集：fa7-brands，fa7-regular，fa7-solid，material-symbols，simple-icons
@@ -33,31 +33,31 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "WeChat",
 			icon: "simple-icons:wechat",
-			url: "https://re.tsh520.cn/zl/vx.webp",
+			url: "https://cloud.tucong.vip/file/BQACAgUAAyEGAATYW9o6AAO9akOVtUUb8EYoJ_vrbnO9h2HmaP4AAn8pAAJtnCBWUeXsgbtyN1Y8BA.png",
 			showName: false,
 		},
 		{
 			name: "QQ",
 			icon: "simple-icons:tencentqq",
-			url: "https://re.tsh520.cn/zl/qq.webp",
+			url: "https://cloud.tucong.vip/file/BQACAgUAAyEGAATYW9o6AAO7akOVseIl19YpEmeD-2ZhAQpr7OMAAn4pAAJtnCBWueIoQleWOw08BA.jpg",
 			showName: false,
 		},
 		{
 			name: "GitHub",
 			icon: "simple-icons:github",
-			url: "https://github.com/tianshihao2003",
+			url: "https://github.com/txwfisher/",
 			showName: false,
 		},
 		{
 			name: "Email",
 			icon: "material-symbols:mail-outline",
-			url: "mailto:3109581507@qq.com",
+			url: "mailto:jjyfisher@vip.qq.com",
 			showName: false,
 		},
 		{
 			name: "Bilibili",
 			icon: "simple-icons:bilibili",
-			url: "https://space.bilibili.com/1394731616?spm_id_from=333.1007.0.0",
+			url: "https://space.bilibili.com/473933020",
 			showName: false,
 		},
 	],
