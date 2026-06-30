@@ -7,13 +7,13 @@ const SITE_LANG = "zh_CN";
 
 export const siteConfig: SiteConfig = {
 	// 站点标题
-	title: "团子和蛋糕的博客",
+	title: "荼丛的博客",
 
 	// 站点副标题
 	subtitle: "",
 
 	// 站点 URL
-	site_url: "https://blog.tsh520.cn",
+	site_url: "https://blog.tucong.vip/",
 
 	// 站点描述
 	description:
@@ -21,12 +21,10 @@ export const siteConfig: SiteConfig = {
 
 	// 站点关键词
 	keywords: [
-		"团子",
-		"团子和蛋糕",
-		"蛋糕",
-		"团子和蛋糕的博客",
-		"团子的博客",
-		"蛋糕的博客",
+		"荼丛",
+		"Tea",
+		"TuCo",
+		"荼丛的博客",
 	],
 
 	// 主题色
@@ -54,7 +52,7 @@ export const siteConfig: SiteConfig = {
 	favicon: [
 		{
 			// 图标文件路径
-			src: "https://re.tsh520.cn/zl/tx.webp",
+			src: "https://cloud.tucong.vip/file/AgACAgUAAyEGAATYW9o6AAMGajXbYx6S9DHM_6BMsZqr7_HNvpcAAv4Naxsua7FVGu1lmV6FpgQBAAMCAANtAAM8BA.jpg",
 			// 可选，指定主题 'light' | 'dark'
 			// theme: "light",
 			// 可选，图标大小
@@ -76,7 +74,7 @@ export const siteConfig: SiteConfig = {
 			alt: "🍀",
 		},
 		// 导航栏标题
-		title: "团子和蛋糕",
+		title: "荼丛",
 		// 悬停时显示的互动颜文字
 		hoverTitle: "w(ﾟДﾟ)w 不要走！再看看嘛！",
 		// 全宽导航栏，导航栏是否占满屏幕宽度，true：占满，false：不占满
@@ -86,7 +84,7 @@ export const siteConfig: SiteConfig = {
 	},
 
 	// 站点开始日期，用于统计运行天数
-	siteStartDate: "2025-9-1",
+	siteStartDate: "2025-1-1",
 
 	// 门户区配置
 	portal: {
@@ -120,7 +118,7 @@ export const siteConfig: SiteConfig = {
 		start: 9, // 上班时间 9:00
 		end: 18, // 下班时间 18:00
 		// 工作日范围，0=周日 1=周一 ... 6=周六，默认周一到周五
-		workDays: [1, 2, 3, 4, 5],
+		workDays: [1, 2, 3, 4, 5，6],
 	},
 
 	// 站点时区（IANA 时区字符串），用于格式化bangumi、rss里的构建日期时间等等..
@@ -179,7 +177,7 @@ export const siteConfig: SiteConfig = {
 	momentsCover: {
 		enable: true,
 		image:
-			"https://ph.0824.uk/file/博客横屏封面/1780635498430_mmexport1774845895097.jpg",
+			"https://cloud.tucong.vip/file/BQACAgUAAyEGAATYW9o6AAO5akOUwaBZD-nHGmId2mLdjOZ9NycAAnwpAAJtnCBWQTidcUqjLgM8BA.jpg",
 	},
 
 	// 分类导航栏开关，在首页和归档页顶部显示分类快捷导航
